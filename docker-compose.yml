@@ -1,0 +1,53 @@
+# Local PostgreSQL for development and for the integration test suite (Part 4.3).
+#
+#   pnpm db:up          start both services
+#   pnpm db:down        stop them
+#   pnpm db:migrate     apply migrations to `db`
+#   pnpm db:seed        load demo data into `db`
+#   pnpm test:integration
+#
+# `db` and `db-test` are deliberately separate containers on separate ports so an
+# integration test can truncate tables without touching development data.
+
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: fsjesc-fmc-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fsjesc
+      POSTGRES_PASSWORD: fsjesc_dev_password
+      POSTGRES_DB: fsjesc_fmc
+      # Deterministic collation so ORDER BY does not vary by host locale.
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fsjesc -d fsjesc_fmc"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  db-test:
+    image: postgres:17-alpine
+    container_name: fsjesc-fmc-db-test
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fsjesc
+      POSTGRES_PASSWORD: fsjesc_test_password
+      POSTGRES_DB: fsjesc_fmc_test
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fsjesc -d fsjesc_fmc_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+volumes:
+  db-data:

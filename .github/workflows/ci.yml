@@ -1,0 +1,140 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Non-secret defaults so every job fails fast on the same configuration error a
+  # developer would see locally. Secrets come from repository secrets, never here.
+  DATABASE_URL: postgresql://fsjesc:fsjesc_ci_password@localhost:5432/fsjesc_fmc
+  AUTH_SECRET: Y2ktb25seS1hdXRoLXNlY3JldC1ub3QtZm9yLXByb2QtaWRlLTI1Ni1ieXRlcyE=
+  AUTH_TRUST_HOST: "true"
+  BOOTSTRAP_ADMIN_EMAIL: ci-admin@fsjesc-fmc.local
+  BOOTSTRAP_ADMIN_PASSWORD: ci-only-not-a-real-secret
+  MAIL_PROVIDER: console
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+
+jobs:
+  verify:
+    name: Typecheck, lint, test, build
+    runs-on: ubuntu-latest
+    services:
+      db:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: fsjesc
+          POSTGRES_PASSWORD: fsjesc_ci_password
+          POSTGRES_DB: fsjesc_fmc
+          POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U fsjesc -d fsjesc_fmc"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Fail fast on misconfiguration
+        run: node --import tsx --eval "import { assertServerEnv } from './src/config/env.ts'; assertServerEnv(); console.log('env ok');"
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Format check
+        run: pnpm format:check
+
+      - name: Generate migrations
+        run: pnpm db:generate
+
+      - name: Apply migrations
+        run: pnpm db:migrate
+
+      - name: Seed demo data
+        run: pnpm db:seed
+
+      - name: Unit tests with coverage gate
+        run: pnpm test:coverage
+
+      - name: Integration tests
+        run: pnpm test:integration
+        env:
+          TEST_DATABASE_URL: postgresql://fsjesc:fsjesc_ci_password@localhost:5432/fsjesc_fmc_test
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
+
+      - name: Build
+        run: pnpm build
+
+      - name: Upload production build log
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: next-build
+          path: .next/**/*.log
+          retention-days: 3
+
+  e2e:
+    name: End-to-end
+    runs-on: ubuntu-latest
+    needs: verify
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Run end-to-end suite
+        run: pnpm test:e2e
+        env:
+          DATABASE_URL: postgresql://fsjesc:fsjesc_ci_password@localhost:5432/fsjesc_fmc
+          AUTH_TRUST_HOST: "true"
+          SEED_DEMO: "true"
+          NODE_ENV: production
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 14
