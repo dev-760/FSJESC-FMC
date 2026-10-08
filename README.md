@@ -9,43 +9,43 @@ student-led environment for learning, researching and simulating financial marke
 > a deterministic model. Nothing here is real market data, and nothing here is
 > investment advice.
 
-*Learn financial markets. Research. Simulate. Analyze. Improve.*
+_Learn financial markets. Research. Simulate. Analyze. Improve._
 
 ---
 
 ## Documentation
 
-| Document | Contents |
-|---|---|
-| [`PLAN.md`](./PLAN.md) | Phase checklist and the ten non-negotiable rules |
-| [`DECISIONS.md`](./DECISIONS.md) | Architecture decisions, alternatives, rationale |
-| [`PROGRESS.md`](./PROGRESS.md) | Current state, what is done, what is next |
-| [`ARCHITECTURE.md`](./ARCHITECTURE.md) | Layers, data flow, dependency rules |
-| [`DATABASE.md`](./DATABASE.md) | Schema, constraints, indexes, monetary columns |
-| [`TRADING_ENGINE.md`](./TRADING_ENGINE.md) | Order lifecycle, execution, fees, accounting, concurrency |
-| [`MARKET_SIMULATION.md`](./MARKET_SIMULATION.md) | Price model algorithm, candles, scenarios |
-| [`SECURITY.md`](./SECURITY.md) | Threat model, RBAC, sessions, rate limits, data handling |
-| [`DEPLOYMENT.md`](./DEPLOYMENT.md) | Production deployment and operations |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Conventions, commit format, review expectations |
+| Document                                         | Contents                                                  |
+| ------------------------------------------------ | --------------------------------------------------------- |
+| [`PLAN.md`](./PLAN.md)                           | Phase checklist and the ten non-negotiable rules          |
+| [`DECISIONS.md`](./DECISIONS.md)                 | Architecture decisions, alternatives, rationale           |
+| [`PROGRESS.md`](./PROGRESS.md)                   | Current state, what is done, what is next                 |
+| [`ARCHITECTURE.md`](./ARCHITECTURE.md)           | Layers, data flow, dependency rules                       |
+| [`DATABASE.md`](./DATABASE.md)                   | Schema, constraints, indexes, monetary columns            |
+| [`TRADING_ENGINE.md`](./TRADING_ENGINE.md)       | Order lifecycle, execution, fees, accounting, concurrency |
+| [`MARKET_SIMULATION.md`](./MARKET_SIMULATION.md) | Price model algorithm, candles, scenarios                 |
+| [`SECURITY.md`](./SECURITY.md)                   | Threat model, RBAC, sessions, rate limits, data handling  |
+| [`DEPLOYMENT.md`](./DEPLOYMENT.md)               | Production deployment and operations                      |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md)           | Conventions, commit format, review expectations           |
 
 ---
 
 ## Stack
 
-| Concern | Choice |
-|---|---|
-| Framework | Next.js 16 (App Router, React 19, Server Components) |
-| Language | TypeScript 5, strict mode, no `any` |
-| Styling | Tailwind CSS v4 (CSS-first design tokens) |
-| Components | Radix UI primitives, hand-composed |
-| Backend | Next.js Route Handlers + Server Actions |
-| Database | PostgreSQL 17 via Drizzle ORM + drizzle-kit |
-| Auth | Auth.js v5 (credentials, database sessions, argon2id) |
-| Validation | Zod |
-| Charts | lightweight-charts |
-| Markdown | gray-matter + remark/rehype + rehype-sanitize |
-| Testing | Vitest (unit / integration / component) + Playwright (e2e) |
-| Package manager | pnpm |
+| Concern         | Choice                                                     |
+| --------------- | ---------------------------------------------------------- |
+| Framework       | Next.js 16 (App Router, React 19, Server Components)       |
+| Language        | TypeScript 5, strict mode, no `any`                        |
+| Styling         | Tailwind CSS v4 (CSS-first design tokens)                  |
+| Components      | Radix UI primitives, hand-composed                         |
+| Backend         | Next.js Route Handlers + Server Actions                    |
+| Database        | PostgreSQL 17 via Drizzle ORM + drizzle-kit                |
+| Auth            | Auth.js v5 (credentials, database sessions, argon2id)      |
+| Validation      | Zod                                                        |
+| Charts          | lightweight-charts                                         |
+| Markdown        | gray-matter + remark/rehype + rehype-sanitize              |
+| Testing         | Vitest (unit / integration / component) + Playwright (e2e) |
+| Package manager | pnpm                                                       |
 
 ---
 
@@ -107,36 +107,36 @@ The application is then available at <http://localhost:3000>.
 Seeded accounts share the password `demo-password-1234` (14 characters, satisfying
 the 12-character policy). All are clearly labelled demo data.
 
-| Role | Email |
-|---|---|
-| Student | `student@fsjesc-fmc.local` |
-| Member | `member@fsjesc-fmc.local` |
-| Executive | `executive@fsjesc-fmc.local` |
+| Role          | Email                                               |
+| ------------- | --------------------------------------------------- |
+| Student       | `student@fsjesc-fmc.local`                          |
+| Member        | `member@fsjesc-fmc.local`                           |
+| Executive     | `executive@fsjesc-fmc.local`                        |
 | Administrator | the `BOOTSTRAP_ADMIN_EMAIL` value from `.env.local` |
 
 ---
 
 ## Commands
 
-| Command | Purpose |
-|---|---|
-| `pnpm dev` | Development server |
-| `pnpm build` | Production build |
-| `pnpm start` | Serve the production build |
-| `pnpm typecheck` | `tsc --noEmit` |
-| `pnpm lint` | ESLint (type-aware, plus layering rules) |
-| `pnpm format` / `pnpm format:check` | Prettier |
-| `pnpm test` | Unit + integration |
-| `pnpm test:unit` | Unit tests only |
-| `pnpm test:coverage` | Unit tests with the 90% coverage gate |
-| `pnpm test:integration` | PostgreSQL integration tests |
-| `pnpm test:e2e` | Playwright end-to-end suite (builds and starts the app) |
-| `pnpm verify` | typecheck → lint → test → build |
-| `pnpm db:up` / `db:down` | Start/stop local PostgreSQL |
-| `pnpm db:generate` | Generate a migration from the Drizzle schema |
-| `pnpm db:migrate` | Apply pending migrations |
-| `pnpm db:seed` | Load demo data |
-| `pnpm db:studio` | Drizzle Studio |
+| Command                             | Purpose                                                 |
+| ----------------------------------- | ------------------------------------------------------- |
+| `pnpm dev`                          | Development server                                      |
+| `pnpm build`                        | Production build                                        |
+| `pnpm start`                        | Serve the production build                              |
+| `pnpm typecheck`                    | `tsc --noEmit`                                          |
+| `pnpm lint`                         | ESLint (type-aware, plus layering rules)                |
+| `pnpm format` / `pnpm format:check` | Prettier                                                |
+| `pnpm test`                         | Unit + integration                                      |
+| `pnpm test:unit`                    | Unit tests only                                         |
+| `pnpm test:coverage`                | Unit tests with the 90% coverage gate                   |
+| `pnpm test:integration`             | PostgreSQL integration tests                            |
+| `pnpm test:e2e`                     | Playwright end-to-end suite (builds and starts the app) |
+| `pnpm verify`                       | typecheck → lint → test → build                         |
+| `pnpm db:up` / `db:down`            | Start/stop local PostgreSQL                             |
+| `pnpm db:generate`                  | Generate a migration from the Drizzle schema            |
+| `pnpm db:migrate`                   | Apply pending migrations                                |
+| `pnpm db:seed`                      | Load demo data                                          |
+| `pnpm db:studio`                    | Drizzle Studio                                          |
 
 ---
 

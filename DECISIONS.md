@@ -165,3 +165,42 @@ Newest last. Each entry is immutable once merged; supersede with a new entry.
 **Decision.** `package.json` keeps `"private": true` and pins `packageManager: "pnpm@12.9.1"`. The scaffold's `name` was regenerated to `fsjesc-fmc` (npm forbids capitals in package names).
 
 **Rationale.** This is an application, not a library. Pinning the package manager enables Corepack enforcement and reproducible installs in CI.
+
+---
+
+## D15 — Unprerendered route parameters return HTTP 200 with the 404 page (known limitation)
+
+**Decision.** Accept, document, and contain. A parameter that is not produced by `generateStaticParams` is rendered on demand; by the time `notFound()` runs, the response has already begun streaming, so the status is `200` even though the body is the platform's 404 page and the route declares `robots: noindex`.
+
+**Measured.** `GET /events/no-such-event` and `GET /simulator/market/nope` both return `200` with the 404 body (`NEXT_HTTP_ERROR_FALLBACK;404` in the RSC payload, `robots: noindex, nofollow` in the metadata).
+
+**Alternatives tried.**
+
+1. `export const dynamicParams = false` — rejected at build time: `Route segment config "dynamicParams" is not compatible with nextConfig.cacheComponents`.
+2. `export const ensureStatic = "navigation"` — accepted by the build but had no effect; the route stayed `◐ (Partial Prerender)` in the build output and the status stayed `200`.
+3. Validate the parameter in `proxy.ts` and return a bare 404 — rejected: it produces an empty body, losing the 404 page's recovery links, and adds request-time work to every matching request for a two-route problem.
+
+**Containment.** The body is a genuine 404 page with navigation; the metadata is `noindex, nofollow`; no event or instrument content is served for an unknown parameter. The end-to-end suite asserts the rendered content and the `noindex` metadata rather than the status code, so the behaviour is pinned even though the status is not.
+
+**If this matters more than PPR.** Disabling `cacheComponents` restores a true 404 status, at the cost of losing static prerendering and `use cache` for the whole site. That trade is recorded here so it can be revisited deliberately rather than discovered later. Phase 5 moves events and instruments behind a database, at which point these routes stop being static parameter families and the question should be re-examined.
+
+**Why it is recorded rather than hidden.** A 200 on a missing page is a real defect. Writing a test that asserts `200` and calling it correct would be worse than naming the limitation.
+---
+
+## D16 — The contact form is a no-JavaScript Server Action form, and a server rejection loses the draft
+
+**Decision.** The contact form is a Server Component rendering `<form action={submitContactMessage}>` with native browser constraint validation left enabled. No Client Component, no `useActionState`. On success the action redirects to `?status=received`; on a validation failure it redirects to `?status=invalid&fields=…` and the page renders the errors.
+
+**Measured.** `useActionState` adds ~32 KB gzip of React's form-action runtime to `/contact`, taking it from 190 KB to 222 KB and breaking the Part 10 budget of 200 KB initial JS. The framework floor for this stack is 190 KB, so there is roughly 10 KB of headroom on every public page. `scripts/perf-budget.mjs` measures this on demand rather than trusting a claim.
+
+**Alternatives.**
+
+1. `useActionState` Client Component — rejected: exceeds the budget, and the form stops working without JavaScript.
+2. Echo the draft through an HttpOnly flash cookie and re-render it — rejected for now: it adds a signed-cookie round trip and a 4 KB size ceiling for a 4,000-character message. Recorded here as the upgrade path if draft preservation becomes a requirement.
+3. Accept losing the draft on server rejection — **chosen.**
+
+**Rationale.** With browser validation enabled, an empty required field, a malformed address, and a message under 30 characters are all blocked before a request is made. The server-side rejection path is therefore reached only when the browser and server constraint sets disagree — rare, and it still produces a correct, explained error message rather than a silent failure.
+
+**Honest limitation.** A server-side rejection navigates away and does not restore what was typed. The end-to-end test asserts the guarantee that actually exists (the error is reported) rather than asserting draft preservation, which this design does not provide. The browser-constraint behaviour is asserted separately.
+
+**Why this matters for later phases.** Any interactive surface on a public page costs against the same ~10 KB headroom. Phase 8's order ticket is the first surface that genuinely needs client state; it lives under `/simulator`, which is a separate code-split route and not measured against the public-page budget. That separation is deliberate.

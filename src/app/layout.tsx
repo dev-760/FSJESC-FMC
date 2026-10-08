@@ -3,6 +3,11 @@ import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
 import { getPublicEnv } from "@/config/env-public";
 import { SITE, DISC_1 } from "@/config/site";
 import { SkipLink } from "@/components/layout/skip-link";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { AccountSlot } from "@/components/layout/account-slot";
+import { visiblePrimaryNav } from "@/config/navigation";
+import { LOCALE_CONFIG } from "@/i18n/strings";
 import "./globals.css";
 
 /**
@@ -84,8 +89,16 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
+  const navItems = visiblePrimaryNav();
+
   return (
-    <html lang={SITE.locale} className={`${plexSans.variable} ${plexMono.variable} h-full`}>
+    // `dir` comes from the locale record, so adding Arabic later needs a new
+    // locale entry rather than a layout change (Part 9.5).
+    <html
+      lang={SITE.locale}
+      dir={LOCALE_CONFIG.en.dir}
+      className={`${plexSans.variable} ${plexMono.variable} h-full`}
+    >
       <head>
         {/*
           Applies the stored colour scheme before first paint to avoid a flash.
@@ -108,7 +121,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         >
           {DISC_1}
         </div>
+        <SiteHeader navItems={navItems} accountSlot={<AccountSlot />} />
         {children}
+        <SiteFooter />
       </body>
     </html>
   );

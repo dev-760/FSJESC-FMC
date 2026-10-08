@@ -5,151 +5,164 @@
 @source "../../src";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Design tokens (Part 9)
-   Institutional / analytical identity: research terminal, not crypto exchange.
-   Light and dark themes are both contrast-checked for WCAG 2.2 AA.
-   Every foreground/background pair used for text meets or exceeds 4.5:1; every
-   pair used for component boundaries meets or exceeds 3:1.
+   Design tokens — a financial research terminal for students.
+
+   The governing idea: this is a terminal, not a brochure. A terminal is dense,
+   ruled, and aligned to a grid. Structure comes from hairlines and column
+   alignment, not from floating boxes; a figure is set in a monospaced face and
+   lines up with the figure beneath it.
+
+   Both themes are contrast-checked for WCAG 2.2 AA: body text ≥ 4.5:1, large
+   text and component boundaries ≥ 3:1.
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
   color-scheme: light;
 
-  /* Surfaces */
+  /* Surfaces — three levels, no more. */
   --canvas: #ffffff;
-  --surface: #ffffff;
-  --surface-subtle: #f4f6f9;
-  --surface-inset: #eaeef4;
+  --surface: #fbfcfd;
+  --surface-raised: #ffffff;
+  --surface-sunken: #f2f4f7;
+  --surface-inset: #eaedf2;
 
-  /* Lines */
-  --border: #d9dee7;
-  --border-strong: #8a93a3;
+  /* Lines — the terminal's primary structural device. */
+  --rule: #dfe3ea;
+  --rule-strong: #c3cad5;
+  --rule-hairline: #edf0f4;
 
   /* Text */
-  --text-primary: #10151c;
-  --text-secondary: #38424f;
-  --text-muted: #5f6a78;
+  --text-primary: #0d1218;
+  --text-secondary: #333d4a;
+  --text-muted: #5c6675;
   --text-inverse: #ffffff;
 
-  /* Brand / interactive */
-  --accent: #1c4f8b;
-  --accent-hover: #163d6e;
-  --accent-subtle: #e8eff8;
-  --accent-text: #14406f;
-  --ring: #1c4f8b;
+  /* Brand / interactive — a deep institutional blue, not a startup accent. */
+  --accent: #14477e;
+  --accent-hover: #0f3763;
+  --accent-subtle: #e7eef7;
+  --accent-text: #103868;
+  --ring: #14477e;
 
-  /* Semantic state (Part 9.2) — never the sole carrier of meaning */
-  --positive: #0f7a4d;
-  --positive-subtle: #e6f4ec;
-  --negative: #b3261e;
-  --negative-subtle: #fbeae8;
-  --warning: #8a5a00;
-  --warning-subtle: #fbf1de;
-  --information: #1c4f8b;
-  --information-subtle: #e8eff8;
-  --neutral: #4a5462;
-  --neutral-subtle: #eef1f5;
+  /* Semantic state (Part 9.2) — never the sole carrier of meaning. */
+  --positive: #0c6b43;
+  --positive-subtle: #e3f2ea;
+  --negative: #a8241c;
+  --negative-subtle: #f9e8e6;
+  --warning: #7a4e00;
+  --warning-subtle: #f9efdb;
+  --information: #14477e;
+  --information-subtle: #e7eef7;
+  --neutral: #4b5563;
+  --neutral-subtle: #eceff3;
 
-  /* Non-semantic chart series, restrained and colour-blind-safe in order */
-  --series-1: #1c4f8b;
-  --series-2: #6b4f9e;
-  --series-3: #0f7a6a;
-  --series-4: #8a5a00;
-  --series-5: #5f6a78;
+  /* Chart series: distinct in hue *and* lightness, ordered for a reader who
+     cannot rely on hue alone. */
+  --series-1: #14477e;
+  --series-2: #5b3f96;
+  --series-3: #0d6a5e;
+  --series-4: #8a5300;
+  --series-5: #4b5563;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
 
-    --canvas: #0d1117;
-    --surface: #141a22;
-    --surface-subtle: #1a212b;
-    --surface-inset: #1f2733;
+    --canvas: #0c1017;
+    --surface: #11161e;
+    --surface-raised: #161d26;
+    --surface-sunken: #0a0e14;
+    --surface-inset: #1c242f;
 
-    --border: #2a323e;
-    --border-strong: #64738c;
+    --rule: #232c38;
+    --rule-strong: #3b4655;
+    --rule-hairline: #1a212a;
 
-    --text-primary: #e6edf3;
-    --text-secondary: #a9b4c2;
-    --text-muted: #7d8896;
-    --text-inverse: #0d1117;
+    --text-primary: #e8eef5;
+    --text-secondary: #b3bfcd;
+    --text-muted: #8593a3;
+    --text-inverse: #0c1017;
 
-    --accent: #7aa7dd;
-    --accent-hover: #9bbce6;
+    --accent: #74a9e0;
+    --accent-hover: #94bfe9;
     --accent-subtle: #16243a;
-    --accent-text: #b6d0ee;
-    --ring: #7aa7dd;
+    --accent-text: #a8c9ec;
+    --ring: #74a9e0;
 
-    --positive: #4ec98a;
-    --positive-subtle: #10281c;
-    --negative: #f2837c;
-    --negative-subtle: #2c1513;
-    --warning: #e0b358;
-    --warning-subtle: #2a2113;
-    --information: #7aa7dd;
+    --positive: #46c184;
+    --positive-subtle: #0f2619;
+    --negative: #ef8079;
+    --negative-subtle: #2b1513;
+    --warning: #dfb257;
+    --warning-subtle: #291f11;
+    --information: #74a9e0;
     --information-subtle: #16243a;
-    --neutral: #a9b4c2;
-    --neutral-subtle: #1c242e;
+    --neutral: #b3bfcd;
+    --neutral-subtle: #1b222c;
 
-    --series-1: #7aa7dd;
-    --series-2: #b39ae0;
-    --series-3: #5fc7b2;
-    --series-4: #e0b358;
-    --series-5: #a9b4c2;
+    --series-1: #74a9e0;
+    --series-2: #b19ae2;
+    --series-3: #54c4b0;
+    --series-4: #dfb257;
+    --series-5: #b3bfcd;
   }
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --canvas: #0d1117;
-  --surface: #141a22;
-  --surface-subtle: #1a212b;
-  --surface-inset: #1f2733;
+  --canvas: #0c1017;
+  --surface: #11161e;
+  --surface-raised: #161d26;
+  --surface-sunken: #0a0e14;
+  --surface-inset: #1c242f;
 
-  --border: #2a323e;
-  --border-strong: #64738c;
+  --rule: #232c38;
+  --rule-strong: #3b4655;
+  --rule-hairline: #1a212a;
 
-  --text-primary: #e6edf3;
-  --text-secondary: #a9b4c2;
-  --text-muted: #7d8896;
-  --text-inverse: #0d1117;
+  --text-primary: #e8eef5;
+  --text-secondary: #b3bfcd;
+  --text-muted: #8593a3;
+  --text-inverse: #0c1017;
 
-  --accent: #7aa7dd;
-  --accent-hover: #9bbce6;
+  --accent: #74a9e0;
+  --accent-hover: #94bfe9;
   --accent-subtle: #16243a;
-  --accent-text: #b6d0ee;
-  --ring: #7aa7dd;
+  --accent-text: #a8c9ec;
+  --ring: #74a9e0;
 
-  --positive: #4ec98a;
-  --positive-subtle: #10281c;
-  --negative: #f2837c;
-  --negative-subtle: #2c1513;
-  --warning: #e0b358;
-  --warning-subtle: #2a2113;
-  --information: #7aa7dd;
+  --positive: #46c184;
+  --positive-subtle: #0f2619;
+  --negative: #ef8079;
+  --negative-subtle: #2b1513;
+  --warning: #dfb257;
+  --warning-subtle: #291f11;
+  --information: #74a9e0;
   --information-subtle: #16243a;
-  --neutral: #a9b4c2;
-  --neutral-subtle: #1c242e;
+  --neutral: #b3bfcd;
+  --neutral-subtle: #1b222c;
 
-  --series-1: #7aa7dd;
-  --series-2: #b39ae0;
-  --series-3: #5fc7b2;
-  --series-4: #e0b358;
-  --series-5: #a9b4c2;
+  --series-1: #74a9e0;
+  --series-2: #b19ae2;
+  --series-3: #54c4b0;
+  --series-4: #dfb257;
+  --series-5: #b3bfcd;
 }
 
-/* Map tokens onto Tailwind utilities. `inline` keeps the var() reference in the
-   emitted CSS so a runtime theme switch recolours without a rebuild. */
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
-  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunken: var(--surface-sunken);
   --color-surface-inset: var(--surface-inset);
 
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-rule-hairline: var(--rule-hairline);
+  --color-border: var(--rule);
+  --color-border-strong: var(--rule-strong);
 
   --color-foreground: var(--text-primary);
   --color-foreground-secondary: var(--text-secondary);
@@ -182,15 +195,41 @@
   --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, monospace;
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.375rem;
-  --radius-lg: 0.5rem;
+  /* Radius: panels are 14px (card floor is 12–16), controls are 8px, and only
+     small controls become pills. */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 14px;
 
+  /* A type scale with real steps. The old scale had two body sizes and nothing
+     between a 13px label and a 30px heading, which is why every section looked
+     the same weight. */
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.8125rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 0.9375rem;
+  --text-base--line-height: 1.625rem;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl: 1.25rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl: 1.5rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl: 1.875rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl: 2.375rem;
+  --text-4xl--line-height: 2.5rem;
+  --text-5xl: 3.25rem;
+  --text-5xl--line-height: 1.08;
 
-  --shadow-panel: 0 1px 2px 0 rgb(16 21 28 / 0.04), 0 1px 3px 0 rgb(16 21 28 / 0.06);
-  --shadow-raised: 0 2px 4px 0 rgb(16 21 28 / 0.06), 0 4px 12px 0 rgb(16 21 28 / 0.08);
+  /* Elevation is declared once. Panels carry a hairline and no shadow — a 1px
+     border under a wide soft shadow is a ghost card. Shadows are reserved for
+     things that genuinely float above the page. */
+  --shadow-float: 0 1px 2px rgb(13 18 24 / 0.06), 0 8px 24px -6px rgb(13 18 24 / 0.14);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -198,39 +237,76 @@
    ─────────────────────────────────────────────────────────────────────────── */
 
 @layer base {
-  * {
-    border-color: var(--border);
+  *,
+  *::before,
+  *::after {
+    border-color: var(--rule);
   }
 
   html {
     -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
   }
 
   body {
     background-color: var(--canvas);
     color: var(--text-primary);
     font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-    font-feature-settings:
-      "cv05" 1,
-      "ss01" 1;
+    font-size: var(--text-base);
+    line-height: 1.625;
     text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* Visible focus on every interactive element (Part 9.3). */
+  /*
+   * Browser surfaces ship with defaults that belong to no design system: text
+   * selection, the caret, scrollbars, focus rings, underline offset. Theming
+   * them is the cheapest signal that a page was built rather than assembled.
+   */
+  ::selection {
+    background-color: var(--accent-subtle);
+    color: var(--accent-text);
+  }
+
   :focus-visible {
     outline: 2px solid var(--ring);
     outline-offset: 2px;
     border-radius: 2px;
   }
 
-  /* Remove the default outline only where :focus-visible provides one. */
   :focus:not(:focus-visible) {
     outline: none;
   }
 
-  ::selection {
-    background-color: var(--accent-subtle);
-    color: var(--accent-text);
+  /* The caret belongs to the palette. */
+  input,
+  textarea,
+  select {
+    caret-color: var(--accent);
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--rule-strong) transparent;
+  }
+
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--rule-strong);
+    border: 3px solid var(--canvas);
+    border-radius: 6px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-muted);
   }
 
   h1,
@@ -241,19 +317,29 @@
   h6 {
     text-wrap: balance;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.022em;
+    line-height: 1.2;
+  }
+
+  h1 {
+    letter-spacing: -0.028em;
   }
 
   p {
     text-wrap: pretty;
   }
+
+  /*
+   * A reading measure is applied deliberately with `.measure`, never globally.
+   * A blanket max-width on `p` also constrains text inside panels, alerts and
+   * table cells, where it produces ragged, needlessly narrow columns.
+   */
 }
 
 @layer utilities {
   /*
-   * All financial figures use tabular numerals and a right-aligned,
-   * monospaced presentation so columns of digits line up vertically and a
-   * changing last digit does not shift the rest of the row (Part 9.1, §9.4).
+   * Every figure in this product is tabular and monospaced, so columns of digits
+   * align vertically and a changing last digit does not shift its neighbours.
    */
   .numeric {
     font-family: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, monospace;
@@ -262,6 +348,30 @@
       "tnum" 1,
       "zero" 1;
     letter-spacing: -0.01em;
+  }
+
+  /* A small tracked label for table column heads and section markers. */
+  .label {
+    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* A reading measure for prose, applied where prose is the point. */
+  .measure {
+    max-width: 68ch;
+  }
+
+  /*
+   * A data-table caption is annotation, so it belongs under the table. The UA
+   * default is `caption-side: top`, which put a paragraph above the column heads
+   * and made the board read as a heading with a table attached to it.
+   */
+  caption {
+    caption-side: bottom;
   }
 
   /* Screen-reader-only text that becomes visible on focus (skip link). */
@@ -273,17 +383,66 @@
   }
 
   .skip-link:focus {
-    left: 0.5rem;
-    top: 0.5rem;
+    left: 0.75rem;
+    top: 0.75rem;
     padding: 0.5rem 0.875rem;
-    background-color: var(--surface);
-    border: 1px solid var(--border-strong);
-    border-radius: 0.375rem;
+    background-color: var(--surface-raised);
+    border: 1px solid var(--rule-strong);
+    border-radius: var(--radius-md);
   }
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Motion — restrained, and fully disabled on request (Part 9.3)
+   Signature motion — authored once, not scattered.
+
+   The quote board is the product's thesis, so it is the one thing that moves on
+   load: rows settle in sequence, like a terminal painting a frame. Everything
+   else on the page is still. Under `prefers-reduced-motion` the rows are simply
+   present.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@keyframes row-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 6px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.board-row {
+  animation: row-settle 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.board-row:nth-child(1) {
+  animation-delay: 0ms;
+}
+.board-row:nth-child(2) {
+  animation-delay: 45ms;
+}
+.board-row:nth-child(3) {
+  animation-delay: 90ms;
+}
+.board-row:nth-child(4) {
+  animation-delay: 135ms;
+}
+.board-row:nth-child(5) {
+  animation-delay: 180ms;
+}
+.board-row:nth-child(6) {
+  animation-delay: 225ms;
+}
+.board-row:nth-child(7) {
+  animation-delay: 270ms;
+}
+.board-row:nth-child(8) {
+  animation-delay: 315ms;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Reduced motion — honoured globally (Part 9.3).
    ─────────────────────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
@@ -294,5 +453,11 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .board-row {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
   }
 }

@@ -49,8 +49,24 @@ const applicationLayering = {
       "error",
       {
         patterns: [
+          // Presentation-layer modules are forbidden. `next/navigation`,
+          // `next/cache` and `next/headers` are server framework primitives —
+          // `redirect`, `revalidatePath`, `cookies()` — which a Server Action
+          // legitimately needs, so they stay permitted.
           {
-            group: ["react", "react-dom", "next", "next/*"],
+            group: [
+              "react",
+              "react/*",
+              "react-dom",
+              "react-dom/*",
+              "next/link",
+              "next/image",
+              "next/head",
+              "next/script",
+              "next/form",
+              "@/app/*",
+              "@/components/*",
+            ],
             message: "Part 3.1: application services must not depend on the presentation layer.",
           },
         ],
@@ -116,11 +132,24 @@ const eslintConfig = defineConfig([
   },
   prettier,
   {
-    // Config and spec files are plain JS/TS outside the app's tsconfig project,
-    // so type-aware linting cannot be applied to them.
-    files: ["*.config.mts", "*.config.ts", "*.config.mjs", "tests/setup/**/*.ts"],
-    ...tseslint.configs.disableTypeChecked,
+    // Config files, spec files and build scripts are plain JS outside the app's
+    // tsconfig project, so type-aware linting cannot be applied to them.
+    // `extends` is used rather than spreading, because spreading `disableTypeChecked`
+    // would be overwritten by this object's own `rules` key.
+    files: [
+      "*.config.mts",
+      "*.config.ts",
+      "*.config.mjs",
+      "scripts/**/*.mjs",
+      "tests/setup/**/*.ts",
+    ],
+    extends: [tseslint.configs.disableTypeChecked],
     languageOptions: { parserOptions: { projectService: false, project: false } },
+    rules: {
+      // Build scripts and config generators report to the terminal; that is their
+      // entire purpose.
+      "no-console": "off",
+    },
   },
   globalIgnores([
     ".next/**",

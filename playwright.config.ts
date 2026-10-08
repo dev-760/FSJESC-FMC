@@ -7,8 +7,10 @@ const baseURL = `http://127.0.0.1:${PORT}`;
  * End-to-end suite (Part 11.4).
  *
  * Runs against a production build rather than the dev server, so the tests
- * exercise the same bundling, prerendering and cache behaviour that a visitor
- * gets. `pnpm test:e2e` builds and starts the app automatically.
+ * exercise the same bundling, prerendering and cache behaviour a visitor gets.
+ *
+ * `E2E_SKIP_WEBSERVER=1` reuses an already-running server, which is how the
+ * suite is driven during local development against a server on a chosen port.
  */
 export default defineConfig({
   testDir: "./tests/e2e",
@@ -38,16 +40,20 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: `pnpm build && pnpm start --port ${PORT}`,
-    url: baseURL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 300_000,
-    stdout: "pipe",
-    stderr: "pipe",
-    env: {
-      NODE_ENV: "production",
-      NEXT_PUBLIC_APP_URL: baseURL,
-    },
-  },
+  ...(process.env.E2E_SKIP_WEBSERVER
+    ? {}
+    : {
+        webServer: {
+          command: `pnpm build && pnpm start --port ${PORT}`,
+          url: baseURL,
+          reuseExistingServer: !process.env.CI,
+          timeout: 300_000,
+          stdout: "pipe",
+          stderr: "pipe",
+          env: {
+            NODE_ENV: "production",
+            NEXT_PUBLIC_APP_URL: baseURL,
+          },
+        },
+      }),
 });

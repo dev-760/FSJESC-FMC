@@ -15,6 +15,8 @@ export const SITE = {
   locale: "en",
   /** All user-facing dates and times are displayed in this zone (Part 1.4). */
   timezone: "Africa/Casablanca",
+  /** Used only in the footer copyright line; update each year. */
+  foundingYear: 2026,
   campus: "Faculté des Sciences Juridiques, Économiques et Sociales de Casablanca",
   campusShort: "FSJES Casablanca",
   localeCode: "fr-MA",

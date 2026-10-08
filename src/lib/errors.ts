@@ -1,3 +1,5 @@
+import { logError } from "./logger";
+
 /**
  * The application's error model (Part 8.6).
  *
@@ -246,13 +248,19 @@ export function toAppError(error: unknown): AppError {
   return internalError(error);
 }
 
-/** Log an error server-side without printing secrets (N9, Part 8.5). */
+/**
+ * Report an error server-side without printing secrets (N9, Part 8.5).
+ *
+ * Expected 4xx conditions are not failures and are not logged: a validation error
+ * or a 403 is a normal outcome, and logging them would bury the 5xx entries that
+ * actually need attention.
+ */
 export function logServerError(context: string, error: unknown): void {
   if (error instanceof AppError) {
     if (error.status >= 500) {
-      console.error(`[${context}] ${error.code}: ${error.message}`, error.cause ?? "");
+      logError(`${context} ${error.code}: ${error.message}`, error.cause);
     }
     return;
   }
-  console.error(`[${context}] unexpected error`, error);
+  logError(`${context} unexpected error`, error);
 }
