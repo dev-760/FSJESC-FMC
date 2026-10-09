@@ -2,6 +2,7 @@
   "name": "fsjesc-ams",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@12.9.1",
   "description": "FSJESC Admin Management System - shares database with main app",
   "scripts": {
     "dev": "next dev -p 3001",
