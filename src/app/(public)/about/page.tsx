@@ -173,10 +173,10 @@ export default function AboutPage() {
         </div>
       </Container>
 
-      <Section className="border-rule bg-surface-raised border-t">
+      <Section contained={false} className="border-rule bg-surface-raised border-t">
         <Container size="prose">
           <h2 className="text-xl font-semibold tracking-tight">Common questions</h2>
-          <dl className="divide-border mt-6 divide-y">
+          <dl className="divide-rule mt-6 divide-y">
             {[
               [
                 "Is the simulator connected to a real market?",

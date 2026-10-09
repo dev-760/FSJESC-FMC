@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /**
@@ -134,12 +136,19 @@ export function SectionHeading({
  * the result read as a four-column table with term and detail as separate cells,
  * losing the pairing that made the list legible.
  */
+export interface RuledListItem {
+  term: string;
+  detail: string;
+  /** When present the row becomes a link — used for navigation gateways. */
+  href?: string;
+}
+
 export function RuledList({
   items,
   columns = 1,
   className,
 }: {
-  items: readonly { term: string; detail: string }[];
+  items: readonly RuledListItem[];
   columns?: 1 | 2;
   className?: string;
 }) {
@@ -152,18 +161,45 @@ export function RuledList({
         className,
       )}
     >
-      {items.map((item) => (
-        <div
-          key={item.term}
-          className={cn(
-            "border-rule grid gap-1 border-b py-4",
-            "sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-x-8",
-          )}
-        >
-          <dt className="text-foreground text-sm font-medium">{item.term}</dt>
-          <dd className="text-foreground-secondary text-sm leading-relaxed">{item.detail}</dd>
-        </div>
-      ))}
+      {items.map((item) => {
+        const rowClass = cn(
+          "border-rule grid gap-1 border-b py-4",
+          "sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)] sm:gap-x-8",
+        );
+
+        const body = (
+          <>
+            <dt className="text-foreground text-sm font-medium">{item.term}</dt>
+            <dd className="text-foreground-secondary text-sm leading-relaxed">{item.detail}</dd>
+          </>
+        );
+
+        if (!item.href) {
+          return (
+            <div key={item.term} className={rowClass}>
+              {body}
+            </div>
+          );
+        }
+
+        return (
+          <Link
+            key={item.term}
+            href={item.href}
+            className={cn(
+              rowClass,
+              "hover:bg-surface-sunken focus-visible:outline-ring -outline-offset-2 transition-colors",
+              "focus-visible:outline-2",
+            )}
+          >
+            <dt className="flex items-center gap-1.5 text-sm font-medium">
+              {item.term}
+              <ArrowRight aria-hidden className="text-foreground-muted size-3.5 shrink-0" />
+            </dt>
+            <dd className="text-foreground-secondary text-sm leading-relaxed">{item.detail}</dd>
+          </Link>
+        );
+      })}
     </dl>
   );
 }

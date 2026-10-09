@@ -38,11 +38,8 @@
       "@/domain/*": [
         "../src/domain/*"
       ],
-      "@/app/*": [
+"@/app/*": [
         "../src/app/*"
-      ],
-      "tamagui": [
-        "../node_modules/@tamagui/core/native"
       ]
     }
   },

@@ -9,7 +9,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, DismissibleNotice } from "@/components/ui/alert";
+import { EmptyState, LoadingRegion, Skeleton } from "@/components/ui/feedback";
+import { KpiCard, KpiStrip } from "@/components/primitives";
 import { Num } from "@/components/primitives/num";
+import { Container, SectionHeading } from "@/components/layout/container";
+import { formatDateTime } from "@/lib/format";
+import { ADMIN_NAV } from "@/config/admin-navigation";
 
 interface DashboardStats {
   totalUsers: number;
@@ -27,143 +34,173 @@ interface ActivityItem {
   timestamp: string;
 }
 
+type LoadState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ready"; data: DashboardStats };
+
 export default function AdminDashboardPage() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [state, setState] = useState<LoadState>({ status: "loading" });
+  const [dismissed, setDismissed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    const fetchStats = async () => {
+    const controller = new AbortController();
+
+    async function run() {
       try {
-        const response = await fetch("/api/admin/dashboard");
-        if (response.ok) {
-          const data = (await response.json()) as DashboardStats;
-          setStats(data);
+        const response = await fetch("/api/admin/dashboard", { signal: controller.signal });
+        if (!response.ok) {
+          setState({
+            status: "error",
+            message: `The server responded with ${response.status}.`,
+          });
+          return;
         }
-      } catch (err) {
-        console.error("Failed to fetch admin stats:", err);
-      } finally {
-        setIsLoading(false);
+        setState({ status: "ready", data: (await response.json()) as DashboardStats });
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setState({
+          status: "error",
+          message: error instanceof Error ? error.message : "The request could not be completed.",
+        });
       }
-    };
+    }
 
-    void fetchStats();
-  }, []);
+    void run();
+    return () => controller.abort();
+  }, [attempt]);
 
-  if (isLoading) {
+  if (state.status === "loading") {
+    return (
+<main id="main-content" className="flex-1">
+      <Container size="wide" className="py-10">
+        <LoadingRegion label="Loading platform statistics">
+          <Skeleton className="h-9 w-56" />
+          <Skeleton className="mt-3 w-80" />
+          <Skeleton className="mt-10 h-32 w-full" />
+        </LoadingRegion>
+      </Container>
+    </main>
+  );
+}
+
+  if (state.status === "error") {
     return (
       <main id="main-content" className="flex-1">
-        <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-          <div className="animate-pulse">
-            <div className="bg-surface-sunken mb-4 h-8 w-1/3 rounded" />
-            <div className="bg-surface-sunken h-64 rounded" />
-          </div>
-        </div>
-      </main>
-    );
-  }
+      <Container size="wide" className="py-10">
+        <Alert
+          tone="negative"
+          assertive
+          title="Platform statistics could not be loaded"
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => {
+                setState({ status: "loading" });
+                setAttempt((value) => value + 1);
+              }}
+            >
+              Try again
+            </Button>
+          }
+        >
+{state.message}
+        </Alert>
+      </Container>
+    </main>
+  );
+}
+
+  const { data } = state;
 
   return (
     <main id="main-content" className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h1 className="mb-2 text-2xl font-semibold tracking-tight">Admin Dashboard</h1>
-          <p className="text-foreground-secondary">Platform overview and management</p>
-        </div>
+      <Container size="wide" className="py-10">
+      <SectionHeading as="h1" title="Administration" lead="Platform overview and management." />
 
-        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
-          <div className="bg-surface-sunken rounded-lg p-6">
-            <p className="label">Total Users</p>
-            <p className="mt-2 font-mono text-3xl font-semibold">{stats?.totalUsers ?? 0}</p>
-          </div>
-          <div className="bg-surface-sunken rounded-lg p-6">
-            <p className="label">Active Portfolios</p>
-            <p className="mt-2 font-mono text-3xl font-semibold">{stats?.activePortfolios ?? 0}</p>
-          </div>
-          <div className="bg-surface-sunken rounded-lg p-6">
-            <p className="label">Total Volume</p>
-            <p className="mt-2 font-mono text-3xl font-semibold">
-              <Num cents={BigInt(stats?.totalVolumeCents ?? "0")} unit=" MAD" />
-            </p>
-          </div>
-          <div className="bg-surface-sunken rounded-lg p-6">
-            <p className="label">Active Competitions</p>
-            <p className="mt-2 font-mono text-3xl font-semibold">
-              {stats?.activeCompetitions ?? 0}
-            </p>
-          </div>
-        </div>
+      {dismissed ? null : (
+        <DismissibleNotice
+          className="mt-8"
+          tone="warning"
+          onDismiss={() => setDismissed(true)}
+          dismissLabel="Dismiss notice"
+          title="Simulated platform"
+        >
+          Every figure below comes from the paper-trading engine. No real securities or currency
+          are involved.
+        </DismissibleNotice>
+      )}
 
-        <div className="mb-8 grid gap-6 md:grid-cols-2">
-          <div className="bg-surface-sunken rounded-lg p-6">
-            <h2 className="mb-4 text-lg font-semibold tracking-tight">Quick Actions</h2>
-            <div className="space-y-2">
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/admin/users">Manage Users</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/admin/events">Manage Events</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/admin/articles">Manage Articles</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/admin/competitions">Manage Competitions</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/admin/orders">View Orders</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/admin/system">System Status</Link>
-              </Button>
-            </div>
-          </div>
+      <KpiStrip columns={4} className="mt-10">
+        <KpiCard label="Total users" value={<Num value={data.totalUsers} decimals={0} size="xl" />} />
+        <KpiCard
+          label="Active portfolios"
+          value={<Num value={data.activePortfolios} decimals={0} size="xl" />}
+        />
+        <KpiCard
+          label="Total volume"
+          value={<Num cents={BigInt(data.totalVolumeCents ?? "0")} size="xl" unit=" MAD" />}
+        />
+        <KpiCard
+          label="Active competitions"
+          value={<Num value={data.activeCompetitions} decimals={0} size="xl" />}
+          hint={`${data.pendingOrders} orders pending`}
+        />
+      </KpiStrip>
 
-          <div className="bg-surface-sunken rounded-lg p-6">
-            <h2 className="mb-4 text-lg font-semibold tracking-tight">Executive Tools</h2>
-            <div className="space-y-2">
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/executive/events">Event Management</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/executive/articles">Article Publishing</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/executive/team">Team Management</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/executive/competitions">Competition Setup</Link>
-              </Button>
-              <Button asChild variant="secondary" className="w-full justify-start">
-                <Link href="/executive/grants">Member Grants</Link>
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-surface-sunken rounded-lg p-6">
-          <h2 className="mb-4 text-lg font-semibold tracking-tight">Recent Activity</h2>
-          {stats?.recentActivity && stats.recentActivity.length > 0 ? (
-            <div className="space-y-3">
-              {stats.recentActivity.map((activity) => (
-                <div
-                  key={activity.id}
-                  className="border-rule flex items-start justify-between border-b pb-3 last:border-b-0 last:pb-0"
-                >
-                  <div>
-                    <p className="font-medium">{activity.description}</p>
-                    <p className="text-foreground-secondary text-sm">{activity.type}</p>
-                  </div>
-                  <p className="text-foreground-secondary text-sm">
-                    {new Date(activity.timestamp).toLocaleString()}
-                  </p>
-                </div>
+      <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Administration surfaces</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="space-y-2">
+              {ADMIN_NAV.filter((item) => item.href !== "/admin").map((item) => (
+                <li key={item.href}>
+                  <Button asChild variant="secondary" className="w-full justify-start">
+                    <Link href={item.href}>{item.label}</Link>
+                  </Button>
+                </li>
               ))}
-            </div>
-          ) : (
-            <p className="text-foreground-muted">No recent activity</p>
-          )}
-        </div>
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Recent activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data.recentActivity.length > 0 ? (
+              <ul className="divide-rule divide-y">
+                {data.recentActivity.map((activity) => (
+                  <li key={activity.id} className="flex items-start justify-between gap-4 py-3">
+                    <div className="min-w-0">
+                      <p className="text-foreground text-sm font-medium">{activity.description}</p>
+                      <p className="label text-2xs mt-0.5">{activity.type}</p>
+                    </div>
+                    <time
+                      dateTime={activity.timestamp}
+                      className="text-foreground-secondary shrink-0 text-sm"
+                    >
+                      {formatDateTime(activity.timestamp)}
+                    </time>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <EmptyState
+                padding="sm"
+                title="No activity recorded"
+                description="Actions taken in the administration surfaces will appear here."
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
+    </Container>
     </main>
   );
 }

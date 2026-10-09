@@ -1,72 +1,121 @@
 "use client";
 
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { XStack, YStack, Text, styled, Input } from "tamagui";
-import { Search, MoreVertical, ShoppingCart, TrendingUp, TrendingDown } from "lucide-react";
+import { Text } from "tamagui";
+import { AppShell } from "@/components/app-shell";
+import { Badge, StatusBadge, toneForStatus } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { DataTable, EmptyState, type Column } from "@/components/ui/data-table";
+import { PageHeader, ResourceView } from "@/components/page";
+import { api, formatCount, formatDateTime, formatMAD, type AdminOrder } from "@/lib/api";
+import { useResource } from "@/lib/use-resource";
 
-const StyledBadge = styled(YStack, {
-  name: "Badge",
-  borderRadius: "$12",
-  paddingHorizontal: "$2.5",
-  paddingVertical: "$0.5",
-  variants: {
-    variant: {
-      green: { backgroundColor: "$green3", color: "$green11" },
-      yellow: { backgroundColor: "$yellow3", color: "$yellow11" },
-      red: { backgroundColor: "$red3", color: "$red11" },
-    },
-  },
-});
-
+/**
+ * The order ledger.
+ *
+ * This was previously a single row of nine inline `<Text>` children with no
+ * header, so nothing told the reader that "100" was a quantity or "125.50" a
+ * price. It is now a real grid: a header that names every column, fixed widths
+ * so the columns align, and monospaced figures that line up on the decimal.
+ */
 export default function OrdersPage() {
-  return (
-    <XStack flex={1} height="100vh" backgroundColor="$gray1">
-      <Sidebar />
-      <YStack flex={1} overflow="hidden">
-        <Header />
-        <YStack flex={1} style={{ overflowY: "auto" }} padding="$6">
-          <XStack justifyContent="space-between" alignItems="center" marginBottom="$6">
-            <YStack>
-              <Text fontSize="$8" fontWeight="700">Orders</Text>
-              <Text color="$gray10">View and manage trading orders</Text>
-            </YStack>
-          </XStack>
+  const { resource, retry } = useResource((signal) => api.orders(), []);
 
-          <Card>
-            <CardHeader>
-              <XStack justifyContent="space-between" alignItems="center">
-                <CardTitle>Recent Orders</CardTitle>
-                <XStack backgroundColor="$gray2" borderRadius="$2" padding="$2" position="relative" alignItems="center">
-                  <YStack position="absolute" left={8} zIndex={1}>
-                    <Search size={16} color="#888" />
-                  </YStack>
-                  <Input placeholder="Search orders..." paddingLeft={32} paddingRight={16} paddingVertical={8} backgroundColor="transparent" borderWidth={0} />
-                </XStack>
-              </XStack>
-            </CardHeader>
-            <CardContent>
-              <YStack>
-                <YStack borderBottomWidth={1} borderColor="$border" padding="$4" hoverStyle={{ backgroundColor: "$gray2" }}>
-                  <XStack justifyContent="space-between" alignItems="center">
-                    <Text fontFamily="monospace" fontSize="$2">#ORD-001</Text>
-                    <Text fontWeight="600">AMS</Text>
-                    <Text>MARKET</Text>
-                    <XStack alignItems="center" gap="$1"><TrendingUp size={16} color="#16a34a" /><Text color="$green10">BUY</Text></XStack>
-                    <Text>100</Text>
-                    <Text>125.50 MAD</Text>
-                    <StyledBadge variant="green"><Text fontSize="$1">FILLED</Text></StyledBadge>
-                    <Text fontSize="$2" color="$gray8">2 min ago</Text>
-                    <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
-                  </XStack>
-                </YStack>
-              </YStack>
-            </CardContent>
-          </Card>
-        </YStack>
-      </YStack>
-    </XStack>
+  const columns: Column<AdminOrder>[] = [
+    {
+      header: "Order",
+      width: 140,
+      render: (order) => (
+        <Text fontFamily="$mono" fontSize="$2" color="$foregroundSecondary">
+          {order.id}
+        </Text>
+      ),
+    },
+    {
+      header: "Symbol",
+      width: 100,
+      render: (order) => (
+        <Text fontFamily="$mono" fontSize="$2" fontWeight="600" color="$foreground">
+          {order.symbol}
+        </Text>
+      ),
+    },
+    {
+      header: "Side",
+      width: 80,
+      render: (order) => (
+        <Badge tone={order.side.toUpperCase() === "BUY" ? "bull" : "bear"}>{order.side}</Badge>
+      ),
+    },
+    {
+      header: "Type",
+      width: 110,
+      render: (order) => (
+        <Text fontFamily="$mono" fontSize="$1" color="$foregroundSecondary" textTransform="uppercase">
+          {order.orderType}
+        </Text>
+      ),
+    },
+    {
+      header: "Quantity",
+      width: 110,
+      numeric: true,
+      render: (order) => (
+        <Text fontFamily="$mono" fontSize="$2" color="$foreground" textAlign="right">
+          {formatCount(order.quantity)}
+        </Text>
+      ),
+    },
+    {
+      header: "Fill price",
+      width: 130,
+      numeric: true,
+      render: (order) => (
+        <Text fontFamily="$mono" fontSize="$2" color="$foreground" textAlign="right">
+          {order.filledPriceCents ? formatMAD(order.filledPriceCents) : "—"}
+        </Text>
+      ),
+    },
+    {
+      header: "Status",
+      width: 130,
+      render: (order) => <StatusBadge status={order.status} />,
+    },
+    {
+      header: "Placed",
+      width: 170,
+      render: (order) => (
+        <Text fontFamily="$mono" fontSize="$2" color="$foregroundSecondary">
+          {formatDateTime(order.createdAt)}
+        </Text>
+      ),
+    },
+  ];
+
+  return (
+    <AppShell title="Orders">
+      <PageHeader
+        title="Orders"
+        lead="Every simulated order and the price it executed at. This ledger is append-only."
+      />
+
+      <Card padding="$4">
+        <ResourceView resource={resource} onRetry={retry} loading={null}>
+          {(orders) =>
+            orders.length > 0 ? (
+              <DataTable
+                columns={columns}
+                rows={orders}
+                rowKey={(order) => order.id}
+              />
+            ) : (
+              <EmptyState
+                title="No orders yet"
+                description="Orders appear here as soon as members start trading in the simulator."
+              />
+            )
+          }
+        </ResourceView>
+      </Card>
+    </AppShell>
   );
 }

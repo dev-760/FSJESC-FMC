@@ -173,7 +173,7 @@ export default async function EventDetailPage({ params }: PageProps<"/events/[sl
                 <CardTitle>Session details</CardTitle>
               </CardHeader>
               <CardContent>
-                <dl className="divide-border divide-y">
+                <dl className="divide-rule divide-y">
                   <DetailRow label="Date">{formatDate(event.startAt)}</DetailRow>
                   <DetailRow label="Starts">{formatDateTimeLong(event.startAt)}</DetailRow>
                   <DetailRow label="Ends">{formatDateTimeLong(event.endAt)}</DetailRow>
