@@ -11,7 +11,7 @@ import {
 import { AppError, logServerError } from "@/lib/errors";
 import { renderMarkdown } from "./markdown";
 
-import { getSupabaseServerClient } from "@/lib/supabase/server";
+import { getSupabaseServerClient, isSupabaseConfigured } from "@/lib/supabase/server";
 
 /**
  * Article content source (Part 7.2).
@@ -21,6 +21,9 @@ import { getSupabaseServerClient } from "@/lib/supabase/server";
  *
  * Every export is cached. Content changes on the order of weeks and is invalidated
  * by tag on write ("education" / "education:[slug]").
+ *
+ * The Supabase read is gated on `isSupabaseConfigured()` rather than relying on
+ * a thrown error, so an unconfigured environment costs no network round trip.
  */
 
 const CONTENT_ROOT = path.join(process.cwd(), "src/content/topics");
@@ -47,18 +50,20 @@ export async function listArticleSlugs(): Promise<string[]> {
   cacheTag("education");
 
   // 1. Try Supabase
-  try {
-    const supabase = getSupabaseServerClient();
-    const res = await supabase.from("articles").select("slug").order("slug");
-    if (res.data && !res.error && res.data.length > 0) {
-      const rows = res.data as unknown as { slug: string }[];
-      return rows
-        .map((entry) => entry.slug)
-        .filter((slug) => articleSlugSchema.safeParse(slug).success)
-        .sort();
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const res = await supabase.from("articles").select("slug").order("slug");
+      if (res.data && !res.error && res.data.length > 0) {
+        const rows = res.data as unknown as { slug: string }[];
+        return rows
+          .map((entry) => entry.slug)
+          .filter((slug) => articleSlugSchema.safeParse(slug).success)
+          .sort();
+      }
+    } catch {
+      // Network or client failure: fall through to filesystem
     }
-  } catch {
-    // Network or client failure: fall through to filesystem
   }
 
   // 2. Fallback to filesystem
@@ -86,37 +91,39 @@ export async function getArticle(slug: string): Promise<Article> {
   }
 
   // 1. Try Supabase
-  try {
-    const supabase = getSupabaseServerClient();
-    const res = await supabase
-      .from("articles")
-      .select("*")
-      .eq("slug", slug)
-      .maybeSingle();
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const res = await supabase
+        .from("articles")
+        .select("*")
+        .eq("slug", slug)
+        .maybeSingle();
 
-    if (res.data && !res.error) {
-      const row = res.data as unknown as SupabaseArticleRow;
-      const frontmatter: Frontmatter = {
-        title: row.title,
-        category: row.category as Frontmatter["category"],
-        date: new Date(row.published_at),
-        summary: row.summary,
-        readingTime: row.reading_time ?? undefined,
-        related: Array.isArray(row.related) ? row.related : [],
-        essential: Boolean(row.essential),
-      };
-      const { html, tableOfContents, wordCount } = renderMarkdown(row.content);
-      return {
-        slug: row.slug,
-        frontmatter,
-        html,
-        tableOfContents,
-        wordCount,
-        readingTimeMinutes: row.reading_time ?? readingTimeFor(wordCount),
-      };
+      if (res.data && !res.error) {
+        const row = res.data as unknown as SupabaseArticleRow;
+        const frontmatter: Frontmatter = {
+          title: row.title,
+          category: row.category as Frontmatter["category"],
+          date: new Date(row.published_at),
+          summary: row.summary,
+          readingTime: row.reading_time ?? undefined,
+          related: Array.isArray(row.related) ? row.related : [],
+          essential: Boolean(row.essential),
+        };
+        const { html, tableOfContents, wordCount } = renderMarkdown(row.content);
+        return {
+          slug: row.slug,
+          frontmatter,
+          html,
+          tableOfContents,
+          wordCount,
+          readingTimeMinutes: row.reading_time ?? readingTimeFor(wordCount),
+        };
+      }
+    } catch {
+      // Fall through to filesystem
     }
-  } catch {
-    // Fall through to filesystem
   }
 
   // 2. Fallback to filesystem
@@ -138,41 +145,43 @@ export async function getAllArticles(): Promise<Article[]> {
   cacheTag("education");
 
   // 1. Try Supabase batch fetch
-  try {
-    const supabase = getSupabaseServerClient();
-    const res = await supabase.from("articles").select("*").order("published_at");
-    if (res.data && !res.error && res.data.length > 0) {
-      const rows = res.data as unknown as SupabaseArticleRow[];
-      return rows
-        .map((item) => {
-          try {
-            const frontmatter: Frontmatter = {
-              title: item.title,
-              category: item.category as Frontmatter["category"],
-              date: new Date(item.published_at),
-              summary: item.summary,
-              readingTime: item.reading_time ?? undefined,
-              related: Array.isArray(item.related) ? item.related : [],
-              essential: Boolean(item.essential),
-            };
-            const { html, tableOfContents, wordCount } = renderMarkdown(item.content);
-            return {
-              slug: item.slug,
-              frontmatter,
-              html,
-              tableOfContents,
-              wordCount,
-              readingTimeMinutes: item.reading_time ?? readingTimeFor(wordCount),
-            };
-          } catch (e) {
-            logServerError(`content/article:${item.slug}`, e);
-            return null;
-          }
-        })
-        .filter((a): a is Article => a !== null);
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseServerClient();
+      const res = await supabase.from("articles").select("*").order("published_at");
+      if (res.data && !res.error && res.data.length > 0) {
+        const rows = res.data as unknown as SupabaseArticleRow[];
+        return rows
+          .map((item) => {
+            try {
+              const frontmatter: Frontmatter = {
+                title: item.title,
+                category: item.category as Frontmatter["category"],
+                date: new Date(item.published_at),
+                summary: item.summary,
+                readingTime: item.reading_time ?? undefined,
+                related: Array.isArray(item.related) ? item.related : [],
+                essential: Boolean(item.essential),
+              };
+              const { html, tableOfContents, wordCount } = renderMarkdown(item.content);
+              return {
+                slug: item.slug,
+                frontmatter,
+                html,
+                tableOfContents,
+                wordCount,
+                readingTimeMinutes: item.reading_time ?? readingTimeFor(wordCount),
+              };
+            } catch (e) {
+              logServerError(`content/article:${item.slug}`, e);
+              return null;
+            }
+          })
+          .filter((a): a is Article => a !== null);
+      }
+    } catch {
+      // Fall through to slug mapping
     }
-  } catch {
-    // Fall through to slug mapping
   }
 
   // 2. Fallback

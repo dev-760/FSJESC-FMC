@@ -580,7 +580,7 @@ function StatisticsSection() {
 
 function CallToAction() {
   return (
-    <Section spacing="loose" className="border-rule border-t">
+    <Section contained={false} spacing="loose" className="border-rule border-t">
       <Container size="prose" className="text-center">
         <h2 className="text-3xl font-semibold tracking-tight">Join the programme</h2>
         <p className="text-foreground-secondary mt-4 text-base leading-relaxed">

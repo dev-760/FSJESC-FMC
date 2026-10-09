@@ -1,81 +1,82 @@
 "use client";
 
-import { Sidebar } from "@/components/sidebar";
-import { Header } from "@/components/header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { XStack, YStack, Text, styled, Input } from "tamagui";
-import { Search, Plus, MoreVertical, FileText, Eye, Star } from "lucide-react";
-
-const StyledBadge = styled(YStack, {
-  name: "Badge",
-  borderRadius: "$12",
-  paddingHorizontal: "$2.5",
-  paddingVertical: "$0.5",
-  variants: {
-    variant: {
-      blue: { backgroundColor: "$blue3", color: "$blue11" },
-      purple: { backgroundColor: "$purple3", color: "$purple11" },
-      green: { backgroundColor: "$green3", color: "$green11" },
-      orange: { backgroundColor: "$orange3", color: "$orange11" },
-    },
-  },
-});
+import { Text } from "tamagui";
+import { AppShell } from "@/components/app-shell";
+import { StatusBadge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { DataTable, EmptyState, type Column } from "@/components/ui/data-table";
+import { PageHeader, ResourceView } from "@/components/page";
+import { api, formatDate, type AdminArticle } from "@/lib/api";
+import { useResource } from "@/lib/use-resource";
 
 export default function ArticlesPage() {
-  return (
-    <XStack flex={1} height="100vh" backgroundColor="$gray1">
-      <Sidebar />
-      <YStack flex={1} overflow="hidden">
-        <Header />
-        <YStack flex={1} style={{ overflowY: "auto" }} padding="$6">
-          <XStack justifyContent="space-between" alignItems="center" marginBottom="$6">
-            <YStack>
-              <Text fontSize="$8" fontWeight="700">Articles</Text>
-              <Text color="$gray10">Manage educational content and publications</Text>
-            </YStack>
-            <Button>
-              <Plus size={16} />
-              New Article
-            </Button>
-          </XStack>
+  const { resource, retry } = useResource((signal) => api.articles(), []);
 
-          <Card>
-            <CardHeader>
-              <XStack justifyContent="space-between" alignItems="center">
-                <CardTitle>All Articles</CardTitle>
-                <XStack backgroundColor="$gray2" borderRadius="$2" padding="$2" position="relative" alignItems="center">
-                  <YStack position="absolute" left={8} zIndex={1}>
-                    <Search size={16} color="#888" />
-                  </YStack>
-                  <Input placeholder="Search articles..." paddingLeft={32} paddingRight={16} paddingVertical={8} backgroundColor="transparent" borderWidth={0} />
-                </XStack>
-              </XStack>
-            </CardHeader>
-            <CardContent>
-              <YStack space="$4">
-                <YStack borderRadius="$3" borderWidth={1} borderColor="$border" padding="$4" hoverStyle={{ backgroundColor: "$gray2" }}>
-                  <XStack justifyContent="space-between" alignItems="flex-start">
-                    <YStack flex={1}>
-                      <XStack alignItems="center" gap="$2">
-                        <Text fontWeight="600">Introduction to Stock Markets</Text>
-                        <Star size={16} fill="#fbbf24" color="#fbbf24" />
-                      </XStack>
-                      <Text fontSize="$2" color="$gray10" marginTop="$2">A comprehensive guide to understanding how stock markets work</Text>
-                      <XStack flexWrap="wrap" gap="$4" marginTop="$3">
-                        <StyledBadge variant="blue"><Text fontSize="$1">Fundamentals</Text></StyledBadge>
-                        <XStack alignItems="center" gap="$1"><Eye size={16} /><Text fontSize="$2" color="$gray8">1,234 views</Text></XStack>
-                        <Text fontSize="$2" color="$gray8">Published: Jan 10, 2024</Text>
-                      </XStack>
-                    </YStack>
-                    <Button variant="ghost" size="icon"><MoreVertical size={16} /></Button>
-                  </XStack>
-                </YStack>
-              </YStack>
-            </CardContent>
-          </Card>
-        </YStack>
-      </YStack>
-    </XStack>
+  const columns: Column<AdminArticle>[] = [
+    {
+      header: "Title",
+      width: 360,
+      render: (article) => (
+        <Text fontSize="$2" fontWeight="600" color="$foreground" numberOfLines={1}>
+          {article.title}
+        </Text>
+      ),
+    },
+    {
+      header: "Category",
+      width: 160,
+      render: (article) => (
+        <Text fontFamily="$mono" fontSize="$1" color="$foregroundSecondary" textTransform="uppercase">
+          {article.category ?? "—"}
+        </Text>
+      ),
+    },
+    {
+      header: "Updated",
+      width: 140,
+      render: (article) =>
+        article.updatedAt ? (
+          <Text fontFamily="$mono" fontSize="$2" color="$foregroundSecondary">
+            {formatDate(article.updatedAt)}
+          </Text>
+        ) : (
+          <Text fontSize="$2" color="$foregroundMuted">
+            —
+          </Text>
+        ),
+    },
+    {
+      header: "Status",
+      width: 110,
+      render: (article) => <StatusBadge status={article.status ?? "draft"} />,
+    },
+  ];
+
+  return (
+    <AppShell title="Articles">
+      <PageHeader
+        title="Articles"
+        lead="Published education material in the club's topic library."
+      />
+
+      <Card padding="$4">
+        <ResourceView resource={resource} onRetry={retry} loading={null}>
+          {(articles) =>
+            articles.length > 0 ? (
+              <DataTable
+                columns={columns}
+                rows={articles}
+                rowKey={(article) => article.id}
+              />
+            ) : (
+              <EmptyState
+                title="No articles published"
+                description="Topics appear here once they are written and published."
+              />
+            )
+          }
+        </ResourceView>
+      </Card>
+    </AppShell>
   );
 }

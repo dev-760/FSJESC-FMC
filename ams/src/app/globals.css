@@ -1,1 +1,91 @@
-/* Tamagui handles styling internally - no additional CSS needed */
+/**
+ * Global styles.
+ *
+ * Tamagui handles component styling; this file carries the few things its typed
+ * style surface cannot express here — media-query breakpoints, native control
+ * theming, and focus rings.
+ *
+ * The dark theme is declared to the browser as well as to Tamagui, so native
+ * scrollbars and form controls render dark instead of flashing light against a
+ * dark page. This mirrors `color-scheme: dark` on the public site.
+ */
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: #07080b;
+  color: #f9fafb;
+  -webkit-font-smoothing: antialiased;
+}
+
+/**
+ * Navigation breakpoint.
+ *
+ * The sidebar is persistent from 768px up and collapses into a drawer below it.
+ * Tamagui's typed stack props accept neither a `md` variant nor a `mediaQuery`
+ * block in this version, and `useMedia()` resolves against matchMedia at
+ * runtime, which is not worth the hydration risk for a layout decision — so the
+ * breakpoint is plain CSS, evaluated before first paint.
+ */
+.ams-sidebar {
+  display: none;
+}
+
+.ams-drawer-toggle {
+  display: flex;
+}
+
+@media (min-width: 768px) {
+  .ams-sidebar {
+    display: flex;
+  }
+
+  .ams-drawer-toggle {
+    display: none;
+  }
+}
+
+/**
+ * A visible focus ring on every interactive element.
+ *
+ * Tamagui's press styling gives pointer users feedback but removes the outline
+ * for keyboard users, so focus is restored explicitly here. The ring is 2px of
+ * the accent colour, matching the public site.
+ */
+:where(a, button, [role="button"], input, select, textarea):focus-visible {
+  outline: 2px solid #00e599;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+::selection {
+  background-color: rgba(0, 229, 153, 0.24);
+  color: #f9fafb;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a2f3a transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #2a2f3a;
+  border-radius: 4px;
+}
