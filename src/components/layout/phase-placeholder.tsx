@@ -32,7 +32,7 @@ export function PhasePlaceholder({
         <h1 className="mt-3 text-3xl font-semibold tracking-tight">{title}</h1>
         <p className="text-foreground-secondary mt-4 text-base leading-relaxed">{summary}</p>
 
-        <div className="border-border-strong bg-surface-subtle mt-10 rounded-lg border border-dashed p-6">
+        <div className="border-rule-strong bg-surface-raised mt-10 rounded-lg border border-dashed p-6">
           <h2 className="text-sm font-semibold tracking-tight">What will be here</h2>
           <ul className="text-foreground-secondary mt-3 space-y-2 text-sm leading-relaxed">
             {whatIsComing.map((item) => (

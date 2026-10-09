@@ -23,6 +23,8 @@ const publicEnvSchema = z.object({
   NEXT_PUBLIC_CONTACT_EMAIL: z.email().default("contact@fsjesc-fmc.local"),
   NEXT_PUBLIC_FEATURE_SIMULATOR: featureFlag,
   NEXT_PUBLIC_FEATURE_ADMIN: featureFlag,
+  NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;
@@ -37,6 +39,8 @@ export function getPublicEnv(): PublicEnv {
     NEXT_PUBLIC_CONTACT_EMAIL: process.env.NEXT_PUBLIC_CONTACT_EMAIL,
     NEXT_PUBLIC_FEATURE_SIMULATOR: process.env.NEXT_PUBLIC_FEATURE_SIMULATOR,
     NEXT_PUBLIC_FEATURE_ADMIN: process.env.NEXT_PUBLIC_FEATURE_ADMIN,
+    NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+    NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   });
   if (!parsed.success) {
     const issues = parsed.error.issues

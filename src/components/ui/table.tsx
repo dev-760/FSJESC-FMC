@@ -33,7 +33,7 @@ export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSecti
   return (
     <tbody
       className={cn(
-        "[&_tr]:border-rule-hairline [&_tr]:border-b [&_tr:last-child]:border-0",
+        "[&_tr]:border-rule [&_tr]:border-b [&_tr:last-child]:border-0",
         className,
       )}
       {...props}
@@ -95,7 +95,7 @@ export function TableCaption({ className, ...props }: HTMLAttributes<HTMLTableCa
         // A caption is annotation, so it belongs under the table. The UA default
         // is `caption-side: top`, which made the board read as a paragraph with a
         // table attached rather than as a table with a note.
-        "border-rule-hairline text-foreground-muted caption-bottom border-t px-3 py-2.5 text-left text-xs leading-relaxed",
+        "border-rule text-foreground-muted caption-bottom border-t px-3 py-2.5 text-left text-xs leading-relaxed",
         className,
       )}
       {...props}

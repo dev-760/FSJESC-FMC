@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { memo } from "react";
 import {
   Table,
   TableBody,
@@ -80,38 +81,14 @@ export function QuoteBoard({
         </TableHeader>
         <TableBody>
           {rows.map(({ asset, changeBps }, index) => (
-            <TableRow
+            <QuoteRowComponent
               key={asset.ticker}
-              className={cn(animate && "board-row")}
-              style={animate ? { animationDelay: `${index * 45}ms` } : undefined}
-            >
-              <Td>
-                <Link
-                  href={`/simulator/market/${asset.ticker.toLowerCase()}`}
-                  className="text-accent-text focus-visible:outline-ring rounded font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
-                >
-                  {asset.ticker}
-                </Link>
-              </Td>
-              <Td className="text-foreground-secondary">{asset.name}</Td>
-              <Td className="text-foreground-secondary">{SECTOR_LABELS[asset.sector]}</Td>
-              <Td numeric className="font-medium">
-                {formatMAD(money(asset.startingPriceCents))}
-              </Td>
-              <Td numeric>
-                <ChangeIndicator bps={changeBps} size="sm" />
-              </Td>
-              {showParameters ? (
-                <>
-                  <Td numeric className="text-foreground-muted">
-                    {(asset.annualVolatility * 100).toFixed(0)}%
-                  </Td>
-                  <Td numeric className="text-foreground-muted">
-                    {(asset.annualDrift * 100).toFixed(1)}%
-                  </Td>
-                </>
-              ) : null}
-            </TableRow>
+              asset={asset}
+              changeBps={changeBps}
+              index={index}
+              animate={animate}
+              showParameters={showParameters}
+            />
           ))}
         </TableBody>
         <TableCaption>{caption}</TableCaption>
@@ -145,3 +122,54 @@ function deterministicChangeBps(ticker: string): bigint {
   const spread = (hash % 551) - 240;
   return BigInt(spread === 0 ? 17 : spread);
 }
+
+/**
+ * Individual quote row, memoized to prevent unnecessary re-renders.
+ */
+const QuoteRowComponent = memo(function QuoteRowComponent({
+  asset,
+  changeBps,
+  index,
+  animate,
+  showParameters,
+}: {
+  asset: AssetDefinition;
+  changeBps: bigint;
+  index: number;
+  animate: boolean;
+  showParameters: boolean;
+}) {
+  return (
+    <TableRow
+      className={cn(animate && "board-row", "hover:bg-surface-inset/60 transition-colors")}
+      style={animate ? { animationDelay: `${index * 45}ms` } : undefined}
+    >
+      <Td>
+        <Link
+          href={`/simulator/market/${asset.ticker.toLowerCase()}`}
+          className="text-bull hover:text-bull-hover font-mono focus-visible:outline-ring rounded font-semibold underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2"
+        >
+          {asset.ticker}
+        </Link>
+      </Td>
+      <Td className="text-foreground-secondary">{asset.name}</Td>
+      <Td className="text-foreground-secondary">{SECTOR_LABELS[asset.sector]}</Td>
+      <Td numeric className="font-medium">
+        {formatMAD(money(asset.startingPriceCents))}
+      </Td>
+      <Td numeric>
+        <ChangeIndicator bps={changeBps} size="sm" />
+      </Td>
+      {showParameters ? (
+        <>
+          <Td numeric className="text-foreground-muted">
+            {(asset.annualVolatility * 100).toFixed(0)}%
+          </Td>
+          <Td numeric className="text-foreground-muted">
+            {(asset.annualDrift * 100).toFixed(1)}%
+          </Td>
+        </>
+      ) : null}
+    </TableRow>
+  );
+});

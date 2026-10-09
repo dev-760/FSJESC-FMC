@@ -3,10 +3,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Container, RuledList, Section, SectionHeading } from "@/components/layout/container";
 import { Alert } from "@/components/ui/alert";
-import { QuoteBoard, referenceRows } from "@/components/financial/quote-board";
+import { TerminalPreview } from "@/components/financial/terminal-preview";
+import { KpiCard, KpiStrip } from "@/components/primitives";
+import { Num } from "@/components/primitives/num";
 import { formatMAD } from "@/lib/format";
 import { money } from "@/lib/money";
-import { DISC_3, DISC_4, SITE } from "@/config/site";
+import { DISC_3, DISC_4, SIMULATION, SITE } from "@/config/site";
 
 export const metadata: Metadata = {
   // No `title` override: the root layout's default is `${SITE.name} — ${SITE.tagline}`,
@@ -33,8 +35,38 @@ export const metadata: Metadata = {
  * under Cache Components (DECISIONS.md D1).
  */
 export default function HomePage() {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "EducationalOrganization",
+        "@id": `${SITE.url}/#organization`,
+        name: SITE.name,
+        alternateName: SITE.shortName,
+        url: SITE.url,
+        description: SITE.description,
+        parentOrganization: {
+          "@type": "CollegeOrUniversity",
+          name: "Faculté des Sciences Juridiques, Économiques et Sociales de Casablanca",
+          alternateName: "FSJES Casablanca",
+        },
+      },
+      {
+        "@type": "Website",
+        "@id": `${SITE.url}/#website`,
+        url: SITE.url,
+        name: SITE.name,
+        publisher: { "@id": `${SITE.url}/#organization` },
+      },
+    ],
+  };
+
   return (
     <main id="main-content" className="flex-1">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Hero />
       <ClubIntroduction />
       <WhatWeDo />
@@ -52,16 +84,21 @@ export default function HomePage() {
 /* ── 1. Hero ─────────────────────────────────────────────────────────────── */
 
 function Hero() {
-  const rows = referenceRows().slice(0, 6);
-
   return (
-    <section className="border-rule bg-surface border-b">
+    <section className="hero-mesh border-rule bg-canvas border-b">
       <Container
         size="wide"
-        className="grid gap-10 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-14 lg:py-20"
+        className="grid gap-10 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-12 lg:py-20"
       >
         <div className="flex flex-col justify-center">
-          <h1 className="text-4xl font-semibold tracking-[-0.028em] sm:text-5xl">
+          {/*
+            One machine fact above the headline — the number of instruments, which is
+            what a reader is about to see in the terminal beside this text. An eyebrow
+            phrase like "The Club for Future" would be decoration; this is data.
+          */}
+          <p className="label text-warning">Simulated market · 8 instruments · MAD</p>
+
+          <h1 className="mt-4 text-4xl sm:text-5xl">
             A student terminal for learning how markets actually work.
           </h1>
           <p className="measure text-foreground-secondary mt-6 text-lg leading-relaxed">
@@ -82,28 +119,17 @@ function Hero() {
             </Button>
           </div>
 
-          <p className="border-rule-strong measure text-foreground-muted mt-8 border-l pl-4 text-sm leading-relaxed">
+          <p className="border-rule-strong measure text-foreground-secondary mt-8 border-l pl-4 text-sm leading-relaxed">
             {DISC_4}
           </p>
         </div>
 
         {/*
-          The first viewport is the thesis, not a pitch. A terminal's opening
-          screen is a board, so the hero is the actual instrument set — real
-          tickers, real modelled parameters — rather than an illustration of one.
-          Parameter columns are hidden here because the narrower column would wrap
-          the column heads; the full board carries them.
+          The first viewport is the thesis, not a pitch. A terminal's opening screen is
+          a board, so the hero *is* the instrument set — the same engine the simulator
+          runs on, not an illustration of it.
         */}
-        <div className="lg:pt-1">
-          <QuoteBoard
-            rows={rows}
-            showParameters={false}
-            caption="The instrument set. The change column is a deterministic placeholder until the price model ships."
-          />
-          <p className="label mt-2.5">
-            Six of eight instruments — the full board is on the market page
-          </p>
-        </div>
+        <TerminalPreview className="lg:pt-1" />
       </Container>
     </section>
   );
@@ -122,19 +148,19 @@ function ClubIntroduction() {
         />
         <div className="text-foreground-secondary space-y-5 text-base leading-relaxed">
           <p>
-            A supply-and-demand curve, a volatility formula, a sentence about risk aversion — and
-            then the mechanics that decide whether any of it works are left implicit. How an order
-            becomes a fill. Why a quoted price differs from an achievable one. What a drawdown feels
-            like while it is happening.
+            A supply-and-demand curve, a volatility formula, and a sentence about risk aversion
+            often leave the underlying mechanics implicit. How an order becomes a fill, why a
+            quoted price differs from an achievable execution, and how a drawdown feels while it
+            is unfolding require direct experience.
           </p>
           <p>
-            So the simulator is built to make those mechanics visible. You place real orders against
-            a deterministic price model, watch the consequences accumulate in a ledger that cannot
-            be edited, and see your own drawdown measured rather than assumed.
+            The simulator makes those mechanics visible. You place real orders against a
+            deterministic price model, watch the consequences accumulate in an immutable ledger,
+            and observe your own drawdown measured rather than assumed.
           </p>
           <p>
             Members build the programme too: curating topics, designing scenarios, computing and
-            presenting competition analytics, running sessions. The standard is academic.
+            presenting competition analytics, and running sessions. The standard is academic.
           </p>
         </div>
       </div>
@@ -169,7 +195,7 @@ const ACTIVITIES = [
   {
     title: "Scenario challenges",
     detail:
-      "Time-boxed exercises under defined macroeconomic assumptions. Scored on total portfolio return, with the lower maximum drawdown winning a tie — never on absolute profit in dirhams.",
+      "Time-boxed exercises under defined macroeconomic assumptions. scored on total portfolio return, with the lower maximum drawdown winning a tie; never on absolute profit in dirhams.",
     href: "/competitions",
     linkLabel: "Current challenges",
   },
@@ -210,7 +236,7 @@ const WRITING_STANDARDS = [
   ],
   [
     "Show the arithmetic",
-    "Risk measures arrive with their formula and a worked example, not just a name.",
+    "Risk measures arrive with their mathematical formula and a worked numerical example alongside the term.",
   ],
   [
     "State the limits",
@@ -246,8 +272,6 @@ function EducationSection() {
 /* ── 5. Paper-trading simulator ──────────────────────────────────────────── */
 
 function SimulatorSection() {
-  const rows = referenceRows().slice(2, 6);
-
   return (
     <Section className="border-rule bg-surface border-y">
       <div className="grid gap-12 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] lg:items-start">
@@ -255,19 +279,24 @@ function SimulatorSection() {
           <SectionHeading
             as="h2"
             title="A market that behaves the same way every time"
-            lead="Eight invented instruments across six sectors, priced in MAD by a hash-seeded deterministic model. The same input yields the same price on every machine — which is what makes a classroom discussion of results possible at all."
+            lead="Eight invented instruments across six sectors, priced in MAD by a hash-seeded deterministic model. The same input yields the same price on every machine, which makes classroom discussions reproducible."
           />
           <div className="mt-10">
             <RuledList
               items={[
                 {
                   term: "Starting cash",
-                  detail: `Each new portfolio is funded with ${formatMAD(money(10_000_000n))} of simulated capital.`,
+                  detail: `Each new portfolio is funded with ${formatMAD(money(SIMULATION.defaultStartingCashCents))} of simulated capital.`,
                 },
                 {
-                  term: "Order types",
+                  term: "Execution",
                   detail:
-                    "Market and limit orders, with a review step before anything executes and a two-step confirmation before submission.",
+                    "Market and limit orders, with a review step before anything executes. A buy fills at the ask and a sell at the bid, so the spread costs you exactly what it would in a real book.",
+                },
+                {
+                  term: "The fee is part of the cost basis",
+                  detail:
+                    "Commission is capitalised into a position's break-even price, so realised P&L reconciles exactly with the change in your cash.",
                 },
                 {
                   term: "Permanent ledger",
@@ -292,13 +321,37 @@ function SimulatorSection() {
           </div>
         </div>
 
+        {/*
+          The model described on the left, stated as arithmetic on the right. A reader
+          who wants to know whether the determinism claim is credible gets the formula
+          and two real prices, not a reassurance.
+        */}
         <div className="lg:sticky lg:top-24">
-          <QuoteBoard
-            rows={rows}
-            caption="A four-instrument excerpt. The full board, with every instrument and its modelled parameters, is on the market page."
-            showParameters={false}
-            animate={false}
-          />
+          <div className="border-rule bg-surface-sunken border">
+            <p className="label border-rule border-b px-4 py-2.5">The price model</p>
+            <div className="space-y-4 p-4">
+              <pre className="numeric text-foreground-secondary text-xs leading-relaxed">
+                <code>{`S(t) = S(0) · exp(
+  (μ − σ²/2)·t + σ·√t·Z(t)
+)`}</code>
+              </pre>
+              <RuledList
+                items={[
+                  { term: "S(0)", detail: "The instrument's starting price, in integer centimes." },
+                  { term: "μ, σ", detail: "Its modelled annual drift and volatility." },
+                  {
+                    term: "Z(t)",
+                    detail:
+                      "A sum of one standard normal deviate per minute, each derived from (seed, symbol, minute).",
+                  },
+                ]}
+              />
+              <p className="text-2xs text-muted-allowed leading-relaxed">
+                Recomputable by hand from the published parameters. Students can compare notes and verify every number directly.
+              </p>
+            </div>
+          </div>
+
           <Alert tone="warning" className="mt-4">
             <p>
               These are not real securities. No company, index or exchange is represented, and
@@ -467,35 +520,58 @@ function StatisticsSection() {
         title="What the programme currently holds"
         lead="Figures below describe the platform's own contents. They are not performance claims."
       />
+
+      <KpiStrip columns={4} className="mt-10">
+        <KpiCard
+          label="Published topics"
+          value={<Num value={20} decimals={0} size="xl" />}
+          hint="Across six categories"
+        />
+        <KpiCard
+          label="Instruments"
+          value={<Num value={8} decimals={0} size="xl" />}
+          hint="Fictional, six sectors"
+        />
+        <KpiCard
+          label="Scenarios"
+          value={<Num value={6} decimals={0} size="xl" />}
+          hint="Published assumptions"
+        />
+        <KpiCard
+          label="Starting capital"
+          value={<Num cents={SIMULATION.defaultStartingCashCents} size="xl" />}
+          hint="Simulated cash per portfolio"
+        />
+      </KpiStrip>
+
       <div className="mt-10">
         <RuledList
           columns={2}
           items={[
             {
-              term: "Published topics",
-              detail: "20 across six categories, from first principles to portfolio construction.",
+              term: "Currency",
+              detail:
+                "Moroccan dirham (MAD) throughout, held in integer centimes so no balance is a float. Simulated.",
             },
-            {
-              term: "Simulated instruments",
-              detail: "8 fictional Moroccan instruments across six sectors.",
-            },
-            {
-              term: "Scenario challenges",
-              detail: "6 macro scenarios, each with published assumptions.",
-            },
-            {
-              term: "Starting capital",
-              detail: `${formatMAD(money(10_000_000n))} of simulated cash per portfolio.`,
-            },
-            { term: "Currency", detail: "Moroccan dirham (MAD) throughout. Simulated." },
             {
               term: "Fee model",
-              detail: "Zero brokerage commission, so the focus stays on market mechanics.",
+              detail:
+                "Zero brokerage commission, so the focus stays on market mechanics and the spread.",
+            },
+            {
+              term: "Settlement",
+              detail:
+                "Positions settle T+2, skipping weekends. A share bought on Friday is sellable on Tuesday.",
+            },
+            {
+              term: "Short selling",
+              detail:
+                "Not available. A sell larger than the position fills what is held and says so, rather than silently inventing a borrow.",
             },
           ]}
         />
       </div>
-      <p className="text-foreground-muted mt-8 text-xs">{DISC_3}</p>
+      <p className="text-muted-allowed mt-8 text-xs">{DISC_3}</p>
     </Section>
   );
 }
@@ -508,9 +584,9 @@ function CallToAction() {
       <Container size="prose" className="text-center">
         <h2 className="text-3xl font-semibold tracking-tight">Join the programme</h2>
         <p className="text-foreground-secondary mt-4 text-base leading-relaxed">
-          An account gives you a simulated portfolio, access to competitions, event registration,
-          and the member resources. It takes a minute and costs nothing — there is no mechanism to
-          move real money on this platform.
+          An account provides a simulated portfolio, access to competitions, event registration,
+          and member resources. Registration is free; the platform contains no mechanism to move
+          real money.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-2">
           <Button asChild size="lg">

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { IBM_Plex_Mono, IBM_Plex_Sans } from "next/font/google";
+import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Suspense } from "react";
 import { getPublicEnv } from "@/config/env-public";
 import { SITE, DISC_1 } from "@/config/site";
 import { SkipLink } from "@/components/layout/skip-link";
@@ -11,18 +12,29 @@ import { LOCALE_CONFIG } from "@/i18n/strings";
 import "./globals.css";
 
 /**
- * Typeface: IBM Plex Sans for interface text, IBM Plex Mono for figures.
- * Self-hosted by `next/font` (Part 10) — no third-party font request at runtime.
+ * Typefaces, self-hosted at build by `next/font` — zero runtime font request, and
+ * no CDN dependency (Part 10).
+ *
+ * Inter for body and UI. Inter Tight for headings, at -0.02em tracking.
+ * JetBrains Mono for every number, ticker, timestamp and id, with tabular figures
+ * applied globally in globals.css.
  */
-const plexSans = IBM_Plex_Sans({
-  variable: "--font-ibm-plex-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600"],
   display: "swap",
 });
 
-const plexMono = IBM_Plex_Mono({
-  variable: "--font-ibm-plex-mono",
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
+  subsets: ["latin"],
+  weight: ["600", "700"],
+  display: "swap",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
   display: "swap",
@@ -39,8 +51,8 @@ function siteUrl(): URL {
 export const metadata: Metadata = {
   metadataBase: siteUrl(),
   title: {
-    default: `${SITE.name} — ${SITE.tagline}`,
-    template: `%s — ${SITE.shortName}`,
+    default: `${SITE.name} | ${SITE.tagline}`,
+    template: `%s | ${SITE.shortName}`,
   },
   description: SITE.description,
   applicationName: SITE.name,
@@ -61,20 +73,16 @@ export const metadata: Metadata = {
     type: "website",
     siteName: SITE.name,
     locale: "en",
-    title: `${SITE.name} — ${SITE.tagline}`,
+    title: `${SITE.name} | ${SITE.tagline}`,
     description: SITE.description,
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: `${SITE.name} — ${SITE.tagline}`,
+    title: `${SITE.name} | ${SITE.tagline}`,
     description: SITE.description,
   },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, "max-image-preview": "large" },
-  },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   formatDetection: { telephone: false, address: false, email: false },
 };
 
@@ -82,10 +90,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0d1117" },
-  ],
+  themeColor: "#07080B",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -97,31 +102,19 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang={SITE.locale}
       dir={LOCALE_CONFIG.en.dir}
-      className={`${plexSans.variable} ${plexMono.variable} h-full`}
+      data-theme="dark"
+      className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
     >
-      <head>
-        {/*
-          Applies the stored colour scheme before first paint to avoid a flash.
-          This is deliberately a render-blocking synchronous script in <head>:
-          deferring it would reintroduce exactly the flash it exists to prevent.
-          It lives in public/theme-init.js rather than inline so that no
-          dangerouslySetInnerHTML is required (Part 8.4), and it is same-origin
-          and cacheable, so a strict `script-src 'self'` CSP is sufficient.
-        */}
-        {/* eslint-disable-next-line @next/next/no-sync-scripts -- must run before first paint */}
-        <script src="/theme-init.js" />
-      </head>
       <body className="bg-canvas text-foreground flex min-h-full flex-col">
         <SkipLink targetId="main-content" />
-        {/* The simulated-market notice is a permanent site-wide condition, not a
-            page detail (Part 0.4, DISC-1). */}
-        <div
-          role="note"
-          className="border-border bg-surface-inset text-2xs text-foreground-secondary border-b px-4 py-1.5 text-center font-medium tracking-wide"
-        >
-          {DISC_1}
-        </div>
-        <SiteHeader navItems={navItems} accountSlot={<AccountSlot />} />
+        {/*
+          The simulated-market notice is a permanent site-wide condition, not a
+          page detail (Part 0.4, DISC-1). It sits inside the header stack so the
+          56px nav + 32px ticker rhythm is not broken by a third bar.
+        */}
+        <Suspense fallback={null}>
+          <SiteHeader navItems={navItems} disclaimer={DISC_1} accountSlot={<AccountSlot />} />
+        </Suspense>
         {children}
         <SiteFooter />
       </body>

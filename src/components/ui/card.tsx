@@ -21,7 +21,7 @@ const cardVariants = cva("rounded-lg", {
       /** The default: a hairline and a slightly raised surface. */
       rule: "border border-rule bg-surface-raised",
       /** Recedes into the page. Used for secondary blocks inside a panel. */
-      sunken: "border border-rule-hairline bg-surface-sunken",
+      sunken: "border border-rule bg-surface-sunken",
       /** The page itself. For full-bleed blocks that need no box. */
       flat: "bg-transparent",
       /** Above the page. Only for genuinely floating surfaces. */

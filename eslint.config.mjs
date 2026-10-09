@@ -130,6 +130,15 @@ const eslintConfig = defineConfig([
       "no-console": "off",
     },
   },
+  {
+    // Domain unit tests exercise the loader that serves them. That is the one
+    // place a domain test reaches outward, and it is a test, not runtime code —
+    // the layering that matters (N10) still holds for every module in `src`.
+    files: ["src/domain/**/*.test.ts"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
   prettier,
   {
     // Config files, spec files and build scripts are plain JS outside the app's
@@ -161,6 +170,8 @@ const eslintConfig = defineConfig([
     "next-env.d.ts",
     "drizzle/**",
     "public/**",
+    "ams/**",
+    "api/**",
   ]),
 ]);
 

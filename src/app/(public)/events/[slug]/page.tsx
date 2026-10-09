@@ -192,7 +192,7 @@ export default async function EventDetailPage({ params }: PageProps<"/events/[sl
                 <div className="mt-6">
                   {status === "open" ? (
                     <Button asChild fullWidth>
-                      <Link href="/create-account">Register — sign in to continue</Link>
+                      <Link href="/create-account">Register: sign in to continue</Link>
                     </Button>
                   ) : (
                     <Button fullWidth disabled>

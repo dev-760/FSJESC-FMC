@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { RuledList } from "@/components/layout/container";
 import { Alert } from "@/components/ui/alert";
 import { QuoteBoard, referenceRows } from "@/components/financial/quote-board";
+import { OrderTicketWrapper } from "@/components/simulator/order-ticket-wrapper";
+import { InstrumentTerminal } from "@/components/simulator/instrument-terminal";
+import { SimulatorNav } from "@/components/simulator/simulator-nav";
 import { ASSETS, SECTOR_LABELS } from "@/data/assets";
-import { formatMAD } from "@/lib/format";
-import { money } from "@/lib/money";
-import { DISC_1 } from "@/config/site";
 
 export function generateStaticParams(): Array<{ ticker: string }> {
   return ASSETS.map((asset) => ({ ticker: asset.ticker.toLowerCase() }));
@@ -30,10 +30,10 @@ export async function generateMetadata({
     return { title: "Instrument not found", robots: { index: false, follow: false } };
   }
 
-  const description = `${asset.ticker} — ${asset.name}, a fictional instrument on the FSJESC Financial Markets Club simulated market. ${SECTOR_LABELS[asset.sector]} sector. Simulated price, no real security.`;
+  const description = `${asset.ticker} | ${asset.name}, a fictional instrument on the FSJESC Financial Markets Club simulated market. ${SECTOR_LABELS[asset.sector]} sector. Simulated price, no real security.`;
 
   return {
-    title: `${asset.ticker} — ${asset.name}`,
+    title: `${asset.ticker} | ${asset.name}`,
     description,
     alternates: { canonical: `/simulator/market/${asset.ticker.toLowerCase()}` },
   };
@@ -52,12 +52,12 @@ export default async function InstrumentPage({ params }: PageProps<"/simulator/m
   );
   const allRows = referenceRows(ASSETS);
   const peerRows = allRows.filter((row) => peers.some((peer) => peer.ticker === row.asset.ticker));
-  const price = money(asset.startingPriceCents);
 
   return (
     <main id="main-content" className="flex-1">
-      <div className="mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-        <nav aria-label="Breadcrumb" className="mb-8">
+      <SimulatorNav />
+      <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <nav aria-label="Breadcrumb" className="mb-6">
           <ol className="text-foreground-secondary flex items-center gap-2 text-sm">
             <li>
               <Link
@@ -76,62 +76,18 @@ export default async function InstrumentPage({ params }: PageProps<"/simulator/m
           </ol>
         </nav>
 
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:gap-16">
-          {/* ── Chart region ─────────────────────────────────────────── */}
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:gap-12">
+          {/* ── Chart & Terminal region ─────────────────────────────── */}
           <div>
-            <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
-              <div>
-                <p className="label mb-2">{SECTOR_LABELS[asset.sector]}</p>
-                <h1 className="text-3xl font-semibold tracking-[-0.028em] sm:text-4xl">
-                  {asset.name}
-                </h1>
-                <p className="numeric text-foreground-secondary mt-1 text-lg">{asset.ticker}</p>
-              </div>
-              <div className="text-right">
-                <p className="numeric text-4xl font-semibold tracking-tight">{formatMAD(price)}</p>
-                <p className="label mt-1">Reference price · MAD</p>
-              </div>
-            </div>
-
-            {/*
-              Chart region. Phase 7 fills this with a `lightweight-charts` candle
-              series fed by the simulated price model, with a data-table
-              alternative alongside it so the information does not depend on being
-              able to see it (Part 9.3).
-            */}
-            <div className="border-rule bg-surface-raised mt-8 overflow-hidden rounded-lg border">
-              <div className="border-rule flex items-center justify-between border-b px-4 py-2.5">
-                <p className="label">Price history</p>
-                <p className="label">Chart arrives with the price model</p>
-              </div>
-              {/*
-                A ruled plot frame with axis furniture. This is geometry, not a
-                picture pretending to be one: the gridlines and the y-axis ticks are
-                real reference marks, and the series area is left empty rather than
-                filled with a decorative squiggle that implies data we do not have.
-              */}
-              <div
-                aria-hidden="true"
-                className="bg-surface-sunken relative h-64"
-                style={{
-                  backgroundImage:
-                    "linear-gradient(to right, var(--rule-hairline) 1px, transparent 1px), linear-gradient(to bottom, var(--rule-hairline) 1px, transparent 1px)",
-                  backgroundSize: "12.5% 100%, 100% 25%",
-                }}
-              >
-                <div className="border-rule bg-surface absolute inset-y-0 left-0 flex w-16 flex-col justify-between border-r px-2 py-2">
-                  {[price, price, price, price, price].map((value, index) => (
-                    <span key={index} className="numeric text-2xs text-foreground-muted text-right">
-                      {formatMAD(value)}
-                    </span>
-                  ))}
-                </div>
-              </div>
-              <p className="border-rule text-foreground-muted border-t px-4 py-2.5 text-xs leading-relaxed">
-                {DISC_1} The series arrives in Phase 7. Every charted value will also be available
-                as a data table.
-              </p>
-            </div>
+            <InstrumentTerminal
+              ticker={asset.ticker}
+              name={asset.name}
+              sectorLabel={SECTOR_LABELS[asset.sector]}
+              startingPriceCents={asset.startingPriceCents}
+              annualVolatility={asset.annualVolatility}
+              annualDrift={asset.annualDrift}
+              description={asset.description}
+            />
 
             <section className="mt-12">
               <h2 className="text-xl font-semibold tracking-tight">About this instrument</h2>
@@ -174,7 +130,13 @@ export default async function InstrumentPage({ params }: PageProps<"/simulator/m
           </div>
 
           {/* ── Reference rail ───────────────────────────────────────── */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
+          <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+            <OrderTicketWrapper
+              symbol={asset.ticker}
+              currentPriceCents={asset.startingPriceCents}
+              availableCashCents={10_000_000n}
+            />
+
             <div>
               <p className="label mb-3">Reference data</p>
               <RuledList
@@ -195,7 +157,7 @@ export default async function InstrumentPage({ params }: PageProps<"/simulator/m
               />
             </div>
 
-            <div className="mt-8">
+            <div>
               <Button asChild fullWidth>
                 <Link href="/simulator">Open a portfolio</Link>
               </Button>
@@ -204,7 +166,7 @@ export default async function InstrumentPage({ params }: PageProps<"/simulator/m
               </Button>
             </div>
 
-            <Alert tone="warning" title="Not a real security" className="mt-6">
+            <Alert tone="warning" title="Not a real security">
               <p>
                 {asset.name} is fictional. It does not exist, is not listed anywhere, and cannot be
                 bought or sold outside this platform. Any performance attributed to it describes a

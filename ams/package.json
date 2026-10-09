@@ -1,0 +1,37 @@
+{
+  "name": "fsjesc-ams",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FSJESC Admin Management System - shares database with main app",
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tamagui/config": "^1.125.3",
+    "@tamagui/core": "^1.125.3",
+    "@tamagui/lucide-icons": "^1.125.3",
+    "@tamagui/react-native-svg": "^1.125.3",
+    "drizzle-orm": "0.45.3",
+    "lucide-react": "1.52.0",
+    "next": "16.4.0",
+    "postgres": "3.4.9",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tamagui": "^1.125.3",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@tamagui/cli": "^1.125.3",
+    "@tamagui/next-plugin": "^2.7.7",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0",
+    "typescript": "^5"
+  }
+}

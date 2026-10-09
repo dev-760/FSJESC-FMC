@@ -45,7 +45,7 @@ export default function EventsPage() {
           }
         />
 
-        <Section spacing="tight" className="px-0 sm:px-0">
+        <Section contained={false} spacing="tight">
           <h2 className="text-lg font-semibold tracking-tight">
             Upcoming
             <span className="numeric text-foreground-muted ml-2 text-sm font-normal">
@@ -68,7 +68,7 @@ export default function EventsPage() {
         </Section>
 
         {past.length > 0 ? (
-          <Section className="px-0 sm:px-0">
+          <Section contained={false}>
             <h2 className="text-lg font-semibold tracking-tight">
               Past sessions
               <span className="numeric text-foreground-muted ml-2 text-sm font-normal">
@@ -85,12 +85,12 @@ export default function EventsPage() {
           </Section>
         ) : null}
 
-        <Section className="px-0 sm:px-0">
-          <div className="border-border bg-surface-subtle rounded-lg border p-6">
+        <Section contained={false}>
+          <div className="border-rule bg-surface-raised rounded-lg border p-6">
             <h2 className="text-base font-semibold tracking-tight">Attending a session</h2>
             <p className="text-foreground-secondary mt-2 max-w-prose text-sm leading-relaxed">
               Registration is handled from each session page. Capacity is enforced on the server, so
-              a session that reports places remaining has that many places left — the count cannot
+              a session that reports places remaining has that many places left. The count cannot
               overshoot capacity even if several people register at once.
             </p>
             <Link

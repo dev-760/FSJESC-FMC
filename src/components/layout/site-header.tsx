@@ -4,17 +4,24 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
+
+import { MarketTicker } from "@/components/financial/market-ticker";
+import { SessionIndicator } from "@/components/financial/session-indicator";
 import { Button } from "@/components/ui/button";
-import { ThemeSwitcher } from "./theme-switcher";
 import { cn } from "@/lib/cn";
 import type { NavItem } from "@/config/navigation";
+import { SITE } from "@/config/site";
 
 /**
- * Site header.
+ * The site header: a 56px nav bar over a 32px ticker strip.
  *
- * A terminal's chrome is a thin rule and a row of small caps, not a floating bar.
- * The brand is a typographic lockup plus a ticker glyph: it must read at 16px and
- * be legible to assistive technology (Part 0.4).
+ * The rhythm is fixed and stated once here rather than re-derived per page. Sticky
+ * chrome on a scrolling page is the default on a trading platform, and a header
+ * that changes height between routes is the clearest possible sign that it was
+ * assembled rather than designed.
+ *
+ * `SIMULATED DATA` is permanent and site-wide, not a page detail, so it lives in the
+ * header stack rather than being repeated on each surface (Part 0.4, DISC-1).
  *
  * Keyboard and screen-reader behaviour (Part 9.3):
  *   - the trigger is a real `<button>` with `aria-expanded` and `aria-controls`
@@ -23,9 +30,11 @@ import type { NavItem } from "@/config/navigation";
  */
 export function SiteHeader({
   navItems,
+  disclaimer,
   accountSlot,
 }: {
   navItems: readonly NavItem[];
+  disclaimer: string;
   accountSlot?: React.ReactNode;
 }) {
   const panelId = useId();
@@ -33,11 +42,9 @@ export function SiteHeader({
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  // The panel is closed during render when the path changes, rather than in an
-  // effect. An effect would leave the overlay visible for one extra frame after a
-  // navigation, and React advises against setState in an effect for exactly this
-  // "derive state instead" case. React discards and re-runs the render, so this
-  // costs nothing and never loops.
+  // Closed during render when the path changes, rather than in an effect. An effect
+  // would leave the panel visible for a frame after a navigation, and React advises
+  // against setState in an effect for exactly this "derive state" case.
   const [renderedPath, setRenderedPath] = useState(pathname);
   if (renderedPath !== pathname) {
     setRenderedPath(pathname);
@@ -49,15 +56,16 @@ export function SiteHeader({
     function onKeyDown(event: KeyboardEvent): void {
       if (event.key !== "Escape") return;
       setOpen(false);
-      // Return focus to the control that opened the panel, so keyboard users are
-      // not dropped at the top of the document.
+      // Return focus to the control that opened the panel, so keyboard users are not
+      // dropped at the top of the document.
       triggerRef.current?.focus();
     }
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  // Prevent the page behind the panel from scrolling.
+  // Stop the page behind the panel scrolling, and restore the previous value rather
+  // than clearing it — another component may have set it.
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -68,26 +76,32 @@ export function SiteHeader({
   }, [open]);
 
   return (
-    <header className="border-rule bg-canvas/92 supports-[not(backdrop-filter:blur(0))]:bg-canvas sticky top-0 z-40 border-b backdrop-blur-sm">
+    <header className="bg-canvas/95 supports-[not(backdrop-filter:blur(0))]:bg-canvas border-rule sticky top-0 z-40 border-b backdrop-blur-sm">
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
-          aria-label="FSJESC Financial Markets Club — home"
+          aria-label={`${SITE.name}, home`}
           className="focus-visible:outline-ring flex shrink-0 items-center gap-2.5 rounded focus-visible:outline-2 focus-visible:outline-offset-4"
         >
+          {/*
+            A `MAD` badge rather than a logo mark. The currency is the one fact every
+            visitor needs before they trust any number on the page.
+          */}
           <span
             aria-hidden="true"
-            className="numeric border-rule-strong bg-surface-sunken text-2xs text-foreground-secondary flex h-7 items-center rounded-sm border px-1.5 font-semibold tracking-tight"
+            className="numeric border-rule-strong bg-surface-sunken text-2xs text-foreground-secondary flex h-6 items-center rounded-xs border px-1.5 font-semibold"
           >
             MAD
           </span>
           <span className="flex flex-col leading-none">
-            <span className="text-sm font-semibold tracking-tight">FSJESC FMC</span>
-            <span className="text-2xs text-foreground-muted mt-0.5">Financial Markets Club</span>
+            <span className="text-sm font-semibold">{SITE.shortName}</span>
+            <span className="text-2xs text-foreground-secondary mt-0.5 hidden sm:block">
+              {SITE.locale === "en" ? "Financial Markets Club" : SITE.name}
+            </span>
           </span>
         </Link>
 
-        <nav aria-label="Primary" className="ml-auto hidden lg:block">
+        <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-0.5">
             {navItems.map((item) => (
               <li key={item.href}>
@@ -109,9 +123,9 @@ export function SiteHeader({
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-1.5 lg:ml-0">
-          <ThemeSwitcher />
-          <div className="hidden items-center gap-2 sm:flex">{accountSlot}</div>
+        <div className="ml-auto flex items-center gap-3 lg:ml-0">
+          <SessionIndicator />
+          <div className="hidden items-center gap-1.5 sm:flex">{accountSlot}</div>
           <Button
             ref={triggerRef}
             variant="ghost"
@@ -127,12 +141,14 @@ export function SiteHeader({
         </div>
       </div>
 
+      <MarketTicker />
+
       {open ? (
         <div
           id={panelId}
-          className="border-rule bg-canvas fixed inset-x-0 top-14 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
+          className="border-rule bg-canvas fixed inset-x-0 top-22 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
         >
-          <nav aria-label="Primary (mobile)" className="px-4 py-2 sm:px-6">
+          <nav aria-label="Primary (mobile)" className="px-4 sm:px-6">
             <ul className="divide-rule divide-y">
               {navItems.map((item) => (
                 <li key={item.href}>
@@ -160,13 +176,20 @@ export function SiteHeader({
           </nav>
         </div>
       ) : null}
+
+      {/*
+        The full disclaimer, once, in the document rather than only in the ticker
+        label. Screen readers reach it, and it is what a reader who wants the exact
+        wording is looking for.
+      */}
+      <p className="sr-only">{disclaimer}</p>
     </header>
   );
 }
 
 /**
- * A link is "current" when it matches exactly, or when it is a section root and
- * the path is nested inside it (`/events/market-open` highlights `/events`).
+ * A link is "current" when it matches exactly, or when it is a section root and the
+ * path is nested inside it (`/education/topics` highlights `/education`).
  */
 function isCurrent(pathname: string | null, href: string): boolean {
   if (!pathname) return false;

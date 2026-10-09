@@ -16,23 +16,25 @@ import { cn } from "@/lib/cn";
  */
 const buttonVariants = cva(
   [
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md",
-    "text-sm font-medium transition-colors duration-150",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md cursor-pointer",
+    "text-sm font-medium transition-colors duration-150 transition-transform duration-75",
     "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring",
-    "disabled:pointer-events-none disabled:opacity-50",
+    "disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100",
     "[&_svg]:size-4 [&_svg]:shrink-0",
   ],
   {
     variants: {
       variant: {
-        primary: "bg-accent text-white hover:bg-accent-hover active:bg-accent-hover",
+        primary: "bg-bull text-canvas font-semibold hover:bg-bull-hover active:scale-[0.98]",
+        bull: "bg-bull text-canvas font-semibold hover:bg-bull-hover active:scale-[0.98]",
+        bear: "bg-bear text-white font-semibold hover:bg-red-600 active:scale-[0.98]",
         secondary:
-          "border border-rule-strong bg-surface-raised text-foreground hover:bg-surface-sunken",
-        ghost: "text-foreground-secondary hover:bg-surface-sunken hover:text-foreground",
-        subtle: "bg-surface-inset text-foreground hover:bg-surface-sunken",
+          "border border-rule-strong bg-surface-raised text-foreground hover:bg-surface-sunken active:scale-[0.98]",
+        ghost: "text-foreground-secondary hover:bg-surface-sunken hover:text-foreground active:scale-[0.98]",
+        subtle: "bg-surface-inset text-foreground hover:bg-surface-sunken active:scale-[0.98]",
         danger:
-          "border border-rule-strong bg-surface-raised text-negative hover:bg-negative-subtle",
-        link: "text-accent-text underline underline-offset-4 hover:text-accent-hover",
+          "border border-rule-strong bg-surface-raised text-negative hover:bg-negative-subtle active:scale-[0.98]",
+        link: "text-bull underline underline-offset-4 hover:text-bull-hover active:scale-[0.98]",
       },
       size: {
         sm: "h-8 px-3 text-xs",

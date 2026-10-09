@@ -28,6 +28,7 @@ const PUBLIC_ROUTES: readonly RouteSpec[] = [
   { path: "/education", changeFrequency: "weekly", priority: 0.9 },
   { path: "/education/topics", changeFrequency: "weekly", priority: 0.7 },
   { path: "/simulator", changeFrequency: "daily", priority: 0.9 },
+  { path: "/simulator/market", changeFrequency: "daily", priority: 0.85 },
   { path: "/competitions", changeFrequency: "daily", priority: 0.8 },
   { path: "/events", changeFrequency: "weekly", priority: 0.8 },
   { path: "/team", changeFrequency: "monthly", priority: 0.6 },
@@ -60,8 +61,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   entries.push(...(await articleEntries(base)));
   entries.push(...(await eventEntries(base)));
+  entries.push(...(await assetEntries(base)));
 
   return entries;
+}
+
+async function assetEntries(base: string): Promise<MetadataRoute.Sitemap> {
+  try {
+    const { ASSETS } = await import("@/data/assets");
+    return ASSETS.map((asset) => ({
+      url: `${base}/simulator/market/${asset.ticker.toLowerCase()}`,
+      lastModified: NOW,
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    }));
+  } catch {
+    return [];
+  }
 }
 
 async function articleEntries(base: string): Promise<MetadataRoute.Sitemap> {

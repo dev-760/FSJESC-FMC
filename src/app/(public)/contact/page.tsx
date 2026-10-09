@@ -56,7 +56,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
           </div>
         </div>
 
-        <Section spacing="loose" className="px-0 sm:px-0">
+        <Section contained={false} spacing="loose">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <Card padding="lg">
               <CardHeader>
@@ -114,7 +114,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
           </div>
         </Section>
 
-        <Section className="px-0 sm:px-0">
+        <Section contained={false}>
           <Card padding="lg">
             <CardHeader>
               <CardTitle>Topics we can help with</CardTitle>
@@ -128,7 +128,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
                 {ACADEMIC_TRACKS.map((track) => (
                   <li
                     key={track}
-                    className="border-border bg-surface-subtle text-foreground-secondary rounded border px-2 py-1 text-xs"
+                    className="border-rule bg-surface-raised text-foreground-secondary rounded border px-2 py-1 text-xs"
                   >
                     {track}
                   </li>

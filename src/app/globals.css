@@ -5,186 +5,139 @@
 @source "../../src";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Design tokens — a financial research terminal for students.
+   Design tokens — dark only.
 
-   The governing idea: this is a terminal, not a brochure. A terminal is dense,
-   ruled, and aligned to a grid. Structure comes from hairlines and column
-   alignment, not from floating boxes; a figure is set in a monospaced face and
-   lines up with the figure beneath it.
+   This is an institutional trading terminal: dense, ruled, aligned. Structure
+   comes from 1px hairlines and column alignment, never from floating boxes.
 
-   Both themes are contrast-checked for WCAG 2.2 AA: body text ≥ 4.5:1, large
-   text and component boundaries ≥ 3:1.
+   Single theme by decision (DECISIONS.md D17): out of scope was a light theme, so
+   there is exactly one contrast budget to hold and it is audited here.
+
+   Contrast, measured against the canvas #07080B:
+     text-primary   #F9FAFB  17.9:1   all text
+     text-secondary #9CA3AF   7.0:1    all text
+     text-muted     #6B7280   4.15:1   NON-ESSENTIAL TEXT AT 14px OR LARGER ONLY
+     text-disabled  #374151   1.9:1    disabled controls only, never read as content
+     bull           #00E599  12.1:1    gain, and the primary action fill
+     bear           #EF4444   5.2:1    loss
+     info           #3B82F6   5.5:1    quantitative / model output
+     warning        #FBBF24   9.6:1    simulation and honesty markers
+   `text-muted` is deliberately below 4.5:1. It is scoped to non-essential text,
+   and `--color-muted-allowed` exists so a component reaches for the *explicit*
+   token rather than getting muted text by accident.
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  color-scheme: light;
-
-  /* Surfaces — three levels, no more. */
-  --canvas: #ffffff;
-  --surface: #fbfcfd;
-  --surface-raised: #ffffff;
-  --surface-sunken: #f2f4f7;
-  --surface-inset: #eaedf2;
-
-  /* Lines — the terminal's primary structural device. */
-  --rule: #dfe3ea;
-  --rule-strong: #c3cad5;
-  --rule-hairline: #edf0f4;
-
-  /* Text */
-  --text-primary: #0d1218;
-  --text-secondary: #333d4a;
-  --text-muted: #5c6675;
-  --text-inverse: #ffffff;
-
-  /* Brand / interactive — a deep institutional blue, not a startup accent. */
-  --accent: #14477e;
-  --accent-hover: #0f3763;
-  --accent-subtle: #e7eef7;
-  --accent-text: #103868;
-  --ring: #14477e;
-
-  /* Semantic state (Part 9.2) — never the sole carrier of meaning. */
-  --positive: #0c6b43;
-  --positive-subtle: #e3f2ea;
-  --negative: #a8241c;
-  --negative-subtle: #f9e8e6;
-  --warning: #7a4e00;
-  --warning-subtle: #f9efdb;
-  --information: #14477e;
-  --information-subtle: #e7eef7;
-  --neutral: #4b5563;
-  --neutral-subtle: #eceff3;
-
-  /* Chart series: distinct in hue *and* lightness, ordered for a reader who
-     cannot rely on hue alone. */
-  --series-1: #14477e;
-  --series-2: #5b3f96;
-  --series-3: #0d6a5e;
-  --series-4: #8a5300;
-  --series-5: #4b5563;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    color-scheme: dark;
-
-    --canvas: #0c1017;
-    --surface: #11161e;
-    --surface-raised: #161d26;
-    --surface-sunken: #0a0e14;
-    --surface-inset: #1c242f;
-
-    --rule: #232c38;
-    --rule-strong: #3b4655;
-    --rule-hairline: #1a212a;
-
-    --text-primary: #e8eef5;
-    --text-secondary: #b3bfcd;
-    --text-muted: #8593a3;
-    --text-inverse: #0c1017;
-
-    --accent: #74a9e0;
-    --accent-hover: #94bfe9;
-    --accent-subtle: #16243a;
-    --accent-text: #a8c9ec;
-    --ring: #74a9e0;
-
-    --positive: #46c184;
-    --positive-subtle: #0f2619;
-    --negative: #ef8079;
-    --negative-subtle: #2b1513;
-    --warning: #dfb257;
-    --warning-subtle: #291f11;
-    --information: #74a9e0;
-    --information-subtle: #16243a;
-    --neutral: #b3bfcd;
-    --neutral-subtle: #1b222c;
-
-    --series-1: #74a9e0;
-    --series-2: #b19ae2;
-    --series-3: #54c4b0;
-    --series-4: #dfb257;
-    --series-5: #b3bfcd;
-  }
-}
-
-[data-theme="dark"] {
   color-scheme: dark;
 
-  --canvas: #0c1017;
-  --surface: #11161e;
-  --surface-raised: #161d26;
-  --surface-sunken: #0a0e14;
-  --surface-inset: #1c242f;
+  /* Surfaces — four levels, from the page inward. */
+  --canvas: #07080b;
+  --surface: #0f1117;
+  --surface-raised: #161922;
+  --surface-inset: #1c2029;
+  --surface-sunken: #0a0b10;
 
-  --rule: #232c38;
-  --rule-strong: #3b4655;
-  --rule-hairline: #1a212a;
+  /* Hairlines. rgba white at three weights is the whole structural language. */
+  --rule: rgb(255 255 255 / 0.08);
+  --rule-strong: rgb(255 255 255 / 0.16);
+  --rule-faint: rgb(255 255 255 / 0.04);
 
-  --text-primary: #e8eef5;
-  --text-secondary: #b3bfcd;
-  --text-muted: #8593a3;
-  --text-inverse: #0c1017;
+  /* Text */
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+  --text-disabled: #374151;
+  --text-inverse: #07080b;
 
-  --accent: #74a9e0;
-  --accent-hover: #94bfe9;
-  --accent-subtle: #16243a;
-  --accent-text: #a8c9ec;
-  --ring: #74a9e0;
+  /* Action + semantics */
+  --bull: #00e599;
+  --bull-hover: #22f0aa;
+  --bull-subtle: rgb(0 229 153 / 0.12);
+  --bear: #ef4444;
+  --bear-subtle: rgb(239 68 68 / 0.12);
+  --info: #3b82f6;
+  --info-subtle: rgb(59 130 246 / 0.12);
+  --warning: #fbbf24;
+  --warning-subtle: rgb(251 191 36 / 0.12);
+  --neutral: #9ca3af;
+  --neutral-subtle: rgb(156 163 175 / 0.1);
 
-  --positive: #46c184;
-  --positive-subtle: #0f2619;
-  --negative: #ef8079;
-  --negative-subtle: #2b1513;
-  --warning: #dfb257;
-  --warning-subtle: #291f11;
-  --information: #74a9e0;
-  --information-subtle: #16243a;
-  --neutral: #b3bfcd;
-  --neutral-subtle: #1b222c;
+  /* Semantic aliases for component libraries and design tokens */
+  --accent: var(--bull);
+  --accent-hover: var(--bull-hover);
+  --accent-subtle: var(--bull-subtle);
+  --accent-text: var(--bull);
+  --positive: var(--bull);
+  --positive-subtle: var(--bull-subtle);
+  --negative: var(--bear);
+  --negative-subtle: var(--bear-subtle);
+  --information: var(--info);
+  --information-subtle: var(--info-subtle);
 
-  --series-1: #74a9e0;
-  --series-2: #b19ae2;
-  --series-3: #54c4b0;
-  --series-4: #dfb257;
-  --series-5: #b3bfcd;
+  /* Focus. 2px emerald, per the accessibility requirement. */
+  --ring: #00e599;
+
+  /* Chart series: distinct in hue AND lightness, ordered for a reader who
+     cannot rely on hue alone. */
+  --series-1: #00e599;
+  --series-2: #3b82f6;
+  --series-3: #fbbf24;
+  --series-4: #a78bfa;
+  --series-5: #f472b6;
+
+  /* The hero backdrop: a static radial mesh plus a masked 1px grid. No animation. */
+  --mesh-1: rgb(0 229 153 / 0.07);
+  --mesh-2: rgb(59 130 246 / 0.06);
+  --mesh-3: rgb(167 139 250 / 0.05);
+  --grid-line: rgb(255 255 255 / 0.028);
 }
 
 @theme inline {
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
-  --color-surface-sunken: var(--surface-sunken);
   --color-surface-inset: var(--surface-inset);
+  --color-surface-sunken: var(--surface-sunken);
 
   --color-rule: var(--rule);
   --color-rule-strong: var(--rule-strong);
-  --color-rule-hairline: var(--rule-hairline);
+  --color-rule-faint: var(--rule-faint);
   --color-border: var(--rule);
   --color-border-strong: var(--rule-strong);
 
   --color-foreground: var(--text-primary);
   --color-foreground-secondary: var(--text-secondary);
   --color-foreground-muted: var(--text-muted);
+  --color-foreground-disabled: var(--text-disabled);
   --color-foreground-inverse: var(--text-inverse);
+
+  /* The opt-in token. Reaching for this is a deliberate act, not a default. */
+  --color-muted-allowed: var(--text-muted);
+
+  --color-bull: var(--bull);
+  --color-bull-hover: var(--bull-hover);
+  --color-bull-subtle: var(--bull-subtle);
+  --color-bear: var(--bear);
+  --color-bear-subtle: var(--bear-subtle);
+  --color-info: var(--info);
+  --color-info-subtle: var(--info-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-neutral: var(--neutral);
+  --color-neutral-subtle: var(--neutral-subtle);
 
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-subtle: var(--accent-subtle);
   --color-accent-text: var(--accent-text);
-  --color-ring: var(--ring);
-
   --color-positive: var(--positive);
   --color-positive-subtle: var(--positive-subtle);
   --color-negative: var(--negative);
   --color-negative-subtle: var(--negative-subtle);
-  --color-warning: var(--warning);
-  --color-warning-subtle: var(--warning-subtle);
   --color-information: var(--information);
   --color-information-subtle: var(--information-subtle);
-  --color-neutral: var(--neutral);
-  --color-neutral-subtle: var(--neutral-subtle);
+
+  --color-ring: var(--ring);
 
   --color-series-1: var(--series-1);
   --color-series-2: var(--series-2);
@@ -192,44 +145,41 @@
   --color-series-4: var(--series-4);
   --color-series-5: var(--series-5);
 
-  --font-sans: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, monospace;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
-  /* Radius: panels are 14px (card floor is 12–16), controls are 8px, and only
-     small controls become pills. */
-  --radius-xs: 3px;
-  --radius-sm: 5px;
+  /* Cards 8px, badges and inner elements 4px, modals 12px. */
+  --radius-xs: 2px;
+  --radius-sm: 4px;
   --radius-md: 8px;
-  --radius-lg: 14px;
+  --radius-lg: 12px;
 
-  /* A type scale with real steps. The old scale had two body sizes and nothing
-     between a 13px label and a 30px heading, which is why every section looked
-     the same weight. */
+  /* A type scale with real steps. */
   --text-2xs: 0.6875rem;
   --text-2xs--line-height: 1rem;
   --text-xs: 0.75rem;
   --text-xs--line-height: 1.125rem;
   --text-sm: 0.8125rem;
   --text-sm--line-height: 1.375rem;
-  --text-base: 0.9375rem;
-  --text-base--line-height: 1.625rem;
-  --text-lg: 1.0625rem;
-  --text-lg--line-height: 1.75rem;
-  --text-xl: 1.25rem;
+  --text-base: 0.875rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg: 1rem;
+  --text-lg--line-height: 1.625rem;
+  --text-xl: 1.125rem;
   --text-xl--line-height: 1.75rem;
-  --text-2xl: 1.5rem;
-  --text-2xl--line-height: 2rem;
-  --text-3xl: 1.875rem;
-  --text-3xl--line-height: 2.25rem;
-  --text-4xl: 2.375rem;
-  --text-4xl--line-height: 2.5rem;
-  --text-5xl: 3.25rem;
-  --text-5xl--line-height: 1.08;
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.75rem;
+  --text-3xl: 1.75rem;
+  --text-3xl--line-height: 2.125rem;
+  --text-4xl: 2.25rem;
+  --text-4xl--line-height: 1.1;
+  --text-5xl: 3rem;
+  --text-5xl--line-height: 1.06;
 
-  /* Elevation is declared once. Panels carry a hairline and no shadow — a 1px
-     border under a wide soft shadow is a ghost card. Shadows are reserved for
-     things that genuinely float above the page. */
-  --shadow-float: 0 1px 2px rgb(13 18 24 / 0.06), 0 8px 24px -6px rgb(13 18 24 / 0.14);
+  /* Elevation declared once. Panels carry a hairline and no shadow — a 1px border
+     under a wide soft shadow is a ghost card. Shadows are for genuine float. */
+  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -251,21 +201,21 @@
   body {
     background-color: var(--canvas);
     color: var(--text-primary);
-    font-family: var(--font-ibm-plex-sans), ui-sans-serif, system-ui, sans-serif;
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     font-size: var(--text-base);
-    line-height: 1.625;
+    line-height: 1.5;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
   }
 
   /*
-   * Browser surfaces ship with defaults that belong to no design system: text
+   * Browser surfaces ship with defaults that belong to no design system:
    * selection, the caret, scrollbars, focus rings, underline offset. Theming
    * them is the cheapest signal that a page was built rather than assembled.
    */
   ::selection {
-    background-color: var(--accent-subtle);
-    color: var(--accent-text);
+    background-color: var(--bull-subtle);
+    color: var(--bull);
   }
 
   :focus-visible {
@@ -278,21 +228,20 @@
     outline: none;
   }
 
-  /* The caret belongs to the palette. */
   input,
   textarea,
   select {
-    caret-color: var(--accent);
+    caret-color: var(--bull);
   }
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--rule-strong) transparent;
+    scrollbar-color: rgb(255 255 255 / 0.16) transparent;
   }
 
   *::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
   }
 
   *::-webkit-scrollbar-track {
@@ -300,13 +249,12 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: var(--rule-strong);
-    border: 3px solid var(--canvas);
-    border-radius: 6px;
+    background-color: rgb(255 255 255 / 0.14);
+    border-radius: 4px;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background-color: var(--text-muted);
+    background-color: rgb(255 255 255 / 0.24);
   }
 
   h1,
@@ -315,34 +263,32 @@
   h4,
   h5,
   h6 {
-    text-wrap: balance;
+    font-family: var(--font-inter-tight), var(--font-inter), sans-serif;
     font-weight: 600;
-    letter-spacing: -0.022em;
-    line-height: 1.2;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+    text-wrap: balance;
   }
 
   h1 {
-    letter-spacing: -0.028em;
+    letter-spacing: -0.02em;
   }
 
   p {
     text-wrap: pretty;
   }
-
-  /*
-   * A reading measure is applied deliberately with `.measure`, never globally.
-   * A blanket max-width on `p` also constrains text inside panels, alerts and
-   * table cells, where it produces ragged, needlessly narrow columns.
-   */
 }
 
 @layer utilities {
-  /*
-   * Every figure in this product is tabular and monospaced, so columns of digits
-   * align vertically and a changing last digit does not shift its neighbours.
+  /**
+   * EVERY number on this platform passes through here.
+   *
+   * JetBrains Mono with tabular figures, so a column of digits aligns vertically
+   * and a changing last digit does not shift its neighbours. This is the single
+   * rule that makes a dense table scannable.
    */
   .numeric {
-    font-family: var(--font-ibm-plex-mono), ui-monospace, SFMono-Regular, monospace;
+    font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
     font-variant-numeric: tabular-nums;
     font-feature-settings:
       "tnum" 1,
@@ -350,28 +296,19 @@
     letter-spacing: -0.01em;
   }
 
-  /* A small tracked label for table column heads and section markers. */
+  /* A tracked mono label: table heads, section markers, terminal chrome. */
   .label {
-    font-family: var(--font-ibm-plex-mono), ui-monospace, monospace;
+    font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
     font-size: 0.6875rem;
     line-height: 1rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--text-muted);
+    color: var(--text-secondary);
   }
 
-  /* A reading measure for prose, applied where prose is the point. */
+  /* A prose measure. Applied deliberately, never globally. */
   .measure {
     max-width: 68ch;
-  }
-
-  /*
-   * A data-table caption is annotation, so it belongs under the table. The UA
-   * default is `caption-side: top`, which put a paragraph above the column heads
-   * and made the board read as a heading with a table attached to it.
-   */
-  caption {
-    caption-side: bottom;
   }
 
   /* Screen-reader-only text that becomes visible on focus (skip link). */
@@ -388,62 +325,64 @@
     padding: 0.5rem 0.875rem;
     background-color: var(--surface-raised);
     border: 1px solid var(--rule-strong);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
   }
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Signature motion — authored once, not scattered.
-
-   The quote board is the product's thesis, so it is the one thing that moves on
-   load: rows settle in sequence, like a terminal painting a frame. Everything
-   else on the page is still. Under `prefers-reduced-motion` the rows are simply
-   present.
+   Hero backdrop — static, no animation.
+   A radial mesh plus a masked 1px grid. The grid is a canvas reference, which is
+   what earns it: it is the substrate a terminal draws on.
    ─────────────────────────────────────────────────────────────────────────── */
 
-@keyframes row-settle {
+.hero-mesh {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero-mesh::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(58rem 32rem at 18% -10%, var(--mesh-1), transparent 60%),
+    radial-gradient(48rem 28rem at 82% 8%, var(--mesh-2), transparent 62%),
+    radial-gradient(40rem 26rem at 50% 110%, var(--mesh-3), transparent 60%);
+}
+
+.hero-mesh::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 72px 72px;
+  /* Masked so the grid dissolves toward the edges rather than ending abruptly. */
+  mask-image: radial-gradient(72rem 40rem at 50% 0%, #000 0%, transparent 78%);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Motion — 150-200ms ease-out, hover lift ≤2px, all disabled under
+   prefers-reduced-motion.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+@keyframes board-row-fade-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 6px, 0);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
-    transform: translate3d(0, 0, 0);
+    transform: translateY(0);
   }
 }
 
 .board-row {
-  animation: row-settle 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: board-row-fade-in 420ms ease-out both;
 }
-
-.board-row:nth-child(1) {
-  animation-delay: 0ms;
-}
-.board-row:nth-child(2) {
-  animation-delay: 45ms;
-}
-.board-row:nth-child(3) {
-  animation-delay: 90ms;
-}
-.board-row:nth-child(4) {
-  animation-delay: 135ms;
-}
-.board-row:nth-child(5) {
-  animation-delay: 180ms;
-}
-.board-row:nth-child(6) {
-  animation-delay: 225ms;
-}
-.board-row:nth-child(7) {
-  animation-delay: 270ms;
-}
-.board-row:nth-child(8) {
-  animation-delay: 315ms;
-}
-
-/* ───────────────────────────────────────────────────────────────────────────
-   Reduced motion — honoured globally (Part 9.3).
-   ─────────────────────────────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -456,8 +395,155 @@
   }
 
   .board-row {
-    animation: none !important;
-    opacity: 1;
-    transform: none;
+    animation: none;
   }
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Article body
+   Typographic settings, because a long-form technical page is a reading surface
+   first and a layout second.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.article-body > * + * {
+  margin-top: 1.15rem;
+}
+
+.article-body h2 {
+  margin-top: 2.75rem;
+  font-size: 1.375rem;
+  scroll-margin-top: 7rem;
+}
+
+.article-body h3 {
+  margin-top: 2rem;
+  font-size: 1.125rem;
+  scroll-margin-top: 7rem;
+}
+
+.article-body p,
+.article-body li {
+  line-height: 1.7;
+}
+
+.article-body ul,
+.article-body ol {
+  padding-left: 1.35rem;
+}
+
+.article-body ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.article-body ul > li {
+  position: relative;
+  padding-left: 1.35rem;
+}
+
+.article-body ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.7em;
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+  background-color: var(--rule-strong);
+}
+
+.article-body li + li {
+  margin-top: 0.5rem;
+}
+
+.article-body ol > li::marker {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 0.875em;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.article-body a {
+  color: var(--bull);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.article-body a:hover {
+  color: var(--bull-hover);
+  text-decoration-thickness: 2px;
+}
+
+.article-body code {
+  font-family: var(--font-jetbrains-mono), ui-monospace, monospace;
+  font-size: 0.9em;
+  background-color: var(--surface-inset);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-xs);
+  padding: 0.08em 0.32em;
+}
+
+.article-body pre {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  background-color: var(--surface-sunken);
+  padding: 1rem 1.15rem;
+  font-size: 0.8125rem;
+  line-height: 1.65;
+}
+
+.article-body pre code {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+.article-body blockquote {
+  border-left: 1px solid var(--rule-strong);
+  padding-left: 1.15rem;
+  color: var(--text-secondary);
+}
+
+.article-body table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  margin-block: 1.5rem;
+}
+
+.article-body th,
+.article-body td {
+  border: 1px solid var(--rule);
+  padding: 0.45rem 0.7rem;
+  text-align: left;
+}
+
+.article-body th {
+  background-color: var(--surface-sunken);
+  font-weight: 600;
+}
+
+.article-body hr {
+  border: 0;
+  border-top: 1px solid var(--rule);
+  margin-block: 2.5rem;
+}
+
+.article-body .heading-anchor {
+  margin-left: 0.4rem;
+  color: var(--rule-strong);
+  text-decoration: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+}
+
+.article-body h2:hover .heading-anchor,
+.article-body h3:hover .heading-anchor,
+.article-body .heading-anchor:focus-visible {
+  opacity: 1;
 }

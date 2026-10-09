@@ -16,9 +16,9 @@ import type { ReactNode } from "react";
 const noticeVariants = cva("rounded-md border px-3 py-2 text-xs leading-relaxed", {
   variants: {
     kind: {
-      info: "border-border bg-surface-subtle text-foreground-secondary",
+      info: "border-rule bg-surface-raised text-foreground-secondary",
       muted: "border-transparent bg-transparent text-foreground-muted",
-      method: "border-border bg-surface-subtle text-foreground-secondary",
+      method: "border-rule bg-surface-raised text-foreground-secondary",
     },
   },
   defaultVariants: { kind: "info" },
@@ -98,7 +98,7 @@ export function SimulatedMarker({
 
   return (
     <span className={cn("text-2xs text-foreground-muted", className)}>
-      Simulated price — educational environment
+      Simulated price · educational environment
     </span>
   );
 }

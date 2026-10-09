@@ -12,19 +12,19 @@ import { cn } from "@/lib/cn";
 export type SemanticTone = "positive" | "negative" | "neutral" | "warning" | "information";
 
 export const toneTextClass: Record<SemanticTone, string> = {
-  positive: "text-positive",
-  negative: "text-negative",
+  positive: "text-bull",
+  negative: "text-bear",
   neutral: "text-foreground-secondary",
   warning: "text-warning",
-  information: "text-information",
+  information: "text-info",
 };
 
 export const toneSurfaceClass: Record<SemanticTone, string> = {
-  positive: "bg-positive-subtle text-positive border-positive/30",
-  negative: "bg-negative-subtle text-negative border-negative/30",
-  neutral: "bg-neutral-subtle text-foreground-secondary border-border",
-  warning: "bg-warning-subtle text-warning border-warning/30",
-  information: "bg-information-subtle text-information border-information/30",
+  positive: "bg-bull-subtle text-bull",
+  negative: "bg-bear-subtle text-bear",
+  neutral: "bg-neutral-subtle text-foreground-secondary",
+  warning: "bg-warning-subtle text-warning",
+  information: "bg-info-subtle text-info",
 };
 
 /** Map a signed basis-point value to a semantic tone. Zero stays neutral. */

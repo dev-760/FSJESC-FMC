@@ -59,7 +59,7 @@ export function EventCard({
         <p className="text-foreground-secondary line-clamp-3 text-sm leading-relaxed">
           {event.description}
         </p>
-        <dl className="divide-border border-border mt-4 divide-y border-y text-sm">
+        <dl className="divide-rule border-rule mt-4 divide-y border-y text-sm">
           <DetailRow label="Date">{formatDate(event.startAt)}</DetailRow>
           <DetailRow label="Time">
             <span className="numeric">
@@ -114,7 +114,7 @@ function StatusBadge({ status }: { status: ReturnType<typeof registrationStatus>
 export function EventSummaryRow({ event, now }: { event: EventRecord; now: Date }) {
   const status = registrationStatus(event, 0, now);
   return (
-    <li className="border-border flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b py-4 last:border-b-0">
+    <li className="border-rule flex flex-wrap items-baseline gap-x-4 gap-y-1 border-b py-4 last:border-b-0">
       <div className="min-w-0 flex-1">
         <Link
           href={`/events/${event.slug}`}

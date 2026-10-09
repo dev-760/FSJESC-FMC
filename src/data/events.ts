@@ -72,7 +72,7 @@ const SEEDS: readonly DemoEventSeed[] = [
     durationHours: 1.5,
     location: "FSJES Casablanca",
     room: "Amphitheatre B",
-    speaker: "Guest speaker — to be announced",
+    speaker: "Guest speaker, to be announced",
     capacity: 120,
     registrationOpen: true,
   },
@@ -80,7 +80,7 @@ const SEEDS: readonly DemoEventSeed[] = [
     slug: "risk-measurements-clinic",
     title: "Clinic: volatility and drawdown in practice",
     description:
-      "A working session on two risk measures students meet in theory — annualised " +
+      "A working session on two risk measures students meet in theory, annualised " +
       "volatility and maximum drawdown. Participants compute both for a sample price " +
       "series and discuss what each measure does and does not tell you about an outcome.",
     format: "WORKSHOP",

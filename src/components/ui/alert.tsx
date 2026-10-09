@@ -15,7 +15,7 @@ const alertVariants = cva("rounded-md border px-4 py-3 text-sm", {
   variants: {
     tone: {
       information: "border-information/30 bg-information-subtle text-foreground",
-      neutral: "border-border bg-surface-subtle text-foreground",
+      neutral: "border-rule bg-surface-raised text-foreground",
       warning: "border-warning/40 bg-warning-subtle text-foreground",
       negative: "border-negative/40 bg-negative-subtle text-foreground",
       positive: "border-positive/30 bg-positive-subtle text-foreground",

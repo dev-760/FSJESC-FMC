@@ -71,8 +71,8 @@ export default function TeamPage() {
           <CardContent>
             <p className="text-foreground-secondary text-sm leading-relaxed">
               Team positions open at the start of each academic year and are announced to members.
-              Responsibility for a part of the programme — a topic series, a scenario, a session, or
-              a part of the platform — is the way members take part. Contact the club if you would
+              Responsibility for a part of the programme (a topic series, a scenario, a session, or
+              a part of the platform) is the way members take part. Contact the club if you would
               like to be told when positions open.
             </p>
           </CardContent>
@@ -134,7 +134,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl: string | null })
         height={56}
         loading="lazy"
         decoding="async"
-        className="border-border size-14 shrink-0 rounded-full border object-cover"
+        className="border-rule size-14 shrink-0 rounded-full border object-cover"
       />
     );
     /* eslint-enable @next/next/no-img-element */
@@ -143,7 +143,7 @@ function Avatar({ name, avatarUrl }: { name: string; avatarUrl: string | null })
   return (
     <div
       aria-hidden="true"
-      className="numeric border-border-strong bg-surface-subtle text-foreground-secondary flex size-14 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
+      className="numeric border-rule-strong bg-surface-raised text-foreground-secondary flex size-14 shrink-0 items-center justify-center rounded-full border text-sm font-semibold"
     >
       {initialsOf(name)}
     </div>

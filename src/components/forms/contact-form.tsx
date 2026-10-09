@@ -148,7 +148,7 @@ export function ContactForm({
 }
 
 const controlClass =
-  "w-full rounded-md border border-border-strong bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring disabled:cursor-not-allowed disabled:bg-surface-subtle disabled:opacity-60 aria-[invalid=true]:border-negative";
+  "w-full rounded-md border border-rule-strong bg-surface px-3 py-2 text-sm text-foreground placeholder:text-foreground-muted focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-ring disabled:cursor-not-allowed disabled:bg-surface-raised disabled:opacity-60 aria-[invalid=true]:border-negative";
 
 function Field({
   id,

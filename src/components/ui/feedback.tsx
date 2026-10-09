@@ -61,7 +61,7 @@ export function LoadingRegion({
  * appear here and what to do next.
  */
 const emptyVariants = cva(
-  "rounded-lg border border-dashed border-border-strong bg-surface-subtle",
+  "rounded-lg border border-dashed border-rule-strong bg-surface-raised",
   {
     variants: {
       padding: {

@@ -11,7 +11,7 @@ export default function CreateAccountPage() {
     <PhasePlaceholder
       phase="authentication"
       title="Create your account"
-      summary="An account gives you a simulated portfolio, access to competitions, event registration, and the education centre. It costs nothing — there is no mechanism to move real money on this platform."
+      summary="An account gives you a simulated portfolio, access to competitions, event registration, and the education centre. It costs nothing. There is no mechanism to move real money on this platform."
       whatIsComing={[
         "Registration with an optional student ID and academic track; nothing else is collected",
         "A password policy of at least twelve characters, hashed with argon2id before storage",

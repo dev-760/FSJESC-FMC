@@ -36,17 +36,16 @@ export default function AboutPage() {
               <div className="text-foreground-secondary mt-4 space-y-4 text-base leading-relaxed">
                 <p>
                   Most economics students meet financial markets as a chapter in a textbook: a
-                  supply-and-demand curve, a volatility formula, a sentence about risk aversion. The
-                  mechanics that decide whether any of it works — how an order becomes a fill, why a
-                  quoted price differs from an achievable one, how a drawdown feels at the time —
-                  are usually left implicit.
+                  supply-and-demand curve, a volatility formula, and a sentence about risk aversion.
+                  The mechanics that govern execution (how an order becomes a fill, why quoted prices
+                  differ from achievable executions, and how a drawdown feels while unfolding) are
+                  usually left implicit.
                 </p>
                 <p>
                   That gap is the reason the club exists. We run a written programme, a simulator
                   built on a documented price model, and scenario challenges that are scored on risk
-                  as well as return. The aim is competence: a member who finishes a session should
-                  be able to explain not just what a number is, but where it came from and what it
-                  does not tell you.
+                  as well as return. The aim is competence: a member who finishes a session can
+                  explain what a number means, where it originated, and what limitations it carries.
                 </p>
               </div>
             </article>
@@ -127,7 +126,7 @@ export default function AboutPage() {
               <CardContent>
                 <dl className="space-y-4 text-sm">
                   {[
-                    ["Founded", "Academic year 2025–2026"],
+                    ["Founded", "Academic year 2025-2026"],
                     ["Home", SITE.campusShort],
                     ["Language", "Instruction and material in English and French"],
                     ["Currency", "Moroccan dirham (MAD), simulated"],
@@ -174,7 +173,7 @@ export default function AboutPage() {
         </div>
       </Container>
 
-      <Section className="border-border bg-surface-subtle border-t">
+      <Section className="border-rule bg-surface-raised border-t">
         <Container size="prose">
           <h2 className="text-xl font-semibold tracking-tight">Common questions</h2>
           <dl className="divide-border mt-6 divide-y">

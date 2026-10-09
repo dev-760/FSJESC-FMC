@@ -59,6 +59,7 @@ const serverEnvSchema = z.object({
   MAIL_PROVIDER: z.enum(["console", "smtp"]).default("console"),
   MAIL_FROM: z.string().min(1).default("FSJESC Financial Markets Club <no-reply@fsjesc-fmc.local>"),
   SMTP_URL: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;

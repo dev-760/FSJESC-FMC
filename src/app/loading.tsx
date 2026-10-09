@@ -25,7 +25,7 @@ export default function Loading() {
         </div>
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((index) => (
-            <div key={index} className="border-border bg-surface space-y-3 rounded-lg border p-5">
+            <div key={index} className="border-rule bg-surface space-y-3 rounded-lg border p-5">
               <div className="bg-surface-inset h-3 w-20 rounded" />
               <div className="bg-surface-inset h-5 w-4/5 rounded" />
               <div className="bg-surface-inset h-3 w-full rounded" />

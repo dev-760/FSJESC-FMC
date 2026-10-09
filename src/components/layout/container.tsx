@@ -31,23 +31,37 @@ export function Container({
   );
 }
 
-/** Vertical section rhythm. */
+/**
+ * Vertical section rhythm.
+ *
+ * By default a `Section` also supplies the platform `Container`, so a page can be
+ * written as a bare stack of sections. Set `contained={false}` when an ancestor
+ * already provides a `Container` — otherwise the gutter is applied twice and the
+ * section sits visibly further in than the content above it.
+ */
 export function Section({
   children,
   className,
   spacing = "default",
   as: Component = "section",
+  contained = true,
 }: {
   children: ReactNode;
   className?: string;
   spacing?: "tight" | "default" | "loose";
   as?: "section" | "div" | "article";
+  /** Set false when an ancestor already renders a `Container`. */
+  contained?: boolean;
 }) {
   const padding = {
     tight: "py-8",
     default: "py-14",
     loose: "py-20",
   }[spacing];
+
+  if (!contained) {
+    return <Component className={cn(padding, className)}>{children}</Component>;
+  }
 
   return (
     <Component className={cn(padding, className)}>
@@ -159,15 +173,15 @@ export function Divider({ className, label }: { className?: string; label?: stri
   if (label) {
     return (
       <div className="flex items-center gap-3" role="separator">
-        <span className="bg-border h-px flex-1" />
+        <span className="bg-rule h-px flex-1" />
         <span className="text-2xs text-foreground-muted font-medium tracking-widest uppercase">
           {label}
         </span>
-        <span className="bg-border h-px flex-1" />
+        <span className="bg-rule h-px flex-1" />
       </div>
     );
   }
-  return <hr className={cn("border-border border-t", className)} />;
+  return <hr className={cn("border-rule border-t", className)} />;
 }
 
 /**

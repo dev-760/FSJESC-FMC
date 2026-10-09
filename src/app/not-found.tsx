@@ -41,7 +41,7 @@ export default function NotFound() {
           </Button>
         </div>
 
-        <p className="border-border text-foreground-muted mt-12 max-w-prose border-t pt-6 text-xs leading-relaxed">
+        <p className="border-rule text-foreground-muted mt-12 max-w-prose border-t pt-6 text-xs leading-relaxed">
           {DISC_3}
         </p>
       </Container>

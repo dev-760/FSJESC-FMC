@@ -11,7 +11,7 @@ export const SITE = {
   shortName: "FSJESC FMC",
   tagline: "Learn financial markets. Research. Simulate. Analyze. Improve.",
   description:
-    "The official platform of the FSJESC Financial Markets Club — a student-led environment for learning, researching and simulating financial markets.",
+    "The official platform of the FSJESC Financial Markets Club, a student-led environment for learning, researching and simulating financial markets.",
   locale: "en",
   /** All user-facing dates and times are displayed in this zone (Part 1.4). */
   timezone: "Africa/Casablanca",
@@ -55,7 +55,7 @@ export const FEES = {
     },
     flat: {
       id: "flat" as const,
-      label: "Flat commission — 10 MAD per order",
+      label: "Flat commission: 10 MAD per order",
       description: "A flat brokerage charge on each execution, for illustration only.",
       buyPercentBps: 0,
       sellPercentBps: 0,
@@ -63,7 +63,7 @@ export const FEES = {
     },
     percentage: {
       id: "percentage" as const,
-      label: "Commission — 0.10% of trade value, minimum 5 MAD",
+      label: "Commission: 0.10% of trade value, minimum 5 MAD",
       description: "A proportional brokerage charge, for illustration only.",
       buyPercentBps: 10,
       sellPercentBps: 10,
@@ -157,7 +157,7 @@ export const PAGINATION = {
  */
 export const DISCLAIMERS = {
   /** Persistent simulator banner. */
-  DISC_1: "SIMULATED MARKET — Educational environment. No real money.",
+  DISC_1: "SIMULATED MARKET: Educational environment. No real money.",
   /** Article footer. */
   DISC_2: "For educational purposes only. Not investment advice.",
   /** Analytics and advanced metrics. */

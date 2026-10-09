@@ -28,12 +28,14 @@ const ALL_ROUTES = {
   home: "/",
   about: "/about",
   events: "/events",
-  eventDetail: "/events/reading-order-statements",
-  team: "/team",
-  contact: "/contact",
   education: "/education",
+  simulator: "/simulator",
+  dashboard: "/simulator/dashboard",
   market: "/simulator/market",
   instrument: "/simulator/market/mari",
+  portfolio: "/simulator/portfolio",
+  history: "/simulator/history",
+  competitions: "/competitions",
 };
 
 /** The width the user actually sees, if the harness reported one. */
@@ -65,12 +67,12 @@ for (const [label, options] of viewports) {
   await page.emulateMedia({ reducedMotion: "reduce" });
 
   for (const [name, route] of Object.entries(selected)) {
-    const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: "load" });
+    const response = await page.goto(`${BASE_URL}${route}`, { waitUntil: "networkidle" });
     if (!response || !response.ok()) {
       console.warn(`skip ${route}: responded ${response?.status() ?? "with no response"}`);
       continue;
     }
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(1000);
     const file = `${outDir}/${label}-${name}.png`;
     await page.screenshot({ path: file, fullPage: true });
     console.log(`captured ${file}`);
