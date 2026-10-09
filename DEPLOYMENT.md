@@ -71,6 +71,63 @@ pnpm db:migrate
 SEED_DEMO="true" pnpm db:seed
 ```
 
+### Supabase as the Primary Database
+
+The data layer is Drizzle + PostgreSQL, so Supabase is used as a hosted
+PostgreSQL rather than as a second data layer. Nothing in the query layer
+changes; only `DATABASE_URL` and three connection settings do.
+
+1. Create the project and take the database password from
+   **Dashboard → Settings → Database**. URL-encode it: characters such as
+   `@ : / #` must be percent-escaped.
+
+2. Point `DATABASE_URL` at the pooler (recommended — IPv4, and works from any
+   network):
+
+   ```
+   postgresql://postgres.<project-ref>:<password>@aws-0-<region>.pooler.supabase.com:6543/postgres
+   ```
+
+   The session pooler (`:5432`) and the direct connection
+   (`db.<project-ref>.supabase.co:5432`, IPv6 only) also work.
+
+3. Apply the schema. `drizzle-kit` generates the SQL; run it against Supabase
+   the same way as any other Postgres:
+
+   ```bash
+   pnpm db:migrate
+   ```
+
+   The schema needs no extensions — `gen_random_uuid()` is core in PostgreSQL 13+,
+   and Supabase runs 15+.
+
+4. Seed, then create the bootstrap administrator:
+
+   ```bash
+   SEED_DEMO="true" pnpm db:seed
+   ```
+
+Connection settings applied automatically by `src/infrastructure/database/connection.ts`:
+
+| Setting | Value | Why |
+| --- | --- | --- |
+| `prepare` | `false` | The transaction-mode pooler (6543) runs PgBouncer, which does not support prepared statements. Re-enable with `DATABASE_PREPARE="true"` for a direct connection. |
+| `ssl` | `require` on `*.supabase.co` / `*.pooler.supabase.com` | Supabase requires TLS. A local docker Postgres has none, so it stays off there. Override with `DATABASE_SSL`. |
+| pool ceiling | `5` | Supabase caps concurrent connections per project, tighter on the free tier. Override with `DATABASE_POOL_MAX`. |
+
+Notes:
+
+- The application connects as the table owner, so Row Level Security does not
+  block it. RLS only matters to the `anon` / `authenticated` roles.
+- Supabase's own `auth.users` table is not used. Authentication remains Auth.js
+  against the `users` / `accounts` / `sessions` tables in this schema, so
+  enabling Supabase Auth would be a separate decision, not a side effect of
+  moving the database.
+- The optional Supabase article reader needs a service-role key in
+  `SUPABASE_SERVICE_ROLE_KEY`. That key bypasses RLS entirely — never commit it,
+  and rotate it if it is ever exposed. With it unset, articles are read from
+  `src/content/topics` instead, so the site builds and runs without it.
+
 ### Connection Pooling
 
 Configure connection pooling for production:
