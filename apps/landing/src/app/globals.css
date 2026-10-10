@@ -5,68 +5,89 @@
 @source "../../src";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Design tokens — dark only.
+   Design tokens — light default, dark via prefers-color-scheme.
 
-   This is an institutional trading terminal: dense, ruled, aligned. Structure
-   comes from 1px hairlines and column alignment, never from floating boxes.
+   Supersedes DECISIONS.md D17 ("single dark theme, by decision"). That decision
+   was made before the brand and mockup language existed; the club identity is
+   navy-and-gold on warm sand, which cannot survive on a near-black canvas, so
+   light is now the default and dark is honoured from the OS.
 
-   Single theme by decision (DECISIONS.md D17): out of scope was a light theme, so
-   there is exactly one contrast budget to hold and it is audited here.
+   The source of truth is mockups/Landing.html `:root`. Its dark mode was keyed
+   on a `[data-theme="dark"]` attribute and only patched ~12 component rules —
+   it never defined a dark token set. The dark block below is therefore derived
+   from the hexes the mockup does define (#0B1B2B, #11243B, #142944, #3A2E14,
+   #11392C, #3A1C13, #D4A94F) rather than copied.
 
-   Contrast, measured against the canvas #07080B:
-     text-primary   #F9FAFB  17.9:1   all text
-     text-secondary #9CA3AF   7.0:1    all text
-     text-muted     #6B7280   4.15:1   NON-ESSENTIAL TEXT AT 14px OR LARGER ONLY
-     text-disabled  #374151   1.9:1    disabled controls only, never read as content
-     bull           #00E599  12.1:1    gain, and the primary action fill
-     bear           #EF4444   5.2:1    loss
-     info           #3B82F6   5.5:1    quantitative / model output
-     warning        #FBBF24   9.6:1    simulation and honesty markers
-   `text-muted` is deliberately below 4.5:1. It is scoped to non-essential text,
-   and `--color-muted-allowed` exists so a component reaches for the *explicit*
-   token rather than getting muted text by accident.
+   Token NAMES are unchanged from the previous dark-only system. Every component
+   consumes `@theme inline` names only, so both themes land without touching a
+   single component file. If you are adding a colour, add a token here first.
+
+   LIGHT contrast, measured against the canvas #FAF6EF:
+      text-primary   #0B1B2B  15.4:1   all text
+      text-secondary #3D5568   6.7:1    all text
+      text-muted     #8A8577   3.3:1    NON-ESSENTIAL TEXT AT 14px OR LARGER ONLY
+      text-disabled  #A9A396   2.1:1    disabled controls only, never read as content
+      bull           #0F7A5A   4.6:1    gain
+      bear           #B4442E   5.2:1    loss
+      info / accent  #2E4A8B   7.7:1    quantitative output AND the action fill
+      warning        #C89B3C   2.3:1    ⚠ FILLS AND MARKS ONLY — NEVER TEXT
+
+   The gold is the brand colour and it FAILS text contrast on sand by design of
+   the palette, not by accident. `--brand` is for the logo, rules, chart accents
+   and decorative fills. Putting gold type on `--canvas` is an accessibility
+   failure; use `--text-primary` or `--accent` instead. `text-muted` is likewise
+   deliberately below 4.5:1 and stays scoped to non-essential text, with
+   `--color-muted-allowed` as the explicit opt-in.
    ─────────────────────────────────────────────────────────────────────────── */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 
-  /* Surfaces — four levels, from the page inward. */
-  --canvas: #07080b;
-  --surface: #0f1117;
-  --surface-raised: #161922;
-  --surface-inset: #1c2029;
-  --surface-sunken: #0a0b10;
+  /* Surfaces — four levels, from the page inward. Warm sand, not grey. */
+  --canvas: #faf6ef;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
+  --surface-inset: #f2eadb;
+  --surface-sunken: #f9f5ed;
 
-  /* Hairlines. rgba white at three weights is the whole structural language. */
-  --rule: rgb(255 255 255 / 0.08);
-  --rule-strong: rgb(255 255 255 / 0.16);
-  --rule-faint: rgb(255 255 255 / 0.04);
+  /* Hairlines. Sand rules at three weights. */
+  --rule: #e4d8c2;
+  --rule-strong: #d4c9b3;
+  --rule-faint: rgb(228 216 194 / 0.55);
 
   /* Text */
-  --text-primary: #f9fafb;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --text-disabled: #374151;
-  --text-inverse: #07080b;
+  --text-primary: #0b1b2b;
+  --text-secondary: #3d5568;
+  --text-muted: #8a8577;
+  --text-disabled: #a9a396;
+  --text-inverse: #faf6ef;
 
   /* Action + semantics */
-  --bull: #00e599;
-  --bull-hover: #22f0aa;
-  --bull-subtle: rgb(0 229 153 / 0.12);
-  --bear: #ef4444;
-  --bear-subtle: rgb(239 68 68 / 0.12);
-  --info: #3b82f6;
-  --info-subtle: rgb(59 130 246 / 0.12);
-  --warning: #fbbf24;
-  --warning-subtle: rgb(251 191 36 / 0.12);
-  --neutral: #9ca3af;
-  --neutral-subtle: rgb(156 163 175 / 0.1);
+  --bull: #0f7a5a;
+  --bull-hover: #0c664a;
+  --bull-subtle: #e6f5ee;
+  --bear: #b4442e;
+  --bear-subtle: #fbeae5;
+  --info: #2e4a8b;
+  --info-subtle: #ebf0fa;
+  --warning: #c89b3c;
+  --warning-subtle: #f5e9ce;
+  --neutral: #3d5568;
+  --neutral-subtle: #f2eadb;
+
+  /* Brand. The mark is navy + gold; gold is the only hue that is not functional,
+     so it never aliases `accent` (which drives buttons, links and focus). */
+  --brand: #c89b3c;
+  --brand-hover: #b2862c;
+  --brand-subtle: #f5e9ce;
+  --brand-glow: rgb(200 155 60 / 0.22);
+  --brand-navy: #142944;
 
   /* Semantic aliases for component libraries and design tokens */
-  --accent: var(--bull);
-  --accent-hover: var(--bull-hover);
-  --accent-subtle: var(--bull-subtle);
-  --accent-text: var(--bull);
+  --accent: var(--info);
+  --accent-hover: #24406f;
+  --accent-subtle: var(--info-subtle);
+  --accent-text: var(--info);
   --positive: var(--bull);
   --positive-subtle: var(--bull-subtle);
   --negative: var(--bear);
@@ -74,22 +95,93 @@
   --information: var(--info);
   --information-subtle: var(--info-subtle);
 
-  /* Focus. 2px emerald, per the accessibility requirement. */
-  --ring: #00e599;
+  /* Focus. 2px indigo, per the accessibility requirement. */
+  --ring: #2e4a8b;
+
+  /* Shadows are navy-tinted so they read as depth on warm sand rather than grey
+     dirt. Layered small/medium/large per the mockup. */
+  --elev-sm: 0 1px 3px rgb(11 27 43 / 0.06), 0 1px 2px rgb(11 27 43 / 0.04);
+  --elev-md: 0 8px 24px -4px rgb(11 27 43 / 0.08), 0 2px 6px -1px rgb(11 27 43 / 0.04);
+  --elev-lg: 0 24px 48px -12px rgb(11 27 43 / 0.12), 0 8px 16px -4px rgb(11 27 43 / 0.04);
 
   /* Chart series: distinct in hue AND lightness, ordered for a reader who
      cannot rely on hue alone. */
-  --series-1: #00e599;
-  --series-2: #3b82f6;
-  --series-3: #fbbf24;
-  --series-4: #a78bfa;
-  --series-5: #f472b6;
+  --series-1: #0f7a5a;
+  --series-2: #2e4a8b;
+  --series-3: #c89b3c;
+  --series-4: #b4442e;
+  --series-5: #3d5568;
 
   /* The hero backdrop: a static radial mesh plus a masked 1px grid. No animation. */
-  --mesh-1: rgb(0 229 153 / 0.07);
-  --mesh-2: rgb(59 130 246 / 0.06);
-  --mesh-3: rgb(167 139 250 / 0.05);
-  --grid-line: rgb(255 255 255 / 0.028);
+  --mesh-1: rgb(200 155 60 / 0.12);
+  --mesh-2: rgb(46 74 139 / 0.07);
+  --mesh-3: rgb(15 122 90 / 0.06);
+  --grid-line: rgb(11 27 43 / 0.04);
+}
+
+/* Dark is the same system inverted onto navy, not a second palette. The OS asks
+   for it via prefers-color-scheme; there is no toggle and no attribute hook, so
+   there is exactly one way it can be turned on. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --canvas: #0b1b2b;
+    --surface: #11243b;
+    --surface-raised: #142944;
+    --surface-inset: #1e3448;
+    --surface-sunken: #081420;
+
+    --rule: #24384f;
+    --rule-strong: #35506d;
+    --rule-faint: rgb(240 235 224 / 0.06);
+
+    --text-primary: #f0ebe0;
+    --text-secondary: #b3c0cb;
+    --text-muted: #7d8d9b;
+    --text-disabled: #4e6678;
+    --text-inverse: #0b1b2b;
+
+    --bull: #34c792;
+    --bull-hover: #4ed9a8;
+    --bull-subtle: #11392c;
+    --bear: #e06a52;
+    --bear-subtle: #3a1c13;
+    --info: #7fa0e6;
+    --info-subtle: #1b2c4d;
+    --warning: #d4a94f;
+    --warning-subtle: #3a2e14;
+    --neutral: #b3c0cb;
+    --neutral-subtle: #1e3448;
+
+    --brand: #d4a94f;
+    --brand-hover: #e3bd69;
+    --brand-subtle: #3a2e14;
+    --brand-glow: rgb(212 169 79 / 0.22);
+    --brand-navy: #f0ebe0;
+
+    --accent: var(--info);
+    --accent-hover: #9db8ee;
+    --accent-subtle: var(--info-subtle);
+    --accent-text: var(--info);
+
+    --ring: #7fa0e6;
+
+    --elev-sm: 0 1px 3px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2);
+    --elev-md: 0 8px 24px -4px rgb(0 0 0 / 0.4), 0 2px 6px -1px rgb(0 0 0 / 0.3);
+    --elev-lg: 0 24px 48px -12px rgb(0 0 0 / 0.5), 0 8px 16px -4px rgb(0 0 0 / 0.35);
+
+    --series-1: #34c792;
+    --series-2: #7fa0e6;
+    --series-3: #d4a94f;
+    --series-4: #e06a52;
+    --series-5: #b3c0cb;
+
+    --mesh-1: rgb(212 169 79 / 0.1);
+    --mesh-2: rgb(127 160 230 / 0.07);
+    --mesh-3: rgb(52 199 146 / 0.05);
+    --grid-line: rgb(240 235 224 / 0.03);
+  }
 }
 
 @theme inline {
@@ -139,6 +231,13 @@
 
   --color-ring: var(--ring);
 
+  /* Brand. `--brand` is the mark and its decorative use; it is NOT a text or
+     button colour on the light theme (see the contrast note at the top). */
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-navy: var(--brand-navy);
+
   --color-series-1: var(--series-1);
   --color-series-2: var(--series-2);
   --color-series-3: var(--series-3);
@@ -146,14 +245,18 @@
   --color-series-5: var(--series-5);
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-inter-tight), var(--font-inter), ui-sans-serif, sans-serif;
+  --font-display: var(--font-fraunces), var(--font-inter), ui-serif, Georgia, serif;
+  --font-serif: var(--font-fraunces), ui-serif, Georgia, serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, monospace;
 
-  /* Cards 8px, badges and inner elements 4px, modals 12px. */
-  --radius-xs: 2px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  /* Corners. The mockup is a rounder, softer system than the terminal's hard
+     2px edges; these match its --r-sm/md/lg/xl. */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 22px;
+  --radius-pill: 9999px;
 
   /* A type scale with real steps. */
   --text-2xs: 0.6875rem;
@@ -177,9 +280,14 @@
   --text-5xl: 3rem;
   --text-5xl--line-height: 1.06;
 
-  /* Elevation declared once. Panels carry a hairline and no shadow — a 1px border
-     under a wide soft shadow is a ghost card. Shadows are for genuine float. */
-  --shadow-float: 0 1px 2px rgb(0 0 0 / 0.4), 0 12px 32px -8px rgb(0 0 0 / 0.6);
+  /* Elevation. The previous system banned shadows outright and used hairlines
+     only, which was right for a dark terminal and wrong for warm sand: on a
+     light canvas an edge has to be carried by luminance, not by a bright line.
+     These are navy-tinted so they sit under the paper rather than on it. */
+  --shadow-sm: var(--elev-sm);
+  --shadow-md: var(--elev-md);
+  --shadow-lg: var(--elev-lg);
+  --shadow-float: var(--elev-lg);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -236,12 +344,12 @@
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: rgb(255 255 255 / 0.16) transparent;
+    scrollbar-color: var(--rule-strong) transparent;
   }
 
   *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   *::-webkit-scrollbar-track {
@@ -249,29 +357,35 @@
   }
 
   *::-webkit-scrollbar-thumb {
-    background-color: rgb(255 255 255 / 0.14);
-    border-radius: 4px;
+    background-color: var(--rule-strong);
+    border-radius: 9999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
   }
 
   *::-webkit-scrollbar-thumb:hover {
-    background-color: rgb(255 255 255 / 0.24);
+    background-color: var(--text-muted);
+    background-clip: content-box;
   }
 
+  /* Fraunces for headings, per the mockup's --serif. The numerals stay on
+     JetBrains Mono: a serif oldstyle figure in a price column reads as a
+     different value at a glance, which is the one thing a ticker must not do. */
   h1,
   h2,
   h3,
   h4,
   h5,
   h6 {
-    font-family: var(--font-inter-tight), var(--font-inter), sans-serif;
+    font-family: var(--font-fraunces), var(--font-inter), ui-serif, Georgia, serif;
     font-weight: 600;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.015em;
     line-height: 1.15;
     text-wrap: balance;
   }
 
   h1 {
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
   }
 
   p {

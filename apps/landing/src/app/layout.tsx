@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { Suspense } from "react";
 import { getPublicEnv } from "@fsjesc/config/env-public";
 import { SITE, DISC_1 } from "@fsjesc/config/site";
@@ -15,14 +15,25 @@ import "./globals.css";
  * Typefaces, self-hosted at build by `next/font` — zero runtime font request, and
  * no CDN dependency (Part 10).
  *
- * Inter for body and UI. Inter Tight for headings, at -0.02em tracking.
- * JetBrains Mono for every number, ticker, timestamp and id, with tabular figures
- * applied globally in globals.css.
+ * Inter for body and UI. Fraunces for headings, which is the mockup's --serif and
+ * the voice of the logo wordmark. JetBrains Mono for every number, ticker,
+ * timestamp and id, with tabular figures applied globally in globals.css.
+ *
+ * Inter Tight is kept wired for the dense numeric headings in the terminal apps;
+ * landing headlines use Fraunces. Both are loaded, so this is ~1 font more than
+ * the previous set — accepted for the brand match, and noted in DESIGN.md.
  */
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
   weight: ["400", "500", "600"],
+  display: "swap",
+});
+
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
   display: "swap",
 });
 
@@ -90,7 +101,12 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#07080B",
+  // Paired light/dark so the browser chrome tracks the OS theme, matching the
+  // `prefers-color-scheme` block in globals.css.
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF6EF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B1B2B" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -99,11 +115,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     // `dir` comes from the locale record, so adding Arabic later needs a new
     // locale entry rather than a layout change (Part 9.5).
+    // No `data-theme` here on purpose: colour is owned by globals.css, which
+    // switches on prefers-color-scheme. A hardcoded attribute here would win
+    // over the media query and pin every visitor to one theme.
     <html
       lang={SITE.locale}
       dir={LOCALE_CONFIG.en.dir}
-      data-theme="dark"
-      className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
+      className={`${inter.variable} ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="bg-canvas text-foreground flex min-h-full flex-col">
         <SkipLink targetId="main-content" />

@@ -21,8 +21,8 @@ body {
 
 body {
   margin: 0;
-  background-color: #07080b;
-  color: #f9fafb;
+  background-color: #0a1520;
+  color: #f0ebe0;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,24 +56,22 @@ body {
 /**
  * A visible focus ring on every interactive element.
  *
- * Tamagui's press styling gives pointer users feedback but removes the outline
- * for keyboard users, so focus is restored explicitly here. The ring is 2px of
- * the accent colour, matching the public site.
+ * Focus ring uses the action colour (--action / #6b8cd6) matching mockups/AMS.html.
  */
 :where(a, button, [role="button"], input, select, textarea):focus-visible {
-  outline: 2px solid #00e599;
+  outline: 2px solid #6b8cd6;
   outline-offset: 2px;
   border-radius: 2px;
 }
 
 ::selection {
-  background-color: rgba(0, 229, 153, 0.24);
-  color: #f9fafb;
+  background-color: rgba(107, 140, 214, 0.24);
+  color: #f0ebe0;
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: #2a2f3a transparent;
+  scrollbar-color: #1f3549 transparent;
 }
 
 *::-webkit-scrollbar {
@@ -86,6 +84,6 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background-color: #2a2f3a;
+  background-color: #1f3549;
   border-radius: 4px;
 }

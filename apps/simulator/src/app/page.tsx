@@ -21,22 +21,22 @@ const WORKSTATIONS = [
     term: "Trading dashboard",
     detail:
       "Portfolio valuation, open positions, recent orders, and daily equity metrics in one view.",
-    href: "/simulator/dashboard",
+    href: "/dashboard",
   },
   {
     term: "Market quotes",
     detail: "Eight Casablanca instruments across banking, telecom and energy, with order depth.",
-    href: "/simulator/market",
+    href: "/market",
   },
   {
     term: "Portfolio holdings",
     detail: "Marked-to-market positions, average acquisition costs, and asset allocation.",
-    href: "/simulator/portfolio",
+    href: "/portfolio",
   },
   {
     term: "Execution audit",
     detail: "An immutable ledger of every share traded, the price it filled at, and the fee charged.",
-    href: "/simulator/history",
+    href: "/history",
   },
 ] as const;
 

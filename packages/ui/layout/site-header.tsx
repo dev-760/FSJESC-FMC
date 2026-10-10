@@ -8,6 +8,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { MarketTicker } from "../financial/market-ticker";
 import { SessionIndicator } from "../financial/session-indicator";
 import { Button } from "../button";
+import { FmcLogo } from "../brand/fmc-mark";
 import { cn } from "@fsjesc/config/cn";
 import type { NavItem } from "@fsjesc/config/navigation";
 import { SITE } from "@fsjesc/config/site";
@@ -84,15 +85,14 @@ export function SiteHeader({
           className="focus-visible:outline-ring flex shrink-0 items-center gap-2.5 rounded focus-visible:outline-2 focus-visible:outline-offset-4"
         >
           {/*
-            A `MAD` badge rather than a logo mark. The currency is the one fact every
-            visitor needs before they trust any number on the page.
+            The club mark, then the name beside it. This used to be a text `MAD`
+            badge on the argument that the currency is the one fact every visitor
+            needs before they trust any number on the page. That reasoning was
+            sound but it cost the identity: with no logo anywhere on the site,
+            the only mark a visitor met was a currency ticker. The brand now
+            leads and the currency is carried by the nav and the content itself.
           */}
-          <span
-            aria-hidden="true"
-            className="numeric border-rule-strong bg-surface-sunken text-2xs text-foreground-secondary flex h-6 items-center rounded-xs border px-1.5 font-semibold"
-          >
-            MAD
-          </span>
+          <FmcLogo variant="mark" height={26} alt="" />
           <span className="flex flex-col leading-none">
             <span className="text-sm font-semibold">{SITE.shortName}</span>
             <span className="text-2xs text-foreground-secondary mt-0.5 hidden sm:block">

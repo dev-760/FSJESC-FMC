@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Container } from "./container";
+import { FmcLogo } from "../brand/fmc-mark";
 import { FOOTER_NAV } from "@fsjesc/config/navigation";
 import { SITE } from "@fsjesc/config/site";
 
@@ -18,8 +19,8 @@ export function SiteFooter() {
       <Container size="wide" className="py-12">
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           <div>
-            <p className="text-sm font-semibold tracking-tight">{SITE.shortName}</p>
-            <p className="text-foreground-secondary mt-2 max-w-xs text-sm leading-relaxed">
+            <FmcLogo variant="wordmark" height={30} alt={SITE.name} className="mb-3" />
+            <p className="text-foreground-secondary max-w-xs text-sm leading-relaxed">
               A student-led platform for learning, researching and simulating financial markets at{" "}
               {SITE.campusShort}.
             </p>

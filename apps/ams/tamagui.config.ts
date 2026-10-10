@@ -14,40 +14,25 @@ import { config } from "@tamagui/config";
  * apart.
  */
 
-/** Surfaces — four levels, from the page inward. */
-const CANVAS = "#07080b";
-const SURFACE = "#0f1117";
-const SURFACE_RAISED = "#161922";
-const SURFACE_INSET = "#1c2029";
-const SURFACE_SUNKEN = "#0a0b10";
-
-/** Text. */
-const TEXT_PRIMARY = "#f9fafb";
-const TEXT_SECONDARY = "#9ca3af";
-const TEXT_MUTED = "#6b7280";
-
-/** Semantics. */
-const BULL = "#00e599";
-const BEAR = "#ef4444";
-const INFO = "#3b82f6";
-const WARNING = "#fbbf24";
-
 /**
- * The site's hairline language, expressed as opaque colours.
- *
- * The public site draws its rules with `rgb(255 255 255 / 0.08)`. Tamagui's
- * `borderColor` resolves through a palette index rather than an alpha channel,
- * so the equivalent is that same white composited onto the surface the rule
- * sits on. Blending rather than substituting a grey is what keeps a 1px divider
- * here reading identically to one on the public site.
+ * Surfaces — four levels, from the page inward, matching mockups/AMS.html.
  */
-function overSurface(alpha: number, base: string): string {
-  const n = parseInt(base.slice(1), 16);
-  const channels = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((channel) =>
-    Math.round(channel * (1 - alpha) + 255 * alpha),
-  );
-  return `#${channels.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
-}
+const CANVAS = "#0a1520";
+const SURFACE = "#132435";
+const SURFACE_RAISED = "#1a2e42";
+const SURFACE_INSET = "#1a2e42";
+const SURFACE_SUNKEN = "#0f2030";
+
+/** Text from mockups/AMS.html. */
+const TEXT_PRIMARY = "#f0ebe0";
+const TEXT_SECONDARY = "#9aa5b1";
+const TEXT_MUTED = "#6e7a85";
+
+/** Semantics from mockups/AMS.html. */
+const BULL = "#2dbf8e";
+const BEAR = "#e8745a";
+const INFO = "#6b8cd6";
+const WARNING = "#e0b858";
 
 const amsColors = {
   canvas: CANVAS,
@@ -65,15 +50,13 @@ const amsColors = {
   info: INFO,
   warning: WARNING,
 
-  accent: BULL,
+  accent: WARNING,
   destructive: BEAR,
 
-  /** The standard 8% rule. */
-  rule: overSurface(0.08, SURFACE_RAISED),
-  /** Emphasised 16% rule — active nav, table headers. */
-  ruleStrong: overSurface(0.16, SURFACE_RAISED),
-  /** Barely-there 4% rule inside a row. */
-  ruleFaint: overSurface(0.04, SURFACE_RAISED),
+  /** Hairline borders matching mockup tokens --border and --border-strong */
+  rule: "#1f3549",
+  ruleStrong: "#2e4760",
+  ruleFaint: "#182a3c",
 } as const;
 
 const tamaguiConfig = createTamagui({

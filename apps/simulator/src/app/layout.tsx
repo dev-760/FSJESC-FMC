@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
+import { Fraunces, Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { loadEnvConfig } from "@next/env";
 import "./globals.css";
 
@@ -21,6 +21,15 @@ const interTight = Inter_Tight({
   subsets: ["latin"],
   variable: "--font-inter-tight",
   weight: ["600", "700"],
+  display: "swap",
+});
+
+// Fraunces backs --font-display, which globals.css uses for headings. It has to
+// be loaded in every app that renders a heading, not just the landing site.
+const fraunces = Fraunces({
+  subsets: ["latin"],
+  variable: "--font-fraunces",
+  weight: ["400", "600", "700"],
   display: "swap",
 });
 
@@ -54,8 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html
       lang="en"
       dir="ltr"
-      data-theme="dark"
-      className={`${inter.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
+      className={`${inter.variable} ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
     >
       <body className="bg-canvas text-foreground flex min-h-full flex-col">{children}</body>
     </html>

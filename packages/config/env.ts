@@ -59,7 +59,14 @@ const serverEnvSchema = z.object({
   MAIL_PROVIDER: z.enum(["console", "smtp"]).default("console"),
   MAIL_FROM: z.string().min(1).default("FSJESC Financial Markets Club <no-reply@fsjesc-fmc.local>"),
   SMTP_URL: z.string().optional(),
-  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
+  /** New secret key format. The legacy service_role JWT is intentionally absent. */
+  /**
+   * Supabase keys, new format only.
+   *
+   * The legacy `service_role` / `anon` JWTs are deliberately absent: Supabase
+   * can revoke the legacy signing secret, and accepting a revoked,
+   * history-exposed credential as a fallback would keep it alive.
+   */
   SUPABASE_SECRET_KEY: z.string().optional(),
   SUPABASE_PUBLISHABLE_KEY: z.string().optional(),
   SUPABASE_JWKS_URL: z.url().optional(),

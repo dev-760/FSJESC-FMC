@@ -22,7 +22,8 @@
     "db:seed": "pnpm --filter @fsjesc/landing db:seed",
     "api:dev": "uvicorn app.main:app --reload --app-dir api --port 8000",
     "api:test": "python -m pytest api/tests -q",
-    "verify": "turbo run typecheck lint test build"
+    "verify": "turbo run typecheck lint test build",
+    "brand:assets": "python scripts/brand-assets.py"
   },
   "packageManager": "pnpm@12.9.1",
   "devDependencies": {

@@ -95,17 +95,28 @@ function Brand() {
     <XStack
       height={56}
       alignItems="center"
-      gap="$2"
+      gap="$2.5"
       paddingHorizontal="$4"
       borderBottomWidth={1}
       borderColor="$rule"
     >
-      <Text fontFamily="$mono" fontSize="$4" fontWeight="700" color="$bull">
-        AMS
-      </Text>
-      <Text fontSize="$1" color="$foregroundMuted">
-        Administration
-      </Text>
+      <picture>
+        <source srcSet="/brand/mark-dark.png" media="(prefers-color-scheme: dark)" />
+        <img
+          src="/brand/mark-light.png"
+          alt="FSJESC FMC"
+          height={24}
+          style={{ height: 24, width: "auto", display: "block" }}
+        />
+      </picture>
+      <YStack gap={0}>
+        <Text fontFamily="$mono" fontSize="$3" fontWeight="700" color="$foreground">
+          FSJESC FMC
+        </Text>
+        <Text fontSize="$1" color="$foregroundMuted">
+          AMS Administration
+        </Text>
+      </YStack>
     </XStack>
   );
 }

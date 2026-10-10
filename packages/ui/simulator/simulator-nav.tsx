@@ -8,6 +8,7 @@ import { landingUrl } from "@fsjesc/config/app-urls";
 import { SIMULATION } from "@fsjesc/config/site";
 import { money } from "@fsjesc/config/money";
 import { Num } from "@fsjesc/ui/primitives/num";
+import { FmcLogo } from "../brand/fmc-mark";
 
 export interface SimulatorNavProps {
   className?: string;
@@ -44,7 +45,16 @@ export function SimulatorNav({ className }: SimulatorNavProps) {
       )}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 overflow-x-auto px-4 py-2 sm:px-6 lg:px-8">
-        <nav aria-label="Simulator sections" className="flex items-center gap-1 sm:gap-2">
+        <div className="flex items-center gap-3">
+          <Link
+            href="/"
+            className="focus-visible:outline-ring flex shrink-0 items-center gap-2 rounded focus-visible:outline-2 focus-visible:outline-offset-2"
+            aria-label="Simulator Hub"
+          >
+            <FmcLogo variant="mark" height={24} alt="" />
+            <span className="hidden font-semibold text-xs tracking-tight sm:inline">FMC</span>
+          </Link>
+          <nav aria-label="Simulator sections" className="flex items-center gap-1 sm:gap-2">
           {NAV_TABS.map((tab) => {
             const active = tab.exact ? pathname === tab.path : pathname.startsWith(tab.path);
             const Icon = tab.icon;
@@ -71,6 +81,7 @@ export function SimulatorNav({ className }: SimulatorNavProps) {
             );
           })}
         </nav>
+        </div>
 
         <div className="hidden items-center gap-3 text-xs md:flex">
           <span className="label text-2xs text-foreground-muted">Default balance:</span>
