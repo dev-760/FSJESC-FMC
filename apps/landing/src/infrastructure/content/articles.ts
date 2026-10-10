@@ -46,8 +46,12 @@ interface SupabaseArticleRow {
 /** All article slugs, sorted. Fetches from Supabase with filesystem fallback. */
 export async function listArticleSlugs(): Promise<string[]> {
   "use cache";
-  cacheLife(CONTENT_CACHE_LIFE);
-  cacheTag("education");
+  try {
+    cacheLife(CONTENT_CACHE_LIFE);
+    cacheTag("education");
+  } catch {
+    // Outside Next.js cacheComponents runtime (e.g. scripts/seed)
+  }
 
   // 1. Try Supabase
   if (isSupabaseConfigured()) {
@@ -82,8 +86,12 @@ export async function listArticleSlugs(): Promise<string[]> {
 /** Load and render one article from Supabase, with filesystem fallback. */
 export async function getArticle(slug: string): Promise<Article> {
   "use cache";
-  cacheLife(CONTENT_CACHE_LIFE);
-  cacheTag("education", `education:${slug}`);
+  try {
+    cacheLife(CONTENT_CACHE_LIFE);
+    cacheTag("education", `education:${slug}`);
+  } catch {
+    // Outside Next.js cacheComponents runtime (e.g. scripts/seed)
+  }
 
   const parsed = articleSlugSchema.safeParse(slug);
   if (!parsed.success) {
@@ -141,8 +149,12 @@ export async function getArticle(slug: string): Promise<Article> {
 /** Every article. One pass from Supabase, or mapped over listArticleSlugs. */
 export async function getAllArticles(): Promise<Article[]> {
   "use cache";
-  cacheLife(CONTENT_CACHE_LIFE);
-  cacheTag("education");
+  try {
+    cacheLife(CONTENT_CACHE_LIFE);
+    cacheTag("education");
+  } catch {
+    // Outside Next.js cacheComponents runtime (e.g. scripts/seed)
+  }
 
   // 1. Try Supabase batch fetch
   if (isSupabaseConfigured()) {

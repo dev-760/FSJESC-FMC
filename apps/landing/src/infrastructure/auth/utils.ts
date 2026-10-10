@@ -16,8 +16,8 @@ import { unauthenticated, forbidden } from "@fsjesc/config/errors";
  *
  * @returns The current session, or null if not authenticated
  */
-export function getCurrentSession(): Session | null {
-  return authProvider.getSession();
+export async function getCurrentSession(): Promise<Session | null> {
+  return await authProvider.getSession();
 }
 
 /**
@@ -25,8 +25,8 @@ export function getCurrentSession(): Session | null {
  *
  * @returns true if authenticated, false otherwise
  */
-export function isAuthenticated(): boolean {
-  const session = getCurrentSession();
+export async function isAuthenticated(): Promise<boolean> {
+  const session = await getCurrentSession();
   return session !== null;
 }
 
@@ -35,8 +35,8 @@ export function isAuthenticated(): boolean {
  *
  * @returns The user's role, or null if not authenticated
  */
-export function getCurrentUserRole(): UserRole | null {
-  const session = getCurrentSession();
+export async function getCurrentUserRole(): Promise<UserRole | null> {
+  const session = await getCurrentSession();
   return session?.user.role ?? null;
 }
 
@@ -45,8 +45,8 @@ export function getCurrentUserRole(): UserRole | null {
  *
  * @returns The user's ID, or null if not authenticated
  */
-export function getCurrentUserId(): string | null {
-  const session = getCurrentSession();
+export async function getCurrentUserId(): Promise<string | null> {
+  const session = await getCurrentSession();
   return session?.user.id ?? null;
 }
 
@@ -56,8 +56,8 @@ export function getCurrentUserId(): string | null {
  * @returns The current session
  * @throws AppError with UNAUTHENTICATED code if not authenticated
  */
-export function requireAuth(): Session {
-  const session = getCurrentSession();
+export async function requireAuth(): Promise<Session> {
+  const session = await getCurrentSession();
   if (!session) {
     throw unauthenticated();
   }
@@ -72,7 +72,7 @@ export function requireAuth(): Session {
  * @throws AppError with FORBIDDEN code if the user lacks the required role
  */
 export async function requireRole(requiredRole: UserRole): Promise<Session> {
-  const session = requireAuth();
+  const session = await requireAuth();
   const { hasRole } = await import("./rbac");
 
   if (!hasRole(session.user.role, requiredRole)) {

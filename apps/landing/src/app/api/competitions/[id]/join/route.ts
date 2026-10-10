@@ -12,7 +12,7 @@ import { requireAuth } from "@/infrastructure/auth/utils";
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     // Require authentication
-    const session = requireAuth();
+    const session = await requireAuth();
 
     const { id } = await params;
     const body = await request.json() as { userId: string };

@@ -87,11 +87,20 @@ export const metadata: Metadata = {
     title: `${SITE.name} | ${SITE.tagline}`,
     description: SITE.description,
     url: "/",
+    images: [
+      {
+        url: "/brand/wordmark-light.png",
+        width: 1200,
+        height: 630,
+        alt: `${SITE.name} Brand`,
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: `${SITE.name} | ${SITE.tagline}`,
     description: SITE.description,
+    images: ["/brand/wordmark-light.png"],
   },
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   formatDetection: { telephone: false, address: false, email: false },
@@ -122,7 +131,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang={SITE.locale}
       dir={LOCALE_CONFIG.en.dir}
       className={`${inter.variable} ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
+      suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("fsjesc-theme");if(t){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="bg-canvas text-foreground flex min-h-full flex-col">
         <SkipLink targetId="main-content" />
         {/*

@@ -21,7 +21,7 @@ import { numericStringToCents } from "@/infrastructure/database/money";
 
 export async function GET() {
   try {
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
     const now = new Date();
     const quotes = market.getQuotes(now);
 

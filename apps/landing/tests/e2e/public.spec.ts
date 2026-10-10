@@ -131,6 +131,9 @@ test.describe("navigation", () => {
     for (const link of links) {
       const href = await link.getAttribute("href");
       expect(href).toBeTruthy();
+      if (String(href).startsWith("http://") || String(href).startsWith("https://")) {
+        continue;
+      }
       const response = await page.request.get(`/${String(href).replace(/^\//, "")}`);
       expect(response.status(), `${href} should resolve`).toBeLessThan(400);
     }

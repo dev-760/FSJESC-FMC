@@ -15,6 +15,7 @@ import {
   resolveRelated,
 } from "@fsjesc/domain/education/article";
 import { formatDate } from "@fsjesc/config/format";
+import { SITE } from "@fsjesc/config/site";
 
 /**
  * Article pages (Part 7.2).
@@ -79,14 +80,42 @@ export default async function TopicPage({ params }: PageProps<"/education/topics
   // prose. Serialised from a literal built here; no submitted value reaches it.
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "Article",
-    headline: article.frontmatter.title,
-    description: article.frontmatter.summary,
-    datePublished: article.frontmatter.date.toISOString(),
-    wordCount: article.wordCount,
-    inLanguage: "en",
-    author: { "@type": "Organization", name: "FSJESC Financial Markets Club" },
-    publisher: { "@type": "Organization", name: "FSJESC Financial Markets Club" },
+    "@graph": [
+      {
+        "@type": "Article",
+        headline: article.frontmatter.title,
+        description: article.frontmatter.summary,
+        datePublished: article.frontmatter.date.toISOString(),
+        wordCount: article.wordCount,
+        inLanguage: "en",
+        mainEntityOfPage: `${SITE.url}/education/topics/${slug}`,
+        author: { "@type": "Organization", name: SITE.name, url: SITE.url },
+        publisher: { "@type": "Organization", name: SITE.name, url: SITE.url },
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: "Education",
+            item: `${SITE.url}/education`,
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: "Topics",
+            item: `${SITE.url}/education/topics`,
+          },
+          {
+            "@type": "ListItem",
+            position: 3,
+            name: article.frontmatter.title,
+            item: `${SITE.url}/education/topics/${slug}`,
+          },
+        ],
+      },
+    ],
   };
 
   return (

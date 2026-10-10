@@ -8,6 +8,13 @@
       "when": 1791437176423,
       "tag": "0000_parched_tomorrow_man",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791600682220,
+      "tag": "0001_lucky_stick",
+      "breakpoints": true
     }
   ]
 }

@@ -5,7 +5,7 @@ CREATE TABLE "articles" (
 	"title" text NOT NULL,
 	"summary" text NOT NULL,
 	"category" text NOT NULL,
-	"essential" integer DEFAULT false NOT NULL,
+	"essential" integer DEFAULT 0 NOT NULL,
 	"published_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
 	CONSTRAINT "articles_slug_unique" UNIQUE("slug")
@@ -41,7 +41,7 @@ CREATE TABLE "competition_participants" (
 	"user_id" uuid NOT NULL,
 	"portfolio_id" uuid NOT NULL,
 	"joined_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "competition_participants_competition_id_user_id_pk" PRIMARY KEY("competition_id","user_id")
+	CONSTRAINT "competition_participants_competition_id_user_id_unique" UNIQUE("competition_id","user_id")
 );
 --> statement-breakpoint
 CREATE TABLE "competitions" (
@@ -72,7 +72,7 @@ CREATE TABLE "events" (
 	"starts_at" timestamp with time zone NOT NULL,
 	"ends_at" timestamp with time zone NOT NULL,
 	"capacity" integer NOT NULL,
-	"is_published" integer DEFAULT false NOT NULL,
+	"is_published" integer DEFAULT 0 NOT NULL,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
 );
@@ -127,7 +127,7 @@ CREATE TABLE "portfolios" (
 	"cash_cents" numeric(20, 2) DEFAULT '0' NOT NULL,
 	"reserved_cents" numeric(20, 2) DEFAULT '0' NOT NULL,
 	"realised_pnl_cents" numeric(20, 2) DEFAULT '0' NOT NULL,
-	"is_competition" integer DEFAULT false NOT NULL,
+	"is_competition" integer DEFAULT 0 NOT NULL,
 	"competition_id" uuid,
 	"created_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL
@@ -141,7 +141,7 @@ CREATE TABLE "positions" (
 	"average_cost_cents" numeric(20, 4) NOT NULL,
 	"opened_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "positions_portfolio_id_symbol_pk" PRIMARY KEY("portfolio_id","symbol")
+	CONSTRAINT "positions_portfolio_id_symbol_unique" UNIQUE("portfolio_id","symbol")
 );
 --> statement-breakpoint
 CREATE TABLE "profiles" (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import { PriceChart } from "../charts/price-chart";
 import { Sparkline } from "../charts/sparkline";
@@ -9,47 +9,13 @@ import { SessionIndicator } from "../financial/session-indicator";
 import { Delta, Num } from "../primitives/num";
 import { cn } from "@fsjesc/config/cn";
 import { market, TRADEABLE } from "@fsjesc/domain/market/engine";
-import type { Quote } from "@fsjesc/domain/market/provider";
 import { INTERVALS, useTerminalView } from "@fsjesc/domain/market/store";
 import { simulatorUrl } from "@fsjesc/config/app-urls";
-
-/**
- * The landing page's terminal preview.
- *
- * This is the product's argument, so the hero *is* the product: a real watchlist, a
- * real chart, real candles, from the same deterministic engine the simulator uses.
- * An illustration of a chart would be a claim about what the platform does; this is a
- * demonstration of it.
- *
- * Why a client component: the chart needs a browser, and the prices are recomputed in
- * the browser from the pure model so the strip and the chart stay in step without a
- * server round trip. Nothing here is authoritative — see `store.ts`.
- */
-
-const REFRESH_MS = 4_000;
-
-/** Quotes for the watchlist, keyed by the render instant so React sees a new array. */
-function useQuotes(): { quotes: Quote[]; ready: boolean } {
-  const [quotes, setQuotes] = useState<Quote[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      return market.watchlistPreview(new Date());
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    const update = (): void => setQuotes(market.watchlistPreview(new Date()));
-    const timer = setInterval(update, REFRESH_MS);
-    return () => clearInterval(timer);
-  }, []);
-
-  return { quotes, ready: quotes.length > 0 };
-}
+import { useMarketStream } from "./use-market-stream";
 
 export function TerminalPreview({ className }: { className?: string }) {
-  const { quotes, ready } = useQuotes();
+  const { quotes } = useMarketStream();
+  const ready = quotes.length > 0;
   const { symbol, interval, setSymbol, setInterval } = useTerminalView();
 
   const selected = quotes.find((quote) => quote.symbol === symbol) ?? quotes[0];

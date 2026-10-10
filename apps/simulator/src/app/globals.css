@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* Tailwind v4 scans upward from this file for class names. The component library
-   lives outside src/app, so the scan root is stated explicitly. */
-@source "../../src";
+@source "..";
+@source "../../../../packages/ui";
+@source "../../../../packages/config";
 
 /* ───────────────────────────────────────────────────────────────────────────
    Design tokens — light default, dark via prefers-color-scheme.

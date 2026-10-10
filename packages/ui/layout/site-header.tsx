@@ -42,6 +42,13 @@ export function SiteHeader({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const [activePath, setActivePath] = useState(pathname);
+
+  useEffect(() => {
+    setActivePath(pathname || (typeof window !== "undefined" ? window.location.pathname : ""));
+  }, [pathname]);
+
+  const currentPath = activePath || pathname;
 
   // Closed during render when the path changes, rather than in an effect. An effect
   // would leave the panel visible for a frame after a navigation, and React advises
@@ -107,11 +114,11 @@ export function SiteHeader({
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                  aria-current={isCurrent(currentPath, item.href) ? "page" : undefined}
                   className={cn(
                     "rounded-sm px-2.5 py-1.5 text-sm transition-colors",
                     "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2",
-                    isCurrent(pathname, item.href)
+                    isCurrent(currentPath, item.href)
                       ? "bg-surface-inset text-foreground font-medium"
                       : "text-foreground-secondary hover:bg-surface-sunken hover:text-foreground",
                   )}
@@ -154,10 +161,10 @@ export function SiteHeader({
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                    aria-current={isCurrent(currentPath, item.href) ? "page" : undefined}
                     className={cn(
                       "focus-visible:outline-ring block rounded-sm px-1 py-4 focus-visible:outline-2 focus-visible:-outline-offset-2",
-                      isCurrent(pathname, item.href)
+                      isCurrent(currentPath, item.href)
                         ? "bg-surface-inset"
                         : "hover:bg-surface-sunken",
                     )}
@@ -178,11 +185,16 @@ export function SiteHeader({
       ) : null}
 
       {/*
-        The full disclaimer, once, in the document rather than only in the ticker
-        label. Screen readers reach it, and it is what a reader who wants the exact
-        wording is looking for.
+        The permanent simulated-market notice (Part 0.4, DISC-1), visible and accessible
+        on every page as mandated by exit criteria.
       */}
-      <p className="sr-only">{disclaimer}</p>
+      <aside
+        role="note"
+        aria-label="Simulated market notice"
+        className="border-rule bg-surface-sunken border-t px-4 py-1 text-center text-2xs text-foreground-secondary"
+      >
+        <p>{disclaimer}</p>
+      </aside>
     </header>
   );
 }
@@ -193,7 +205,9 @@ export function SiteHeader({
  */
 function isCurrent(pathname: string | null, href: string): boolean {
   if (!pathname) return false;
-  if (pathname === href) return true;
-  if (href === "/") return false;
-  return pathname.startsWith(`${href}/`);
+  const p = pathname.replace(/\/+$/, "") || "/";
+  const h = href.replace(/\/+$/, "") || "/";
+  if (p === h) return true;
+  if (h === "/") return false;
+  return p.startsWith(`${h}/`);
 }

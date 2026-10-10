@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-/* Tailwind v4 scans upward from this file for class names. The component library
-   lives outside src/app, so the scan root is stated explicitly. */
-@source "../../src";
+@source "..";
+@source "../../../../packages/ui";
+@source "../../../../packages/config";
 
 /* ───────────────────────────────────────────────────────────────────────────
    Design tokens — light default, dark via prefers-color-scheme.
@@ -123,7 +123,7 @@
    for it via prefers-color-scheme; there is no toggle and no attribute hook, so
    there is exactly one way it can be turned on. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
 
     --canvas: #0b1b2b;
@@ -182,6 +182,66 @@
     --mesh-3: rgb(52 199 146 / 0.05);
     --grid-line: rgb(240 235 224 / 0.03);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --canvas: #0b1b2b;
+  --surface: #11243b;
+  --surface-raised: #142944;
+  --surface-inset: #1e3448;
+  --surface-sunken: #081420;
+
+  --rule: #24384f;
+  --rule-strong: #35506d;
+  --rule-faint: rgb(240 235 224 / 0.06);
+
+  --text-primary: #f0ebe0;
+  --text-secondary: #b3c0cb;
+  --text-muted: #7d8d9b;
+  --text-disabled: #4e6678;
+  --text-inverse: #0b1b2b;
+
+  --bull: #34c792;
+  --bull-hover: #4ed9a8;
+  --bull-subtle: #11392c;
+  --bear: #e06a52;
+  --bear-subtle: #3a1c13;
+  --info: #7fa0e6;
+  --info-subtle: #1b2c4d;
+  --warning: #d4a94f;
+  --warning-subtle: #3a2e14;
+  --neutral: #b3c0cb;
+  --neutral-subtle: #1e3448;
+
+  --brand: #d4a94f;
+  --brand-hover: #e3bd69;
+  --brand-subtle: #3a2e14;
+  --brand-glow: rgb(212 169 79 / 0.22);
+  --brand-navy: #f0ebe0;
+
+  --accent: var(--info);
+  --accent-hover: #9db8ee;
+  --accent-subtle: var(--info-subtle);
+  --accent-text: var(--info);
+
+  --ring: #7fa0e6;
+
+  --elev-sm: 0 1px 3px rgb(0 0 0 / 0.3), 0 1px 2px rgb(0 0 0 / 0.2);
+  --elev-md: 0 8px 24px -4px rgb(0 0 0 / 0.4), 0 2px 6px -1px rgb(0 0 0 / 0.3);
+  --elev-lg: 0 24px 48px -12px rgb(0 0 0 / 0.5), 0 8px 16px -4px rgb(0 0 0 / 0.35);
+
+  --series-1: #34c792;
+  --series-2: #7fa0e6;
+  --series-3: #d4a94f;
+  --series-4: #e06a52;
+  --series-5: #b3c0cb;
+
+  --mesh-1: rgb(212 169 79 / 0.1);
+  --mesh-2: rgb(127 160 230 / 0.07);
+  --mesh-3: rgb(52 199 146 / 0.05);
+  --grid-line: rgb(240 235 224 / 0.03);
 }
 
 @theme inline {

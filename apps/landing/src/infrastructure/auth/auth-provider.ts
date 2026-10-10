@@ -12,9 +12,12 @@ import "server-only";
 import { hash, verify } from "@node-rs/argon2";
 import { randomBytes } from "crypto";
 import { eq } from "drizzle-orm";
+import { cookies, headers } from "next/headers";
 import { db } from "../database/connection";
 import * as schema from "../database/schema";
 import { usersRepository } from "../database/repositories/users.repository";
+import { portfoliosRepository } from "../database/repositories/portfolios.repository";
+import { bearerTokenFrom, verifySupabaseToken } from "./supabase-jwt";
 import { AUTH_CONFIG } from "@fsjesc/config/site";
 import { AppError, ERROR_CODES, rateLimited } from "@fsjesc/config/errors";
 import type { UserRole } from "./rbac";
@@ -92,12 +95,12 @@ export interface AuthProvider {
   /**
    * Sign out the current user.
    */
-  logOut(): void;
+  logOut(): Promise<void> | void;
 
   /**
    * Get the current session.
    */
-  getSession(): Session | null;
+  getSession(): Promise<Session | null>;
 
   /**
    * Request a password reset email.
@@ -195,23 +198,41 @@ class AuthJsAuthProvider implements AuthProvider {
       await usersRepository.upsertProfile(user.id, data.profile);
     }
 
-    // Generate email verification token
-    const token = this.generateToken();
-    const expiresAt = new Date(Date.now() + AUTH_CONFIG.emailVerificationTtlHours * 60 * 60 * 1000);
+    // Auto-create initial portfolio with starting cash (100,000 MAD)
+    try {
+      await portfoliosRepository.create({
+        userId: user.id,
+        startingCashCents: "100000.00",
+      });
+    } catch {
+      // Continue if already exists
+    }
 
-    await db.insert(schema.emailVerificationTokens).values({
-      token,
+    // Generate session token and store in database
+    const token = this.generateToken();
+    const expires = new Date(Date.now() + AUTH_CONFIG.sessionMaxAgeSeconds * 1000);
+    await db.insert(schema.sessions).values({
+      sessionToken: token,
       userId: user.id,
-      expiresAt,
+      expires,
     });
 
-    // TODO: Send verification email
-    // For now, we'll log the token for development
-    console.error(`Email verification token for ${data.email}: ${token}`);
+    try {
+      const cookieStore = await cookies();
+      cookieStore.set("fsjesc-fmc.session", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        expires,
+      });
+    } catch {
+      // Non-action context
+    }
 
     return {
       userId: user.id,
-      requiresVerification: true,
+      requiresVerification: false,
     };
   }
 
@@ -241,16 +262,29 @@ class AuthJsAuthProvider implements AuthProvider {
       throw new AppError(ERROR_CODES.INVALID_CREDENTIALS);
     }
 
-    // Check email verification (optional - could be configurable)
-    if (!user.emailVerified) {
-      // For now, allow login without verification
-      // In production, you might want to enforce this
-      // throw new AppError(ERROR_CODES.EMAIL_NOT_VERIFIED);
+    // Create session token and store in database
+    const token = this.generateToken();
+    const expires = new Date(Date.now() + AUTH_CONFIG.sessionMaxAgeSeconds * 1000);
+
+    await db.insert(schema.sessions).values({
+      sessionToken: token,
+      userId: user.id,
+      expires,
+    });
+
+    try {
+      const cookieStore = await cookies();
+      cookieStore.set("fsjesc-fmc.session", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        expires,
+      });
+    } catch {
+      // Non-action context
     }
 
-    // Create session using Auth.js
-    // Note: This is a simplified version. In production, you'd use the full
-    // Auth.js handler with NextAuth.js
     const session: Session = {
       user: {
         id: user.id,
@@ -258,7 +292,7 @@ class AuthJsAuthProvider implements AuthProvider {
         role: user.role,
         emailVerified: user.emailVerified,
       },
-      expires: new Date(Date.now() + AUTH_CONFIG.sessionMaxAgeSeconds * 1000).toISOString(),
+      expires: expires.toISOString(),
     };
 
     return session;
@@ -267,21 +301,83 @@ class AuthJsAuthProvider implements AuthProvider {
   /**
    * Sign out the current user.
    */
-  logOut(): void {
-    // In production, this would revoke the session in the database
-    // For now, this is a placeholder
-    console.error("User logged out");
+  async logOut(): Promise<void> {
+    try {
+      const cookieStore = await cookies();
+      const token = cookieStore.get("fsjesc-fmc.session")?.value;
+      if (token) {
+        await db.delete(schema.sessions).where(eq(schema.sessions.sessionToken, token));
+        cookieStore.delete("fsjesc-fmc.session");
+      }
+    } catch {
+      // Outside request context
+    }
   }
 
   /**
    * Get the current session.
    */
-  getSession(): Session | null {
-    // In production, this would use Auth.js's getSession() function
-    // For now, this is a placeholder that returns null
-    // The actual implementation would use cookies() to get the session token
-    // and query the database
-    return null;
+  async getSession(): Promise<Session | null> {
+    try {
+      // 1. Check Authorization Bearer header (Supabase JWT support)
+      try {
+        const headerList = await headers();
+        const authHeader = headerList.get("authorization");
+        const bearer = bearerTokenFrom(authHeader);
+        if (bearer) {
+          const identity = await verifySupabaseToken(bearer);
+          if (identity?.email) {
+            const user = await usersRepository.findByEmail(identity.email);
+            if (user) {
+              return {
+                user: {
+                  id: user.id,
+                  email: user.email,
+                  role: user.role,
+                  emailVerified: user.emailVerified,
+                },
+                expires: new Date(Date.now() + 3600 * 1000).toISOString(),
+              };
+            }
+          }
+        }
+      } catch {
+        // Headers not available in current execution context
+      }
+
+      // 2. Check Session Cookie
+      const cookieStore = await cookies();
+      const sessionToken = cookieStore.get("fsjesc-fmc.session")?.value;
+      if (!sessionToken) return null;
+
+      const [sessionRow] = await db
+        .select()
+        .from(schema.sessions)
+        .where(eq(schema.sessions.sessionToken, sessionToken))
+        .limit(1);
+
+      if (!sessionRow) return null;
+
+      if (new Date() > sessionRow.expires) {
+        await db.delete(schema.sessions).where(eq(schema.sessions.sessionToken, sessionToken));
+        return null;
+      }
+
+      const user = await usersRepository.findById(sessionRow.userId);
+      if (!user) return null;
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          emailVerified: user.emailVerified,
+        },
+        expires: sessionRow.expires.toISOString(),
+      };
+    } catch {
+      return null;
+    }
   }
 
   /**

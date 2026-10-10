@@ -22,6 +22,7 @@
     "./financial/semantic": "./financial/semantic.tsx",
     "./financial/session-indicator": "./financial/session-indicator.tsx",
     "./financial/terminal-preview": "./financial/terminal-preview.tsx",
+    "./financial/use-market-stream": "./financial/use-market-stream.ts",
     "./forms/contact-form": "./forms/contact-form.tsx",
     "./label": "./label.tsx",
     "./layout/account-slot": "./layout/account-slot.tsx",

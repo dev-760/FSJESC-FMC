@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const session = getCurrentSession();
+    const session = await getCurrentSession();
 
     if (!session?.user) {
       // Guest demo mode: execute against standard starting capital

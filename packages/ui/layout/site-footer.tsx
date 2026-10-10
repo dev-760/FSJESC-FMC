@@ -1,15 +1,14 @@
 import Link from "next/link";
 import { Container } from "./container";
 import { FmcLogo } from "../brand/fmc-mark";
+import { ThemeSwitcher } from "./theme-switcher";
 import { FOOTER_NAV } from "@fsjesc/config/navigation";
 import { SITE } from "@fsjesc/config/site";
 
 /**
  * Site footer.
  *
- * Static Server Component — no interactivity, so it ships no JavaScript and is
- * part of the prerendered shell on every page. Columns are separated by rules
- * rather than boxes, matching the terminal's structural language.
+ * Static Server Component shell with ThemeSwitcher client control.
  */
 export function SiteFooter() {
   const year = SITE.foundingYear;
@@ -45,15 +44,20 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="border-rule text-foreground-muted mt-10 border-t pt-6 text-xs leading-relaxed">
-          <p>
-            © {year} {SITE.name}. {SITE.campus}.
-          </p>
-          <p className="mt-2 max-w-3xl">
-            Educational project. The market, its instruments and its prices are simulated and
-            fictional. Nothing on this platform is investment advice, a recommendation, or a
-            description of real market activity.
-          </p>
+        <div className="border-rule text-foreground-muted mt-10 border-t pt-6 text-xs leading-relaxed flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <p>
+              © {year} {SITE.name}. {SITE.campus}.
+            </p>
+            <p className="mt-2 max-w-3xl">
+              Educational project. The market, its instruments and its prices are simulated and
+              fictional. Nothing on this platform is investment advice, a recommendation, or a
+              description of real market activity.
+            </p>
+          </div>
+          <div className="shrink-0">
+            <ThemeSwitcher />
+          </div>
         </div>
       </Container>
     </footer>

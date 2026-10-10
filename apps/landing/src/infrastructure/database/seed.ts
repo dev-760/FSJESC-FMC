@@ -233,7 +233,7 @@ export async function seed() {
 }
 
 // Run seed if executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1]?.includes("seed")) {
   seed()
     .then(() => {
       process.exit(0);
