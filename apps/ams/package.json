@@ -1,0 +1,31 @@
+{
+  "name": "@fsjesc/ams",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit --incremental false"
+  },
+  "dependencies": {
+    "@tamagui/config": "^1.125.3",
+    "@tamagui/core": "^1.125.3",
+    "lucide-react": "1.52.0",
+    "next": "16.4.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "tamagui": "^1.125.3"
+  },
+  "devDependencies": {
+    "@tamagui/cli": "^1.125.3",
+    "@tamagui/next-plugin": "^2.7.7",
+    "@types/node": "^24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.4.0",
+    "typescript": "^5"
+  }
+}

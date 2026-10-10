@@ -1,0 +1,31 @@
+{
+  "name": "@fsjesc/config",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Framework-free config, formatting and money helpers",
+  "exports": {
+    "./cn": "./cn.ts",
+    "./env-public": "./env-public.ts",
+    "./env": "./env.ts",
+    "./errors": "./errors.ts",
+    "./feature-flags": "./feature-flags.ts",
+    "./format": "./format.ts",
+    "./logger": "./logger.ts",
+    "./money": "./money.ts",
+    "./navigation": "./navigation.ts",
+    "./pagination": "./pagination.ts",
+    "./site": "./site.ts",
+    "./package.json": "./package.json",
+    "./app-urls": "./app-urls.ts"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.7.0",
+    "zod": "4.6.5"
+  },
+  "scripts": {},
+  "devDependencies": {
+    "@types/node": "^24"
+  }
+}

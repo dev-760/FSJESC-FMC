@@ -1,0 +1,43 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalDependencies": ["**/.env.*local"],
+  /**
+   * Three Next apps plus a TypeScript typecheck run flat-out exhaust this
+   * machine, and `tsc --incremental` races the app builds over
+   * `tsconfig.tsbuildinfo`. Every symptom was a task passing in isolation and
+   * failing only under concurrency, so the graph is deliberately not fanned out
+   * as wide as the machine would allow.
+   */
+  "concurrency": "50%",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "next.config.ts",
+        "**/*.ts",
+        "**/*.tsx"
+      ],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

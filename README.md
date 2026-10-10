@@ -13,6 +13,55 @@ _Learn financial markets. Research. Simulate. Analyze. Improve._
 
 ---
 
+## Repository layout
+
+This is a **Turborepo monorepo**. Each application is independently
+deployable and serves from its own port in development and its own subdomain in
+production.
+
+```
+fsjesc-fmc/
+├── apps/
+│   ├── landing/     @fsjesc/landing    — the public site; also owns the API
+│   ├── simulator/   @fsjesc/simulator  — the paper-trading terminal
+│   └── ams/         @fsjesc/ams        — the administration console (Tamagui)
+├── packages/
+│   ├── config/      @fsjesc/config     — site config, money, formatting, app URLs
+│   ├── domain/      @fsjesc/domain     — market model, trading engine, schemas
+│   └── ui/          @fsjesc/ui         — design system and layout components
+└── api/             Python (FastAPI)   — real-market reference service
+```
+
+### How the apps are wired
+
+| Edge                        | How it is connected                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------ |
+| landing → simulator         | `landingUrl` / `simulatorUrl` from `@fsjesc/config/app-urls` build absolute URLs     |
+| simulator → landing API     | `rewrites()` in the simulator proxies `/api/*` to the landing app — no CORS, no duplication |
+| ams → landing API           | `NEXT_PUBLIC_MAIN_APP_URL`; ams reads `/api/admin/*` over HTTP                         |
+| landing → Python            | `/api/market/reference` proxies the optional real-market feed                          |
+
+The simulator's board is **not** served by the Python service. The simulated
+market is eight fictional instruments priced by a deterministic seeded model;
+the Python service fronts real market data (yfinance). See
+`apps/landing/src/infrastructure/market-api.ts`.
+
+Secrets live at the repository root in `.env.local` and each app links to it —
+Next 16 removed `envDir`, so `loadEnvConfig("../../")` runs in `next.config.ts`
+alongside a symlink from each app directory.
+
+### Commands
+
+```bash
+pnpm install        # once
+pnpm dev            # all three apps, in parallel
+pnpm check          # typecheck + lint + test across the workspace
+pnpm build          # production build of every app
+pnpm --filter @fsjesc/simulator dev    # one app
+```
+
+---
+
 ## Documentation
 
 | Document                                         | Contents                                                  |

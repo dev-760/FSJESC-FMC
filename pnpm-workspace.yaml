@@ -1,3 +1,15 @@
+# pnpm workspace
+#
+# The repository root is itself a package (the landing Next app during the
+# migration; it moves to apps/landing later). Everything else that has its own
+# package.json is declared here.
+#
+# `api` is a Python service and has no package.json, so it is wired into
+# Turborepo separately via its script rather than as a workspace member.
+packages:
+  - "apps/*"
+  - "packages/*"
+
 allowBuilds:
   esbuild: true
   sharp: false
