@@ -6,11 +6,16 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from uuid import uuid4
 
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
 from app.core.config import settings
 from app.core.logging import setup_logging, get_logger, request_id_var
 from app.core.errors import (
     MarketDataError,
     market_data_error_handler,
+    http_exception_handler,
+    validation_exception_handler,
     generic_exception_handler
 )
 from app.api.v1 import (
@@ -55,7 +60,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
-    description="Unified REST API for market data across 7 asset classes",
+    description="Unified REST API for market data across 8 asset classes (CSE, Stocks, ETFs, Futures, Crypto, Forex, Bonds, Options)",
     docs_url="/docs" if settings.ENVIRONMENT != "production" else None,
     redoc_url="/redoc" if settings.ENVIRONMENT != "production" else None,
     lifespan=lifespan
@@ -88,8 +93,10 @@ async def add_request_id(request: Request, call_next):
 
 
 # Exception handlers
-app.add_exception_handler(Exception, generic_exception_handler)
 app.add_exception_handler(MarketDataError, market_data_error_handler)
+app.add_exception_handler(StarletteHTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(Exception, generic_exception_handler)
 
 
 # Include routers

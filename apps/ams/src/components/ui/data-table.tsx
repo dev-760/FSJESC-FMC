@@ -1,21 +1,10 @@
-import { Paragraph, ScrollView, Text, XStack, YStack, styled } from "tamagui";
+import { Text, YStack, styled } from "tamagui";
 import { Inbox } from "lucide-react";
 
 /**
- * Data grid.
- *
- * The pages previously hand-rolled "tables" as a row of flex children with
- * hand-tuned gaps. That gave no alignment between columns and no header row, so
- * nothing on screen said that "100" was a quantity or "125.50" a price.
- *
- * `@tamagui/table` is not a dependency of this app, so the grid is built from
- * stack primitives with explicit column widths: a shared width per column is
- * what actually produces the alignment, and it is the part the hand-rolled
- * version was missing. A monospaced, tabular header row states each column's
- * meaning.
+ * Data grid — rendered as `.table-wrap` + `<table className="table">` matching `mockups/AMS.html`.
  */
 
-/** Tracked uppercase mono header — states what a column holds. */
 export const HeaderCell = styled(Text, {
   name: "HeaderCell",
   fontFamily: "$mono",
@@ -26,7 +15,6 @@ export const HeaderCell = styled(Text, {
   whiteSpace: "nowrap",
 });
 
-/** Numeric body text: tabular figures so digits align down the column. */
 export const NumericText = styled(Text, {
   name: "NumericText",
   fontFamily: "$mono",
@@ -52,9 +40,7 @@ export const StrongText = styled(Text, {
 
 export interface Column<T> {
   header: string;
-  /** Fixed width. Without this a column cannot align down its length. */
   width: number;
-  /** Right-align numeric columns. */
   numeric?: boolean;
   render: (row: T) => React.ReactNode;
 }
@@ -69,61 +55,45 @@ export function DataTable<T>({
   rowKey: (row: T) => string;
 }) {
   return (
-    <YStack>
-      {/* Horizontal rather than vertical: a data table is bounded by its row
-          count, and width is the axis that overflows first on a laptop. */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <YStack minWidth={columns.reduce((sum, c) => sum + c.width, 0)}>
-          <XStack
-            borderBottomWidth={1}
-            borderColor="$ruleStrong"
-            paddingVertical="$2"
-            gap="$3"
-          >
+    <div className="table-wrap">
+      <table className="table">
+        <thead>
+          <tr>
             {columns.map((column) => (
-              <HeaderCell
+              <th
                 key={column.header}
-                width={column.width}
-                textAlign={column.numeric ? "right" : "left"}
+                className={column.numeric ? "num" : undefined}
+                style={{ minWidth: Math.min(column.width, 180) }}
               >
                 {column.header}
-              </HeaderCell>
+              </th>
             ))}
-          </XStack>
-
-          {rows.map((row, index) => (
-            <XStack
-              key={rowKey(row)}
-              alignItems="center"
-              gap="$3"
-              paddingVertical="$3"
-              borderBottomWidth={index === rows.length - 1 ? 0 : 1}
-              borderColor="$ruleFaint"
-              hoverStyle={{ backgroundColor: "$surfaceSunken" }}
-            >
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row) => (
+            <tr key={rowKey(row)}>
               {columns.map((column) => (
-                <YStack
-                  key={column.header}
-                  width={column.width}
-                  alignItems={column.numeric ? "flex-end" : "flex-start"}
-                >
-                  {column.render(row)}
-                </YStack>
+                <td key={column.header} className={column.numeric ? "num" : undefined}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: column.numeric ? "flex-end" : "flex-start",
+                      alignItems: "center",
+                    }}
+                  >
+                    {column.render(row)}
+                  </div>
+                </td>
               ))}
-            </XStack>
+            </tr>
           ))}
-        </YStack>
-      </ScrollView>
-    </YStack>
+        </tbody>
+      </table>
+    </div>
   );
 }
 
-/**
- * Empty state.
- *
- * An empty list is a designed state, not an omission: it says what would appear
- * here and what to do next.
- */
 export function EmptyState({
   title,
   description,
@@ -134,40 +104,17 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <YStack
-      alignItems="center"
-      justifyContent="center"
-      paddingVertical="$8"
-      paddingHorizontal="$4"
-      gap="$2"
-    >
-      <Inbox size={24} color="#778592" />
-      <Text fontSize="$3" fontWeight="600" color="$foreground" textAlign="center">
-        {title}
-      </Text>
-      {description ? (
-        <Paragraph
-          fontSize="$2"
-          color="$foregroundSecondary"
-          textAlign="center"
-          maxWidth={380}
-          lineHeight={19}
-        >
-          {description}
-        </Paragraph>
-      ) : null}
+    <div className="empty-state">
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
+        <Inbox size={24} color="var(--text-3)" />
+      </div>
+      <div className="empty-state__title">{title}</div>
+      {description ? <div style={{ marginBottom: action ? 12 : 0 }}>{description}</div> : null}
       {action}
-    </YStack>
+    </div>
   );
 }
 
-/**
- * A loading placeholder sized like the content it replaces.
- *
- * Deliberately static: an animation here would need CSS that this component
- * layer has no way to express, and a steady grey block is a perfectly legible
- * loading state on its own.
- */
 export function Skeleton({ height = 16, width }: { height?: number; width?: number | string }) {
   return (
     <YStack
@@ -183,7 +130,7 @@ export function Skeleton({ height = 16, width }: { height?: number; width?: numb
 
 export function TableSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <YStack gap="$3" paddingVertical="$2">
+    <YStack gap="$3" paddingVertical="$2" paddingHorizontal="$4">
       {Array.from({ length: rows }, (_, idx) => (
         <Skeleton key={idx} height={36} />
       ))}
@@ -191,12 +138,6 @@ export function TableSkeleton({ rows = 4 }: { rows?: number }) {
   );
 }
 
-/**
- * Loading region.
- *
- * `aria-busy` plus an accessible label means a screen reader learns the region
- * is loading without hearing a generic "loading" on every keystroke.
- */
 export function LoadingRegion({
   label = "Loading",
   children,

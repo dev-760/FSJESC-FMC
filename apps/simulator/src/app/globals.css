@@ -727,3 +727,427 @@
 .article-body .heading-anchor:focus-visible {
   opacity: 1;
 }
+
+/* ───────────────────────────────────────────────────────────────────────────
+   FSJESC-FMC Simulator Terminal Redesign Layer (matches mockups/Simulator.html)
+   ─────────────────────────────────────────────────────────────────────────── */
+
+:root {
+  --sim-bg-app: #f3f5f8;
+  --sim-bg-card: #ffffff;
+  --sim-bg-subtle: #f8fafc;
+  --sim-bg-muted: #eef2f6;
+  --sim-border: #e0e6ed;
+  --sim-border-strong: #cbd5e1;
+  --sim-ink: #0f1d2e;
+  --sim-ink-2: #2c3e50;
+  --sim-ink-3: #617082;
+  --sim-ink-4: #9aa6b5;
+  --sim-navy: #12243b;
+  --sim-navy-2: #1b3352;
+  --sim-gold: #d4a94f;
+  --sim-gold-ink: #8a6418;
+  --sim-gold-tint: #fbf5e6;
+  --sim-emerald: #137a54;
+  --sim-emerald-tint: #e7f6f0;
+  --sim-terracotta: #c23b2b;
+  --sim-terracotta-tint: #fcebe9;
+  --sim-amber: #b87914;
+  --sim-amber-tint: #fef5e6;
+  --sim-indigo: #3856c8;
+  --sim-indigo-tint: #eef2ff;
+  --sim-shadow-sm: 0 2px 6px rgba(15, 29, 46, 0.04), 0 1px 2px rgba(15, 29, 46, 0.03);
+  --sim-shadow-md: 0 8px 24px -6px rgba(15, 29, 46, 0.07), 0 2px 6px -1px rgba(15, 29, 46, 0.04);
+}
+
+:root[data-theme="dark"] {
+  --sim-bg-app: #0b1118;
+  --sim-bg-card: #121b28;
+  --sim-bg-subtle: #162232;
+  --sim-bg-muted: #1c2a3d;
+  --sim-border: #233246;
+  --sim-border-strong: #32465f;
+  --sim-ink: #f1f5f9;
+  --sim-ink-2: #cbd5e1;
+  --sim-ink-3: #8fa0b5;
+  --sim-ink-4: #5f7187;
+  --sim-navy: #0f1824;
+  --sim-navy-2: #172436;
+  --sim-gold: #e0b85c;
+  --sim-gold-ink: #f0d28a;
+  --sim-gold-tint: rgba(224, 184, 92, 0.14);
+  --sim-emerald: #34c792;
+  --sim-emerald-tint: rgba(52, 199, 146, 0.14);
+  --sim-terracotta: #ef6b5b;
+  --sim-terracotta-tint: rgba(239, 107, 91, 0.14);
+  --sim-amber: #f59e0b;
+  --sim-amber-tint: rgba(245, 158, 11, 0.14);
+  --sim-indigo: #7fa0e6;
+  --sim-indigo-tint: rgba(127, 160, 230, 0.14);
+  --sim-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+  --sim-shadow-md: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --sim-bg-app: #0b1118;
+    --sim-bg-card: #121b28;
+    --sim-bg-subtle: #162232;
+    --sim-bg-muted: #1c2a3d;
+    --sim-border: #233246;
+    --sim-border-strong: #32465f;
+    --sim-ink: #f1f5f9;
+    --sim-ink-2: #cbd5e1;
+    --sim-ink-3: #8fa0b5;
+    --sim-ink-4: #5f7187;
+    --sim-navy: #0f1824;
+    --sim-navy-2: #172436;
+    --sim-gold: #e0b85c;
+    --sim-gold-ink: #f0d28a;
+    --sim-gold-tint: rgba(224, 184, 92, 0.14);
+    --sim-emerald: #34c792;
+    --sim-emerald-tint: rgba(52, 199, 146, 0.14);
+    --sim-terracotta: #ef6b5b;
+    --sim-terracotta-tint: rgba(239, 107, 91, 0.14);
+    --sim-amber: #f59e0b;
+    --sim-amber-tint: rgba(245, 158, 11, 0.14);
+    --sim-indigo: #7fa0e6;
+    --sim-indigo-tint: rgba(127, 160, 230, 0.14);
+    --sim-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.35);
+    --sim-shadow-md: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+  }
+}
+
+/* App Shell */
+.sim-shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--sim-bg-app);
+  color: var(--sim-ink);
+}
+
+.sim-header {
+  height: 68px;
+  background-color: var(--sim-bg-card);
+  border-bottom: 1px solid var(--sim-border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  box-shadow: 0 1px 2px rgba(15, 29, 46, 0.03);
+}
+
+.sim-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+  min-height: calc(100vh - 68px);
+}
+
+.sim-rail {
+  background-color: var(--sim-navy);
+  color: rgba(255, 255, 255, 0.78);
+  border-right: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 20px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.sim-rail__label {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.42);
+  padding: 6px 12px;
+}
+
+.sim-rail__item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: all 140ms ease;
+  text-decoration: none;
+}
+
+.sim-rail__item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.sim-rail__item[aria-current="page"] {
+  background-color: rgba(212, 169, 79, 0.14);
+  color: #f0d28a;
+  font-weight: 600;
+  box-shadow: inset 3px 0 0 #d4a94f;
+}
+
+.sim-main {
+  min-width: 0;
+  padding: 28px 32px 64px;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+  .sim-body {
+    grid-template-columns: 1fr;
+  }
+  .sim-rail {
+    display: none;
+  }
+  .sim-main {
+    padding: 20px 16px 48px;
+  }
+}
+
+/* Market Clock Pill */
+.sim-clock {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 9999px;
+  background-color: var(--sim-bg-subtle);
+  border: 1px solid var(--sim-border);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  color: var(--sim-ink-2);
+}
+
+.sim-clock__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--sim-emerald);
+  box-shadow: 0 0 0 3px var(--sim-emerald-tint);
+}
+
+/* KPI Stat Strip (.stats & .stat) */
+.sim-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 24px;
+}
+
+@media (max-width: 1100px) {
+  .sim-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .sim-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sim-stat {
+  background-color: var(--sim-bg-card);
+  border: 1px solid var(--sim-border);
+  border-radius: 16px;
+  padding: 20px 22px;
+  box-shadow: var(--sim-shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.sim-stat::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--sim-gold), rgba(212, 169, 79, 0.25));
+}
+
+.sim-stat__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sim-ink-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.sim-stat__value {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin-top: 8px;
+  color: var(--sim-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-stat__sub {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sim-ink-3);
+}
+
+.sim-delta {
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.sim-delta--up {
+  background-color: var(--sim-emerald-tint);
+  color: var(--sim-emerald);
+}
+
+.sim-delta--down {
+  background-color: var(--sim-terracotta-tint);
+  color: var(--sim-terracotta);
+}
+
+.sim-delta--flat {
+  background-color: var(--sim-bg-muted);
+  color: var(--sim-ink-3);
+}
+
+/* Surface Cards */
+.sim-card {
+  background-color: var(--sim-bg-card);
+  border: 1px solid var(--sim-border);
+  border-radius: 16px;
+  box-shadow: var(--sim-shadow-sm);
+  overflow: hidden;
+}
+
+.sim-card__head {
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--sim-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.sim-card__title {
+  font-family: var(--font-inter), sans-serif;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--sim-ink);
+  letter-spacing: -0.01em;
+}
+
+.sim-card__sub {
+  font-size: 12px;
+  color: var(--sim-ink-3);
+  margin-top: 2px;
+}
+
+.sim-card__body {
+  padding: 20px 22px;
+}
+
+/* 3-Pane Trading Terminal (.sim-terminal-grid) */
+.sim-terminal-grid {
+  display: grid;
+  grid-template-columns: 290px minmax(0, 1fr) 340px;
+  border: 1px solid var(--sim-border);
+  border-radius: 16px;
+  background-color: var(--sim-bg-card);
+  box-shadow: var(--sim-shadow-sm);
+  overflow: hidden;
+  min-height: 680px;
+}
+
+@media (max-width: 1320px) {
+  .sim-terminal-grid {
+    grid-template-columns: 260px minmax(0, 1fr);
+  }
+  .sim-terminal-pane--right {
+    grid-column: 1 / -1;
+    border-left: none !important;
+    border-top: 1px solid var(--sim-border);
+  }
+}
+
+@media (max-width: 860px) {
+  .sim-terminal-grid {
+    grid-template-columns: 1fr;
+  }
+  .sim-terminal-pane--left {
+    border-right: none !important;
+    border-bottom: 1px solid var(--sim-border);
+    max-height: 360px;
+  }
+}
+
+.sim-terminal-pane--left {
+  border-right: 1px solid var(--sim-border);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--sim-bg-card);
+}
+
+.sim-terminal-pane--center {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--sim-bg-card);
+}
+
+.sim-terminal-pane--right {
+  border-left: 1px solid var(--sim-border);
+  display: flex;
+  flex-direction: column;
+  background-color: var(--sim-bg-subtle);
+}
+
+/* L2 Order Book visual bars */
+.sim-book-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  padding: 5px 14px;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 12px;
+  position: relative;
+  font-variant-numeric: tabular-nums;
+}
+
+.sim-book-row__bar {
+  position: absolute;
+  top: 1px;
+  bottom: 1px;
+  right: 0;
+  pointer-events: none;
+  transition: width 200ms ease;
+}
+
+.sim-book-row--ask .sim-book-row__bar {
+  background-color: var(--sim-terracotta-tint);
+}
+
+.sim-book-row--bid .sim-book-row__bar {
+  background-color: var(--sim-emerald-tint);
+}
+

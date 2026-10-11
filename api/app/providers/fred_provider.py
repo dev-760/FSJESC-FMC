@@ -178,8 +178,11 @@ class FREDProvider(Provider):
     @cached(ttl=settings.CACHE_TTL_FRED_METADATA, key_prefix="fred")
     async def get_fred_series_metadata(self, series_id: str) -> FredSeriesMetadata:
         """Get FRED series metadata."""
-        data = await self._request(f"series", {"series_id": series_id})
-        series_data = data["seriess"][0]
+        data = await self._request("series", {"series_id": series_id})
+        series_list = data.get("seriess", [])
+        if not series_list:
+            raise SymbolNotFoundError(series_id, provider=self.name)
+        series_data = series_list[0]
 
         return FredSeriesMetadata(
             id=series_data["id"],
@@ -225,7 +228,7 @@ class FREDProvider(Provider):
         for obs in data.get("observations", []):
             # FRED returns "." for missing values
             value_str = obs.get("value", ".")
-            value = None if value_str == "." or value_str == "" else float(value_str)
+            value = None if value_str in (".", "") else float(value_str)
 
             observations.append(
                 Observation(
@@ -250,28 +253,35 @@ class FREDProvider(Provider):
 
     @cached(ttl=settings.CACHE_TTL_FRED_OBSERVATIONS, key_prefix="fred")
     async def get_yield_curve(self, date_obj: Optional[date] = None) -> YieldCurve:
-        """Get Treasury yield curve for a given date."""
-        target_date = date_obj or date.today()
+        """
+        Get Treasury yield curve for a given date.
+        Uses a 14-day lookback window and concurrent requests so weekends/holidays
+        always resolve to the latest published observation for each maturity.
+        """
+        import asyncio
+        from datetime import timedelta
 
-        # Fetch all maturity series
-        curve_data = []
-        for maturity, series_id in self.YIELD_CURVE_SERIES.items():
+        target_date = date_obj or date.today()
+        lookback_start = target_date - timedelta(days=14)
+
+        async def _fetch_point(maturity: str, series_id: str) -> Optional[YieldCurvePoint]:
             try:
                 obs = await self.get_fred_series_observations(
                     series_id=series_id,
-                    start=target_date,
+                    start=lookback_start,
                     end=target_date
                 )
-
-                if obs.observations:
-                    curve_data.append(
-                        YieldCurvePoint(
-                            maturity=maturity,
-                            yield_rate=obs.observations[0].value
-                        )
-                    )
+                valid_values = [o.value for o in obs.observations if o.value is not None]
+                if valid_values:
+                    return YieldCurvePoint(maturity=maturity, yield_rate=valid_values[-1])
             except Exception as e:
-                logger.warning(f"Failed to fetch yield curve data for {maturity}: {e}")
+                logger.warning(f"Failed to fetch yield curve data for {maturity} ({series_id}): {e}")
+            return None
+
+        points = await asyncio.gather(
+            *[_fetch_point(m, sid) for m, sid in self.YIELD_CURVE_SERIES.items()]
+        )
+        curve_data = [pt for pt in points if pt is not None]
 
         return YieldCurve(
             date=target_date,

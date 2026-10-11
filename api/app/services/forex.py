@@ -24,8 +24,14 @@ class ForexService(BaseService):
         provider: Optional[ProviderName] = None
     ) -> ForexRate:
         """Get forex exchange rate."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.get_forex_rate(base, quote, date_obj)
+        return await self.router.with_fallback(
+            self.asset_class,
+            "get_forex_rate",
+            provider,
+            base,
+            quote,
+            date_obj
+        )
 
     async def get_forex_history(
         self,
@@ -36,8 +42,15 @@ class ForexService(BaseService):
         provider: Optional[ProviderName] = None
     ) -> ForexTimeSeries:
         """Get forex time series."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.get_forex_history(base, quotes, start, end)
+        return await self.router.with_fallback(
+            self.asset_class,
+            "get_forex_history",
+            provider,
+            base,
+            quotes,
+            start,
+            end
+        )
 
     async def convert_currency(
         self,
@@ -48,13 +61,23 @@ class ForexService(BaseService):
         provider: Optional[ProviderName] = None
     ) -> ConversionResult:
         """Convert currency."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.convert_currency(from_currency, to_currency, amount, date_obj)
+        return await self.router.with_fallback(
+            self.asset_class,
+            "convert_currency",
+            provider,
+            from_currency,
+            to_currency,
+            amount,
+            date_obj
+        )
 
     async def get_currencies(
         self,
         provider: Optional[ProviderName] = None
     ) -> list[CurrencyInfo]:
         """Get available currencies."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.get_currencies()
+        return await self.router.with_fallback(
+            self.asset_class,
+            "get_currencies",
+            provider
+        )

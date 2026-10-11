@@ -36,11 +36,17 @@ export interface ReferenceQuote {
 
 interface UpstreamQuotePayload {
   symbol?: string;
+  series_id?: string;
   price?: number;
   rate?: number;
+  underlying_price?: number;
   currency?: string;
   change_percent?: number | null;
   changePercent?: number | null;
+  observations?: Array<{ date?: string; value?: number | null }>;
+  curve?: Array<{ maturity?: string; rate?: number | null }>;
+  calls?: Array<{ last_price?: number | null; mark?: number | null }>;
+  puts?: Array<{ last_price?: number | null; mark?: number | null }>;
 }
 
 function buildHeaders(): Record<string, string> {
@@ -53,6 +59,72 @@ function buildHeaders(): Record<string, string> {
 
 export function isMarketApiConfigured(): boolean {
   return Boolean(BASE_URL);
+}
+
+function extractPriceAndChange(payload: UpstreamQuotePayload): {
+  price: number | null;
+  changePercent: number | null;
+} {
+  if (typeof payload.price === "number") {
+    return {
+      price: payload.price,
+      changePercent:
+        typeof payload.change_percent === "number"
+          ? payload.change_percent
+          : typeof payload.changePercent === "number"
+            ? payload.changePercent
+            : null,
+    };
+  }
+
+  if (typeof payload.rate === "number") {
+    return {
+      price: payload.rate,
+      changePercent:
+        typeof payload.change_percent === "number"
+          ? payload.change_percent
+          : typeof payload.changePercent === "number"
+            ? payload.changePercent
+            : null,
+    };
+  }
+
+  // FRED / Bonds series observations payload
+  if (Array.isArray(payload.observations) && payload.observations.length > 0) {
+    const valid = payload.observations.filter(
+      (obs): obs is { value: number } => typeof obs?.value === "number" && Number.isFinite(obs.value),
+    );
+    const latest = valid[valid.length - 1];
+    if (latest) {
+      const prev = valid.length >= 2 ? valid[valid.length - 2] : undefined;
+      const changePercent =
+        prev && prev.value !== 0 ? ((latest.value - prev.value) / Math.abs(prev.value)) * 100 : null;
+      return { price: latest.value, changePercent };
+    }
+  }
+
+  // Bonds yield curve payload
+  if (Array.isArray(payload.curve) && payload.curve.length > 0) {
+    const tenYear =
+      payload.curve.find((pt) => pt.maturity === "10Y" && typeof pt.rate === "number") ??
+      payload.curve.find((pt) => typeof pt.rate === "number");
+    if (tenYear && typeof tenYear.rate === "number") {
+      return { price: tenYear.rate, changePercent: null };
+    }
+  }
+
+  // Options chain payload
+  const contracts = [...(payload.calls ?? []), ...(payload.puts ?? [])];
+  for (const contract of contracts) {
+    if (typeof contract?.last_price === "number" && contract.last_price > 0) {
+      return { price: contract.last_price, changePercent: null };
+    }
+  }
+  if (typeof payload.underlying_price === "number") {
+    return { price: payload.underlying_price, changePercent: null };
+  }
+
+  return { price: null, changePercent: null };
 }
 
 async function fetchQuoteFromUrl(url: string, fallbackSymbol: string): Promise<ReferenceQuote | null> {
@@ -69,26 +141,14 @@ async function fetchQuoteFromUrl(url: string, fallbackSymbol: string): Promise<R
     if (!response.ok) return null;
 
     const payload = (await response.json()) as UpstreamQuotePayload;
-    const price =
-      typeof payload.price === "number"
-        ? payload.price
-        : typeof payload.rate === "number"
-          ? payload.rate
-          : null;
+    const { price, changePercent } = extractPriceAndChange(payload);
     if (price === null) return null;
 
-    const rawChange =
-      typeof payload.change_percent === "number"
-        ? payload.change_percent
-        : typeof payload.changePercent === "number"
-          ? payload.changePercent
-          : null;
-
     return {
-      symbol: payload.symbol ?? fallbackSymbol,
+      symbol: payload.symbol ?? payload.series_id ?? fallbackSymbol,
       price,
       currency: payload.currency ?? "MAD",
-      changePercent: rawChange,
+      changePercent,
     };
   } catch {
     return null;

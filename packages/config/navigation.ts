@@ -47,6 +47,12 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     description: "Scenario challenges judged on return and risk",
   },
   {
+    href: "/challenges",
+    labelKey: "nav.challenges",
+    label: "Challenges",
+    description: "Guided macroeconomic and execution stress-test briefs",
+  },
+  {
     href: "/events",
     labelKey: "nav.events",
     label: "Events",

@@ -60,8 +60,19 @@ const nextConfig: NextConfig = {
    * and no CORS headers or duplicated route handlers are needed.
    */
   async rewrites() {
-    const origin = process.env.SIMULATOR_API_ORIGIN ?? "http://localhost:3000";
-    return [{ source: "/api/:path*", destination: `${origin}/api/:path*` }];
+    const configuredOrigin = process.env.SIMULATOR_API_ORIGIN ?? process.env.AMS_API_ORIGIN;
+    if (configuredOrigin) {
+      return [
+        {
+          source: "/api/:path*",
+          destination: `${configuredOrigin.replace(/\/$/, "")}/api/:path*`,
+        },
+      ];
+    }
+    if (process.env.NODE_ENV === "development") {
+      return [{ source: "/api/:path*", destination: "http://localhost:3000/api/:path*" }];
+    }
+    return [];
   },
 
   turbopack: {

@@ -2,37 +2,29 @@ import { createTamagui } from "@tamagui/core";
 import { config } from "@tamagui/config";
 
 /**
- * AMS design tokens.
+ * AMS design tokens mapped directly to the CSS custom properties defined in
+ * `src/app/globals.css` (ported verbatim from `mockups/AMS.html`).
  *
- * These mirror the public site's design system (`src/app/globals.css`) so the
- * administration tool reads as the same product: a dark instrument panel built
- * from hairlines rather than shadows, with emerald reserved for the affirmative
- * and red for the negative.
- *
- * Colour values are copied from the site's `:root` block verbatim rather than
- * re-derived, because a second palette is how two products of one brand drift
- * apart.
+ * Referencing `var(--*)` ensures that every Tamagui primitive (`YStack`,
+ * `XStack`, `Text`, `Paragraph`, `Card`, `Button`) automatically adapts to both
+ * the default light theme (`#f3f5f8` / `#ffffff` / `#142944`) and the dark
+ * theme (`[data-theme="dark"]`) without requiring a React re-render.
  */
 
-/**
- * Surfaces — four levels, from the page inward, matching mockups/AMS.html.
- */
-const CANVAS = "#0a1520";
-const SURFACE = "#132435";
-const SURFACE_RAISED = "#1a2e42";
-const SURFACE_INSET = "#1a2e42";
-const SURFACE_SUNKEN = "#0f2030";
+const CANVAS = "var(--bg)";
+const SURFACE = "var(--surface)";
+const SURFACE_RAISED = "var(--surface)";
+const SURFACE_INSET = "var(--surface-2)";
+const SURFACE_SUNKEN = "var(--surface-3)";
 
-/** Text from mockups/AMS.html. */
-const TEXT_PRIMARY = "#f0ebe0";
-const TEXT_SECONDARY = "#9aa5b1";
-const TEXT_MUTED = "#6e7a85";
+const TEXT_PRIMARY = "var(--text)";
+const TEXT_SECONDARY = "var(--text-2)";
+const TEXT_MUTED = "var(--text-3)";
 
-/** Semantics from mockups/AMS.html. */
-const BULL = "#2dbf8e";
-const BEAR = "#e8745a";
-const INFO = "#6b8cd6";
-const WARNING = "#e0b858";
+const BULL = "var(--pos)";
+const BEAR = "var(--neg)";
+const INFO = "var(--action)";
+const WARNING = "var(--accent)";
 
 const amsColors = {
   canvas: CANVAS,
@@ -46,6 +38,7 @@ const amsColors = {
   foregroundMuted: TEXT_MUTED,
 
   bull: BULL,
+  bullHover: "#0d694d",
   bear: BEAR,
   info: INFO,
   warning: WARNING,
@@ -53,11 +46,23 @@ const amsColors = {
   accent: WARNING,
   destructive: BEAR,
 
-  /** Hairline borders matching mockup tokens --border and --border-strong */
-  rule: "#1f3549",
-  ruleStrong: "#2e4760",
-  ruleFaint: "#182a3c",
+  rule: "var(--border)",
+  ruleStrong: "var(--border-strong)",
+  ruleFaint: "var(--border)",
 } as const;
+
+const sharedTheme = {
+  background: CANVAS,
+  backgroundHover: SURFACE_INSET,
+  backgroundPress: SURFACE_INSET,
+  backgroundFocus: SURFACE_RAISED,
+  color: TEXT_PRIMARY,
+  colorHover: TEXT_PRIMARY,
+  borderColor: "$rule",
+  borderColorHover: "$ruleStrong",
+  placeholderColor: TEXT_MUTED,
+  shadowColor: "rgba(17, 36, 60, 0.08)",
+};
 
 const tamaguiConfig = createTamagui({
   ...config,
@@ -72,36 +77,20 @@ const tamaguiConfig = createTamagui({
 
   themes: {
     ...config.themes,
-    /**
-     * The public site sets a single dark theme by decision, and declares
-     * `color-scheme: dark` so native controls render dark too. `defaultTheme` is
-     * pinned below so the provider can never silently fall back to `light`.
-     */
+    light: {
+      ...config.themes.light,
+      ...sharedTheme,
+    },
     dark: {
       ...config.themes.dark,
-      background: CANVAS,
-      backgroundHover: SURFACE_RAISED,
-      backgroundPress: SURFACE_INSET,
-      backgroundFocus: SURFACE_RAISED,
-      color: TEXT_PRIMARY,
-      colorHover: TEXT_PRIMARY,
-      borderColor: "$rule",
-      borderColorHover: "$ruleStrong",
-      placeholderColor: TEXT_MUTED,
-      shadowColor: "#000000",
+      ...sharedTheme,
     },
   },
 
-  /** Single theme by decision, matching the public site. */
-  defaultTheme: "dark",
+  defaultTheme: "light",
 
   settings: {
     ...config.settings,
-    /**
-     * The public site is dark-only and does not follow the OS preference, so
-     * this app must not either — otherwise AMS could render light while the
-     * site it administers is dark.
-     */
     shouldAddPrefersColorThemes: false,
   },
 });

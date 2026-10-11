@@ -3,6 +3,7 @@ from datetime import date
 
 from app.models.common import AssetClass, Quote, HistoryResponse, SearchResults
 from app.providers.router import ProviderRouter, ProviderName
+from app.core.errors import InvalidParameterError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -22,11 +23,11 @@ class BaseService:
     ) -> Quote:
         """Get quote for a symbol."""
         return await self.router.with_fallback(
-            asset_class=self.asset_class,
-            method_name="get_quote",
-            provider_override=provider,
-            symbol=symbol,
-            asset_class=self.asset_class
+            self.asset_class,
+            "get_quote",
+            provider,
+            symbol,
+            self.asset_class
         )
 
     async def get_history(
@@ -39,14 +40,14 @@ class BaseService:
     ) -> HistoryResponse:
         """Get historical data for a symbol."""
         return await self.router.with_fallback(
-            asset_class=self.asset_class,
-            method_name="get_history",
-            provider_override=provider,
-            symbol=symbol,
-            asset_class=self.asset_class,
-            start=start,
-            end=end,
-            interval=interval
+            self.asset_class,
+            "get_history",
+            provider,
+            symbol,
+            self.asset_class,
+            start,
+            end,
+            interval
         )
 
     async def get_batch_quotes(
@@ -56,14 +57,14 @@ class BaseService:
     ) -> list[Quote]:
         """Get quotes for multiple symbols."""
         if len(symbols) > 50:
-            raise ValueError("Maximum 50 symbols per batch request")
+            raise InvalidParameterError("symbols", "Maximum 50 symbols per batch request")
 
         return await self.router.with_fallback(
-            asset_class=self.asset_class,
-            method_name="get_batch_quotes",
-            provider_override=provider,
-            symbols=symbols,
-            asset_class=self.asset_class
+            self.asset_class,
+            "get_batch_quotes",
+            provider,
+            symbols,
+            self.asset_class
         )
 
     async def search(
@@ -73,9 +74,16 @@ class BaseService:
     ) -> list[SearchResults]:
         """Search for symbols."""
         return await self.router.with_fallback(
-            asset_class=self.asset_class,
-            method_name="search",
-            provider_override=provider,
-            query=query,
-            asset_class=self.asset_class
+            self.asset_class,
+            "get_search",
+            provider,
+            query,
+            self.asset_class
+        ) if hasattr(self.router, "get_search") else await self.router.with_fallback(
+            self.asset_class,
+            "search",
+            provider,
+            query,
+            self.asset_class
         )
+

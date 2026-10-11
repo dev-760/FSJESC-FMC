@@ -38,13 +38,15 @@ fsjesc-fmc/
 | --------------------------- | ------------------------------------------------------------------------------------ |
 | landing → simulator         | `landingUrl` / `simulatorUrl` from `@fsjesc/config/app-urls` build absolute URLs     |
 | simulator → landing API     | `rewrites()` in the simulator proxies `/api/*` to the landing app — no CORS, no duplication |
-| ams → landing API           | `NEXT_PUBLIC_MAIN_APP_URL`; ams reads `/api/admin/*` over HTTP                         |
-| landing → Python            | `/api/market/reference` proxies the optional real-market feed                          |
+| ams → landing API           | `AMS_API_ORIGIN` / `NEXT_PUBLIC_MAIN_APP_URL`; ams reads `/api/admin/*` over HTTP    |
+| landing → Python (`api/`)   | `/api/market/*` blends live reference quotes from the 8 FastAPI `/api/v1/*` routers with deterministic GBM fallback |
 
-The simulator's board is **not** served by the Python service. The simulated
-market is eight fictional instruments priced by a deterministic seeded model;
-the Python service fronts real market data (yfinance). See
-`apps/landing/src/infrastructure/market-api.ts`.
+The platform covers **110 real-world instruments across 8 markets** (38 Bourse de
+Casablanca Principal F equities across 9 official French sectors, plus 16 global
+stocks, 12 ETFs, 12 futures, 10 cryptocurrencies, 8 FX pairs, 6 sovereign bond
+yields including BKAM 10Y BDT, and 8 listed equity options), all settled in
+Moroccan dirhams (MAD) using integer-centime (`BigInt`) accounting. See
+`packages/domain/assets.ts` and `apps/landing/src/infrastructure/market-api.ts`.
 
 Secrets live at the repository root in `.env.local` and each app links to it —
 Next 16 removed `envDir`, so `loadEnvConfig("../../")` runs in `next.config.ts`

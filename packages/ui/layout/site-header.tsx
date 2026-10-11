@@ -5,24 +5,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useId, useRef, useState } from "react";
 
-import { MarketTicker } from "../financial/market-ticker";
-import { SessionIndicator } from "../financial/session-indicator";
 import { Button } from "../button";
 import { FmcLogo } from "../brand/fmc-mark";
+import { ThemeSwitcher } from "./theme-switcher";
 import { cn } from "@fsjesc/config/cn";
 import type { NavItem } from "@fsjesc/config/navigation";
 import { SITE } from "@fsjesc/config/site";
 
 /**
- * The site header: a 56px nav bar over a 32px ticker strip.
- *
- * The rhythm is fixed and stated once here rather than re-derived per page. Sticky
- * chrome on a scrolling page is the default on a trading platform, and a header
- * that changes height between routes is the clearest possible sign that it was
- * assembled rather than designed.
- *
- * `SIMULATED DATA` is permanent and site-wide, not a page detail, so it lives in the
- * header stack rather than being repeated on each surface (Part 0.4, DISC-1).
+ * The site header: a 56px editorial navigation bar.
  *
  * Keyboard and screen-reader behaviour (Part 9.3):
  *   - the trigger is a real `<button>` with `aria-expanded` and `aria-controls`
@@ -84,25 +75,23 @@ export function SiteHeader({
   }, [open]);
 
   return (
-    <header className="bg-canvas/95 supports-[not(backdrop-filter:blur(0))]:bg-canvas border-rule sticky top-0 z-40 border-b backdrop-blur-sm">
-      <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-6 px-4 sm:px-6 lg:px-8">
+    <header className="bg-canvas/90 supports-[not(backdrop-filter:blur(0))]:bg-canvas border-rule sticky top-0 z-40 border-b backdrop-blur-md">
+      <div className="mx-auto flex h-14 w-full max-w-7xl items-center gap-5 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
           aria-label={`${SITE.name}, home`}
-          className="focus-visible:outline-ring flex shrink-0 items-center gap-2.5 rounded focus-visible:outline-2 focus-visible:outline-offset-4"
+          className="focus-visible:outline-ring group flex shrink-0 items-center gap-2.5 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4"
         >
-          {/*
-            The club mark, then the name beside it. This used to be a text `MAD`
-            badge on the argument that the currency is the one fact every visitor
-            needs before they trust any number on the page. That reasoning was
-            sound but it cost the identity: with no logo anywhere on the site,
-            the only mark a visitor met was a currency ticker. The brand now
-            leads and the currency is carried by the nav and the content itself.
-          */}
-          <FmcLogo variant="mark" height={26} alt="" />
-          <span className="flex flex-col leading-none">
-            <span className="text-sm font-semibold">{SITE.shortName}</span>
-            <span className="text-2xs text-foreground-secondary mt-0.5 hidden sm:block">
+          <FmcLogo variant="mark" height={28} alt="" />
+          <span className="flex items-center gap-2 leading-none">
+            <span className="font-serif text-base font-bold tracking-tight text-foreground">
+              {SITE.shortName}
+            </span>
+            <span
+              aria-hidden="true"
+              className="bg-rule-strong hidden h-3.5 w-px sm:inline-block"
+            />
+            <span className="text-2xs text-foreground-secondary hidden font-medium sm:inline-block">
               {SITE.locale === "en" ? "Financial Markets Club" : SITE.name}
             </span>
           </span>
@@ -110,28 +99,37 @@ export function SiteHeader({
 
         <nav aria-label="Primary" className="hidden lg:block">
           <ul className="flex items-center gap-0.5">
-            {navItems.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={isCurrent(currentPath, item.href) ? "page" : undefined}
-                  className={cn(
-                    "rounded-sm px-2.5 py-1.5 text-sm transition-colors",
-                    "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2",
-                    isCurrent(currentPath, item.href)
-                      ? "bg-surface-inset text-foreground font-medium"
-                      : "text-foreground-secondary hover:bg-surface-sunken hover:text-foreground",
-                  )}
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
+            {navItems.map((item) => {
+              const active = isCurrent(currentPath, item.href);
+              return (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={cn(
+                      "relative inline-flex items-center rounded-md px-2.5 py-1.5 text-sm transition-colors",
+                      "focus-visible:outline-ring focus-visible:outline-2 focus-visible:outline-offset-2",
+                      active
+                        ? "bg-surface-inset/80 text-foreground font-semibold"
+                        : "text-foreground-secondary hover:bg-surface-inset/60 hover:text-foreground font-medium",
+                    )}
+                  >
+                    {item.label}
+                    {active ? (
+                      <span
+                        aria-hidden="true"
+                        className="bg-brand absolute inset-x-2.5 -bottom-[9px] h-0.5 rounded-full"
+                      />
+                    ) : null}
+                  </Link>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-        <div className="ml-auto flex items-center gap-3 lg:ml-0">
-          <SessionIndicator />
+        <div className="ml-auto flex items-center gap-2.5">
+          <ThemeSwitcher compact />
           <div className="hidden items-center gap-1.5 sm:flex">{accountSlot}</div>
           <Button
             ref={triggerRef}
@@ -148,12 +146,10 @@ export function SiteHeader({
         </div>
       </div>
 
-      <MarketTicker />
-
       {open ? (
         <div
           id={panelId}
-          className="border-rule bg-canvas fixed inset-x-0 top-22 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
+          className="border-rule bg-canvas fixed inset-x-0 top-14 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
         >
           <nav aria-label="Primary (mobile)" className="px-4 sm:px-6">
             <ul className="divide-rule divide-y">
@@ -163,13 +159,13 @@ export function SiteHeader({
                     href={item.href}
                     aria-current={isCurrent(currentPath, item.href) ? "page" : undefined}
                     className={cn(
-                      "focus-visible:outline-ring block rounded-sm px-1 py-4 focus-visible:outline-2 focus-visible:-outline-offset-2",
+                      "focus-visible:outline-ring block rounded-md px-2 py-4 focus-visible:outline-2 focus-visible:-outline-offset-2",
                       isCurrent(currentPath, item.href)
                         ? "bg-surface-inset"
                         : "hover:bg-surface-sunken",
                     )}
                   >
-                    <span className="text-foreground block text-base font-medium">
+                    <span className="text-foreground block text-base font-semibold">
                       {item.label}
                     </span>
                     <span className="text-foreground-secondary mt-0.5 block text-sm">
@@ -191,9 +187,12 @@ export function SiteHeader({
       <aside
         role="note"
         aria-label="Simulated market notice"
-        className="border-rule bg-surface-sunken border-t px-4 py-1 text-center text-2xs text-foreground-secondary"
+        className="border-rule bg-surface-sunken/90 border-t px-4 py-1 text-center text-2xs text-foreground-secondary"
       >
-        <p>{disclaimer}</p>
+        <p className="mx-auto flex max-w-7xl items-center justify-center gap-2">
+          <span aria-hidden="true" className="bg-brand inline-block size-1.5 shrink-0 rounded-full" />
+          <span>{disclaimer}</span>
+        </p>
       </aside>
     </header>
   );

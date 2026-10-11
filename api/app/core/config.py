@@ -1,5 +1,5 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field, field_validator
+from pydantic import AliasChoices, Field, field_validator
 from typing import Literal
 
 
@@ -48,15 +48,19 @@ class Settings(BaseSettings):
     # Logging
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
 
-    # HTTP Client Configuration
-    HTTP_TIMEOUT: float = Field(default=30.0, description="HTTP request timeout in seconds")
+    # HTTP Client Configuration (note: uv reads HTTP_TIMEOUT as an integer during builds)
+    HTTP_TIMEOUT: float = Field(
+        default=30,
+        validation_alias=AliasChoices("API_HTTP_TIMEOUT", "HTTP_TIMEOUT"),
+        description="HTTP request timeout in seconds (use integer e.g. 30 on Vercel/uv)",
+    )
     HTTP_MAX_CONNECTIONS: int = Field(default=100, description="Maximum HTTP connections")
     HTTP_MAX_KEEPALIVE_CONNECTIONS: int = Field(default=20, description="Maximum keepalive connections")
 
     # Retry Configuration
     RETRY_MAX_ATTEMPTS: int = Field(default=3, description="Maximum retry attempts")
-    RETRY_INITIAL_DELAY: float = Field(default=1.0, description="Initial retry delay in seconds")
-    RETRY_MAX_DELAY: float = Field(default=30.0, description="Maximum retry delay in seconds")
+    RETRY_INITIAL_DELAY: float = Field(default=1, description="Initial retry delay in seconds")
+    RETRY_MAX_DELAY: float = Field(default=30, description="Maximum retry delay in seconds")
 
 
 settings = Settings()

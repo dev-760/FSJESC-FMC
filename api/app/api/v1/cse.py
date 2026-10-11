@@ -11,6 +11,8 @@ from app.models.cse import (
 )
 from app.providers.router import ProviderName
 from app.services.cse import CSEService
+from app.utils.symbols import SymbolNormalizer
+from app.core.errors import MarketDataError, InvalidParameterError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -32,8 +34,9 @@ async def get_cse_quote(
 ):
     """Get current quote for a CSE ticker."""
     try:
-        return await service.get_quote(ticker.upper(), provider)
-    except HTTPException:
+        normalized = SymbolNormalizer.normalize(ticker, "cse")
+        return await service.get_quote(normalized, provider)
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting CSE quote: {e}")
@@ -52,16 +55,18 @@ async def get_cse_history(
     """Get historical data for a CSE ticker."""
     try:
         if interval != "1d":
-            raise HTTPException(status_code=400, detail="CSE only supports daily interval")
+            raise InvalidParameterError("CSE only supports daily interval ('1d')")
+        normalized = SymbolNormalizer.normalize(ticker, "cse")
+        SymbolNormalizer.validate_date_range(start.isoformat(), end.isoformat(), "1d")
 
         return await service.get_history(
-            ticker.upper(),
+            normalized,
             start,
             end,
             interval,
             provider
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting CSE history: {e}")
@@ -76,9 +81,11 @@ async def get_cse_quotes(
 ):
     """Get quotes for multiple CSE tickers (max 50)."""
     try:
-        ticker_list = [t.strip().upper() for t in tickers.split(",")]
+        ticker_list = [SymbolNormalizer.normalize(t, "cse") for t in tickers.split(",") if t.strip()]
+        if not ticker_list:
+            raise InvalidParameterError("At least one ticker is required")
         if len(ticker_list) > 50:
-            raise HTTPException(status_code=400, detail="Maximum 50 tickers per request")
+            raise InvalidParameterError("Maximum 50 tickers per request")
 
         quotes = await service.get_batch_quotes(ticker_list, provider)
 
@@ -86,7 +93,7 @@ async def get_cse_quotes(
             quotes=quotes,
             metadata=quotes[0].metadata if quotes else None
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting CSE quotes: {e}")
@@ -103,7 +110,7 @@ async def get_all_share_prices(
     """Get all share prices with optional filters."""
     try:
         return await service.get_all_share_prices(sector, company, provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting share prices: {e}")
@@ -118,8 +125,9 @@ async def get_order_book(
 ):
     """Get order book for a CSE ticker."""
     try:
-        return await service.get_order_book(ticker.upper(), provider)
-    except HTTPException:
+        normalized = SymbolNormalizer.normalize(ticker, "cse")
+        return await service.get_order_book(normalized, provider)
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting order book: {e}")
@@ -134,8 +142,9 @@ async def get_instrument_detail(
 ):
     """Get full instrument detail including fundamentals."""
     try:
-        return await service.get_instrument_detail(ticker.upper(), provider)
-    except HTTPException:
+        normalized = SymbolNormalizer.normalize(ticker, "cse")
+        return await service.get_instrument_detail(normalized, provider)
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting instrument detail: {e}")
@@ -151,7 +160,7 @@ async def get_sector_summary(
     """Get sector summary."""
     try:
         return await service.get_sector_summary(sector, provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting sector summary: {e}")

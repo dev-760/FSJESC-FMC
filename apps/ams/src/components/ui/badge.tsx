@@ -1,24 +1,18 @@
 import { Text, styled } from "tamagui";
 
 /**
- * Badge — a status or category marker.
- *
- * This existed as five near-identical copies across the pages, each with a
- * different set of variants, so the same role was rendered differently on
- * different screens. There is now one definition.
- *
- * Tone is never the sole carrier of meaning: a badge is always text, and colour
- * only reinforces it.
+ * Badge — aligned with `.badge` in `mockups/AMS.html`.
  */
 const StyledBadge = styled(Text, {
   name: "Badge",
   fontFamily: "$mono",
   fontSize: "$0",
-  letterSpacing: 0.6,
+  fontWeight: "600",
+  letterSpacing: 0.5,
   textTransform: "uppercase",
-  borderRadius: "$1",
+  borderRadius: "$round",
   borderWidth: 1,
-  paddingHorizontal: 6,
+  paddingHorizontal: 8,
   paddingVertical: 2,
   alignSelf: "flex-start",
   whiteSpace: "nowrap",
@@ -31,23 +25,23 @@ const StyledBadge = styled(Text, {
         color: "$foregroundSecondary",
       },
       bull: {
-        borderColor: "#2dbf8e4d",
-        backgroundColor: "#2dbf8e1f",
+        borderColor: "var(--pos-border)",
+        backgroundColor: "var(--pos-bg)",
         color: "$bull",
       },
       bear: {
-        borderColor: "#e8745a4d",
-        backgroundColor: "#e8745a1f",
+        borderColor: "var(--neg-border)",
+        backgroundColor: "var(--neg-bg)",
         color: "$bear",
       },
       info: {
-        borderColor: "#6b8cd64d",
-        backgroundColor: "#6b8cd61f",
+        borderColor: "var(--action-border)",
+        backgroundColor: "var(--action-bg)",
         color: "$info",
       },
       warning: {
-        borderColor: "#e0b8584d",
-        backgroundColor: "#e0b8581f",
+        borderColor: "var(--accent-border)",
+        backgroundColor: "var(--accent-bg)",
         color: "$warning",
       },
     } as const,
@@ -70,12 +64,6 @@ export function Badge(props: BadgeProps) {
   return <StyledBadge {...props} />;
 }
 
-/**
- * Map a domain status onto a badge tone.
- *
- * Centralised so that "active" is emerald everywhere rather than green on one
- * screen and blue on another.
- */
 export type StatusTone = NonNullable<BadgeProps["tone"]>;
 
 export function toneForStatus(status: string): StatusTone {
@@ -85,20 +73,27 @@ export function toneForStatus(status: string): StatusTone {
     case "completed":
     case "published":
     case "paid":
+    case "healthy":
+    case "live":
       return "bull";
     case "cancelled":
     case "failed":
     case "rejected":
     case "suspended":
+    case "offline":
+    case "down":
       return "bear";
     case "pending":
     case "queued":
     case "partially_filled":
+    case "partial":
     case "draft":
+    case "degraded":
       return "warning";
     case "open":
     case "new":
     case "scheduled":
+    case "upcoming":
       return "info";
     default:
       return "neutral";
@@ -107,12 +102,6 @@ export function toneForStatus(status: string): StatusTone {
 
 export { StyledBadge };
 
-/**
- * A domain status rendered as a badge.
- *
- * Screens show raw enum values like `PARTIALLY_FILLED`; this turns them into
- * readable text and a consistent tone, so no screen has to remember the mapping.
- */
 export function StatusBadge({ status }: { status: string }) {
   const label = status.replace(/_/g, " ");
   return <StyledBadge tone={toneForStatus(status)}>{label}</StyledBadge>;

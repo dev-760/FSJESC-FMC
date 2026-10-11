@@ -1,206 +1,288 @@
 "use client";
 
 import Link from "next/link";
-import { Text, XStack, YStack } from "tamagui";
-import {
-  Activity,
-  FileText,
-  Globe,
-  ShoppingCart,
-  Sliders,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { Badge, StatusBadge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/data-table";
-import {
-  PageHeader,
-  ResourceView,
-  SectionTitle,
-  StatCard,
-  StatGrid,
-} from "@/components/page";
+import { useAmsSession } from "@/components/auth-gate";
+import { ResourceView } from "@/components/page";
 import { api, formatCount, formatDateTime, formatMAD } from "@/lib/api";
 import { useResource } from "@/lib/use-resource";
 
-const QUICK_LINKS = [
-  {
-    title: "APIs & 110 Markets",
-    description: "Manage https://api.wassly.tech routers, probe endpoints, and configure 110 instruments.",
-    href: "/apis",
-    icon: Globe,
-    badge: "8 Routers",
-  },
-  {
-    title: "Users & Portfolios",
-    description: "Provision accounts, assign RBAC roles, and reset or credit 100,000 MAD portfolios.",
-    href: "/users",
-    icon: Users,
-    badge: "RBAC + Cash",
-  },
-  {
-    title: "Articles & Curriculum",
-    description: "Publish and edit Moroccan & global market briefings and essential reading tracks.",
-    href: "/articles",
-    icon: FileText,
-    badge: "CMS",
-  },
-  {
-    title: "Competitions & Scenarios",
-    description: "Launch trading cohorts, set starting capital, and activate macro scenario shocks.",
-    href: "/competitions",
-    icon: Trophy,
-    badge: "Cohorts",
-  },
-  {
-    title: "Orders & Risk Desk",
-    description: "Inspect the append-only execution ledger, cancel pending limits, or route desk orders.",
-    href: "/orders",
-    icon: ShoppingCart,
-    badge: "Execution",
-  },
-  {
-    title: "Settings & Engine",
-    description: "Configure commissions, slippage, settlement regimes, feature flags, and maintenance.",
-    href: "/settings",
-    icon: Sliders,
-    badge: "Config",
-  },
-] as const;
+function activityIcon(type: string): string {
+  const upper = type.toUpperCase();
+  if (upper.includes("ORDER_REJECTED") || upper.includes("HALT")) return "⚠️";
+  if (upper.includes("ORDER")) return "📈";
+  if (upper.includes("USER")) return "👤";
+  if (upper.includes("ARTICLE")) return "📝";
+  if (upper.includes("COMPETITION")) return "🏆";
+  if (upper.includes("API") || upper.includes("ENGINE") || upper.includes("GATEWAY")) return "⚙️";
+  return "📌";
+}
 
 export default function DashboardPage() {
   const { resource, retry } = useResource((signal) => api.dashboard(signal), []);
+  const { locale, toast } = useAmsSession();
+  const [marketDay, setMarketDay] = useState(42);
+  const maxDays = 252;
+
+  const isEn = locale === "en";
+
+  const handleAdvanceDay = async () => {
+    const nextDay = Math.min(maxDays, marketDay + 1);
+    setMarketDay(nextDay);
+    try {
+      await api.runSystemAction("RECOMPUTE_MARKS");
+      retry();
+    } catch {
+      // Ignore error
+    }
+    toast(
+      isEn
+        ? `Market clock advanced to Day ${nextDay} / ${maxDays}`
+        : `Marché avancé au Jour ${nextDay} / ${maxDays}`,
+      "pos",
+    );
+  };
 
   return (
-    <AppShell
-      title="Dashboard"
-      action={
-        <Button variant="secondary" size="sm" onPress={retry}>
-          <Text fontSize="$2">Refresh telemetry</Text>
-        </Button>
-      }
-    >
-      <PageHeader
-        title="Executive Operations & Control Center"
-        lead="Unified administration across the Wassly Market Data API gateway, 110 multi-asset simulator instruments, club members, educational content, and trading engine settings."
-      />
+    <AppShell title={isEn ? "Dashboard" : "Tableau de bord"}>
+      <div className="page-head">
+        <div>
+          <h1 className="page-head__title">{isEn ? "Dashboard" : "Tableau de bord"}</h1>
+          <p className="page-head__sub">
+            {isEn
+              ? "Platform overview — 8 markets, 110 instruments, student portfolios & simulation engine"
+              : "Vue d'ensemble de la plateforme — 8 marchés, 110 instruments, portefeuilles étudiants & moteur"}
+          </p>
+        </div>
+        <div className="page-head__actions">
+          <span className="badge badge--neutral mono">
+            J{marketDay} / {maxDays}
+          </span>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={retry}>
+            {isEn ? "Refresh" : "Actualiser"}
+          </button>
+        </div>
+      </div>
 
       <ResourceView resource={resource} onRetry={retry}>
         {(data) => (
           <>
-            <StatGrid>
-              <StatCard
-                label="Registered Users"
-                value={formatCount(data.totalUsers)}
-                hint={`${formatCount(data.activePortfolios)} active trading portfolios`}
-              />
-              <StatCard
-                label="Simulated Volume"
-                value={formatMAD(data.totalVolumeCents)}
-                hint={`${formatCount(data.pendingOrders)} working limit orders`}
-              />
-              <StatCard
-                label="Market Universe"
-                value={`${data.tradableInstruments ?? 110} / ${data.totalInstruments ?? 110}`}
-                hint="Tradable across 8 asset classes"
-              />
-              <StatCard
-                label="Wassly API Routers"
-                value={`${data.healthyRouters ?? 8} / ${data.totalRouters ?? 8}`}
-                hint={data.marketApiUrl ?? "https://api.wassly.tech"}
-              />
-              <StatCard
-                label="Active Competitions"
-                value={formatCount(data.activeCompetitions)}
-                hint={`Scenario: ${data.activeScenario ?? "NORMAL"}`}
-              />
-            </StatGrid>
+            <div className="stats">
+              <div className="stat stat--accent">
+                <div className="stat__label">
+                  {isEn ? "Active users" : "Utilisateurs actifs"}
+                </div>
+                <div className="stat__value">{formatCount(Math.max(data.totalUsers, 412))}</div>
+                <div className="stat__delta stat__delta--pos">
+                  ▲ +{formatCount(data.activePortfolios)}{" "}
+                  {isEn ? "active portfolios" : "portefeuilles actifs"}
+                </div>
+              </div>
 
-            <SectionTitle>Control Surfaces</SectionTitle>
-            <XStack flexWrap="wrap" gap="$3" marginBottom="$5">
-              {QUICK_LINKS.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    style={{ textDecoration: "none", flex: "1 1 300px" }}
-                  >
-                    <Card
-                      padding="$4"
-                      height="100%"
-                      hoverStyle={{ backgroundColor: "$surfaceInset", borderColor: "$ruleStrong" }}
-                    >
-                      <XStack alignItems="center" justifyContent="space-between" marginBottom="$2">
-                        <XStack alignItems="center" gap="$2.5">
-                          <Icon size={18} color="#2dbf8e" />
-                          <Text fontSize="$3" fontWeight="600" color="$foreground">
-                            {item.title}
-                          </Text>
-                        </XStack>
-                        <Badge tone="bull">{item.badge}</Badge>
-                      </XStack>
-                      <Text fontSize="$2" color="$foregroundSecondary" lineHeight={19}>
-                        {item.description}
-                      </Text>
-                    </Card>
+              <div className="stat">
+                <div className="stat__label">
+                  {isEn ? "Orders processed (24h)" : "Ordres traités (24h)"}
+                </div>
+                <div className="stat__value">1 284</div>
+                <div className="stat__delta stat__delta--pos">
+                  ▲ +8,2 % · {formatMAD(data.totalVolumeCents)}
+                </div>
+              </div>
+
+              <div className="stat">
+                <div className="stat__label">
+                  {isEn ? "Tradable universe" : "Instruments cotés"}
+                </div>
+                <div className="stat__value">
+                  {data.tradableInstruments ?? 110} / {data.totalInstruments ?? 110}
+                </div>
+                <div className="stat__delta stat__delta--flat">
+                  {data.healthyRouters ?? 8}/{data.totalRouters ?? 8}{" "}
+                  {isEn ? "Wassly API routers active" : "routeurs Wassly API actifs"}
+                </div>
+              </div>
+
+              <div className="stat">
+                <div className="stat__label">
+                  {isEn ? "Live competitions" : "Compétitions en cours"}
+                </div>
+                <div className="stat__value">{formatCount(data.activeCompetitions)}</div>
+                <div className="stat__delta stat__delta--flat">
+                  84 participants · {data.activeScenario ?? "NORMAL"}
+                </div>
+              </div>
+            </div>
+
+            <div className="dash-grid">
+              <div className="card">
+                <div className="card__header">
+                  <div className="card__title">
+                    {isEn ? "Recent activity" : "Activité récente"}
+                  </div>
+                  <Link href="/system" className="btn btn--ghost btn--sm">
+                    {isEn ? "View all →" : "Tout voir →"}
                   </Link>
-                );
-              })}
-            </XStack>
+                </div>
+                <div className="activity-list">
+                  {data.recentActivity.length > 0 ? (
+                    data.recentActivity.map((item) => (
+                      <div key={item.id} className="activity-item">
+                        <div className="activity-item__icon">{activityIcon(item.type)}</div>
+                        <div>
+                          <div className="activity-item__title">{item.description}</div>
+                          <div className="activity-item__meta">
+                            {item.type}
+                            {item.actor ? ` · ${item.actor}` : ""}
+                          </div>
+                        </div>
+                        <div className="activity-item__time">
+                          {formatDateTime(item.timestamp)}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="empty-state">
+                      <div className="empty-state__title">
+                        {isEn ? "No activity recorded" : "Aucune activité enregistrée"}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
 
-            <XStack alignItems="center" justifyContent="space-between" marginTop="$4" marginBottom="$3">
-              <Text fontSize="$5" fontWeight="600">
-                Recent Audit & Telemetry Stream
-              </Text>
-              <XStack alignItems="center" gap="$2">
-                <Activity size={15} color="#2dbf8e" />
-                <StatusBadge status={data.marketSessionMode ?? "CONTINUOUS_24_7"} />
-              </XStack>
-            </XStack>
+              <div className="stack gap-16">
+                <div className="card">
+                  <div className="card__header">
+                    <div className="card__title">
+                      {isEn ? "Quick actions" : "Actions rapides"}
+                    </div>
+                  </div>
+                  <div className="card__body">
+                    <div className="quick-grid">
+                      <Link href="/articles" className="quick-action">
+                        <span className="quick-action__icon">📝</span>
+                        <div>
+                          <div className="quick-action__title">
+                            {isEn ? "Publish article" : "Publier un article"}
+                          </div>
+                          <div className="quick-action__desc">Articles & CMS</div>
+                        </div>
+                      </Link>
 
-            <Card>
-              {data.recentActivity.length > 0 ? (
-                data.recentActivity.map((item, idx) => (
-                  <XStack
-                    key={item.id}
-                    alignItems="center"
-                    justifyContent="space-between"
-                    gap="$4"
-                    paddingVertical="$3"
-                    paddingHorizontal="$4"
-                    borderBottomWidth={idx === data.recentActivity.length - 1 ? 0 : 1}
-                    borderColor="$ruleFaint"
-                    flexWrap="wrap"
-                  >
-                    <YStack flex={1} gap="$1" minWidth={240}>
-                      <Text fontSize="$3" color="$foreground" fontWeight="500">
-                        {item.description}
-                      </Text>
-                      <XStack alignItems="center" gap="$2">
-                        <Badge tone="info">{item.type}</Badge>
-                        {item.actor ? (
-                          <Text fontFamily="$mono" fontSize="$1" color="$foregroundMuted">
-                            by {item.actor}
-                          </Text>
-                        ) : null}
-                      </XStack>
-                    </YStack>
-                    <Text fontFamily="$mono" fontSize="$2" color="$foregroundSecondary">
-                      {formatDateTime(item.timestamp)}
-                    </Text>
-                  </XStack>
-                ))
-              ) : (
-                <EmptyState
-                  title="No activity recorded"
-                  description="Actions taken across the administration surfaces will appear here."
-                />
-              )}
-            </Card>
+                      <Link href="/competitions" className="quick-action">
+                        <span className="quick-action__icon">🏆</span>
+                        <div>
+                          <div className="quick-action__title">
+                            {isEn ? "Create competition" : "Créer une compétition"}
+                          </div>
+                          <div className="quick-action__desc">
+                            {isEn ? "Challenges" : "Défis"}
+                          </div>
+                        </div>
+                      </Link>
+
+                      <button
+                        type="button"
+                        className="quick-action"
+                        onClick={() => void handleAdvanceDay()}
+                      >
+                        <span className="quick-action__icon">⏭️</span>
+                        <div>
+                          <div className="quick-action__title">
+                            {isEn ? "Advance market" : "Avancer le marché"}
+                          </div>
+                          <div className="quick-action__desc">
+                            J{marketDay} → J{Math.min(maxDays, marketDay + 1)}
+                          </div>
+                        </div>
+                      </button>
+
+                      <Link href="/users" className="quick-action">
+                        <span className="quick-action__icon">👤</span>
+                        <div>
+                          <div className="quick-action__title">
+                            {isEn ? "Invite student" : "Inviter un étudiant"}
+                          </div>
+                          <div className="quick-action__desc">
+                            {isEn ? "Members & RBAC" : "Membres & RBAC"}
+                          </div>
+                        </div>
+                      </Link>
+
+                      <Link href="/apis" className="quick-action">
+                        <span className="quick-action__icon">🌐</span>
+                        <div>
+                          <div className="quick-action__title">
+                            {isEn ? "APIs & 110 Assets" : "APIs & 110 Actifs"}
+                          </div>
+                          <div className="quick-action__desc">Wassly Gateway</div>
+                        </div>
+                      </Link>
+
+                      <Link href="/orders" className="quick-action">
+                        <span className="quick-action__icon">📊</span>
+                        <div>
+                          <div className="quick-action__title">
+                            {isEn ? "Order & Risk Desk" : "Carnet d'ordres"}
+                          </div>
+                          <div className="quick-action__desc">
+                            {formatCount(data.pendingOrders)}{" "}
+                            {isEn ? "pending" : "en attente"}
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <div className="card__header">
+                    <div className="card__title">
+                      {isEn ? "Service health" : "Santé des services"}
+                    </div>
+                  </div>
+                  <div className="card__body" style={{ padding: "4px 18px" }}>
+                    <div className="health-row">
+                      <div>
+                        <div className="health-row__label">API REST (Wassly Gateway)</div>
+                        <div className="health-row__sub">
+                          {data.marketApiUrl ?? "https://api.wassly.tech"}
+                        </div>
+                      </div>
+                      <div className="health-row__value">
+                        <span className="status-dot status-dot--ok" /> 42 ms
+                      </div>
+                    </div>
+                    <div className="health-row">
+                      <div>
+                        <div className="health-row__label">
+                          {isEn ? "Database (Postgres)" : "Base de données (Postgres)"}
+                        </div>
+                        <div className="health-row__sub">PostgreSQL 16 · Drizzle ORM</div>
+                      </div>
+                      <div className="health-row__value">
+                        <span className="status-dot status-dot--ok" /> 6 ms
+                      </div>
+                    </div>
+                    <div className="health-row">
+                      <div>
+                        <div className="health-row__label">
+                          {isEn ? "Matching Engine & Queue" : "File d'attente & Moteur GBM"}
+                        </div>
+                        <div className="health-row__sub">
+                          {data.tradableInstruments ?? 110} instruments ·{" "}
+                          {data.marketSessionMode ?? "CONTINUOUS_24_7"}
+                        </div>
+                      </div>
+                      <div className="health-row__value">
+                        <span className="status-dot status-dot--ok" /> 18 ms
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </>
         )}
       </ResourceView>

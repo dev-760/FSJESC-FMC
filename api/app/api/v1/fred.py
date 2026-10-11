@@ -5,6 +5,7 @@ from datetime import date
 from app.models.bonds import FredSeriesMetadata, FredSeriesObservations
 from app.providers.router import ProviderName
 from app.services.bonds import BondsService
+from app.core.errors import MarketDataError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -27,7 +28,7 @@ async def get_fred_series_metadata(
     """Get FRED series metadata."""
     try:
         return await service.get_fred_series_metadata(series_id, provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting FRED series metadata: {e}")
@@ -49,7 +50,7 @@ async def get_fred_series_observations(
         return await service.get_fred_series_observations(
             series_id, start, end, frequency, units, provider
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting FRED series observations: {e}")
@@ -65,7 +66,7 @@ async def search_fred_series(
     """Search for FRED series."""
     try:
         return await service.search(q, provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error searching FRED series: {e}")

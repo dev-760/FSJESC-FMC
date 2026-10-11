@@ -22,8 +22,12 @@ class BondsService(BaseService):
         provider: Optional[ProviderName] = None
     ) -> YieldCurve:
         """Get Treasury yield curve."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.get_yield_curve(date_obj)
+        return await self.router.with_fallback(
+            self.asset_class,
+            "get_yield_curve",
+            provider,
+            date_obj
+        )
 
     async def get_fred_series_metadata(
         self,
@@ -31,8 +35,12 @@ class BondsService(BaseService):
         provider: Optional[ProviderName] = None
     ) -> FredSeriesMetadata:
         """Get FRED series metadata."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.get_fred_series_metadata(series_id)
+        return await self.router.with_fallback(
+            self.asset_class,
+            "get_fred_series_metadata",
+            provider,
+            series_id
+        )
 
     async def get_fred_series_observations(
         self,
@@ -44,7 +52,13 @@ class BondsService(BaseService):
         provider: Optional[ProviderName] = None
     ) -> FredSeriesObservations:
         """Get FRED series observations."""
-        provider_instance = self.router.get_provider(self.asset_class, provider)
-        return await provider_instance.get_fred_series_observations(
-            series_id, start, end, frequency, units
+        return await self.router.with_fallback(
+            self.asset_class,
+            "get_fred_series_observations",
+            provider,
+            series_id,
+            start,
+            end,
+            frequency,
+            units
         )

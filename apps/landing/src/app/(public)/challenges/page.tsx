@@ -30,45 +30,45 @@ const CHALLENGES: readonly ChallengeDefinition[] = [
     id: "bull-run",
     name: "Bull Run & Allocation Discipline",
     description:
-      "Participate in a sustained upward drift (+8% annualised) with normal volatility. Practice position sizing and rebalancing without over-concentrating in a single Moroccan sector.",
+      "Participate in a sustained upward drift (+8% annualised) with normal volatility. Practice position sizing and rebalancing across Bourse de Casablanca sectors without over-concentrating.",
     difficulty: "BEGINNER",
     estimatedTime: "20 minutes",
     volatilityMultiplier: "1.0×",
     driftAdjustment: "+8.0% p.a.",
-    focusSector: "All 6 Casablanca Sectors",
+    focusSector: "All 9 CSE Casablanca Sectors",
   },
   {
     id: "sector-rotation",
     name: "Casablanca Sector Rotation",
     description:
-      "Reallocate capital across Banking (ATB, FCB), Telecoms (MTC), and Mining (PHM) as relative momentum shifts under moderate volatility.",
+      "Reallocate capital across Banking (ATW, BCP, BOA), Telecoms (IAM), and Mining (MNG, CMT) as relative momentum shifts under moderate volatility.",
     difficulty: "BEGINNER",
     estimatedTime: "25 minutes",
     volatilityMultiplier: "1.2×",
     driftAdjustment: "+3.0% p.a.",
-    focusSector: "Banking & Telecommunications",
+    focusSector: "Banques, Télécoms & Mines",
   },
   {
     id: "inflation-shock",
     name: "Inflation Shock",
     description:
-      "Navigate a sudden 2.5× surge in market volatility paired with inflationary price drift. Construct a defensive portfolio that keeps maximum drawdown under control.",
+      "Navigate a sudden 2.5× surge in market volatility paired with inflationary price drift. Construct a defensive portfolio across MNG, TQM, and CSR that keeps maximum drawdown under control.",
     difficulty: "INTERMEDIATE",
     estimatedTime: "30 minutes",
     volatilityMultiplier: "2.5×",
     driftAdjustment: "+2.0% p.a.",
-    focusSector: "Mining, Energy & Consumer",
+    focusSector: "Mines, Énergie & Agroalimentaire",
   },
   {
     id: "interest-rate-hike",
-    name: "Central Bank Rate Tightening",
+    name: "Bank Al-Maghrib Rate Tightening",
     description:
-      "Simulate the impact of monetary tightening (−5% annualised drift, 1.5× volatility). Balance rate-sensitive financial holdings against cash reserves.",
+      "Simulate the impact of monetary tightening (−5% annualised drift, 1.5× volatility). Balance rate-sensitive financial holdings (ATW, BCP) and 10Y BDT against cash reserves.",
     difficulty: "INTERMEDIATE",
     estimatedTime: "30 minutes",
     volatilityMultiplier: "1.5×",
     driftAdjustment: "−5.0% p.a.",
-    focusSector: "Banking & Construction",
+    focusSector: "Banques, Bâtiment & BDT 10Y",
   },
   {
     id: "market-crash",
@@ -79,7 +79,7 @@ const CHALLENGES: readonly ChallengeDefinition[] = [
     estimatedTime: "35 minutes",
     volatilityMultiplier: "3.0×",
     driftAdjustment: "−15.0% p.a.",
-    focusSector: "Defensive & Cash Management",
+    focusSector: "Defensive Equities & Cash Management",
   },
   {
     id: "volatility-spike",
@@ -90,7 +90,7 @@ const CHALLENGES: readonly ChallengeDefinition[] = [
     estimatedTime: "40 minutes",
     volatilityMultiplier: "4.0×",
     driftAdjustment: "0.0% p.a.",
-    focusSector: "Order Book & Execution",
+    focusSector: "Order Book & Limit Execution",
   },
 ];
 
@@ -140,8 +140,9 @@ export default function ChallengesPage() {
 
         <Alert tone="information" title="Educational scenario overlays">
           <p className="text-sm">
-            All challenges use simulated market data and fictional Moroccan instruments priced in
-            MAD. Results are for academic study only and never constitute investment advice.
+            All challenges use simulated price paths across real Bourse de Casablanca and global
+            reference tickers settled in MAD. Results are for academic study only and never
+            constitute investment advice.
           </p>
         </Alert>
 
@@ -158,9 +159,9 @@ export default function ChallengesPage() {
               onClick={() => setFilter(level)}
               aria-pressed={filter === level}
               className={cn(
-                "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors cursor-pointer",
+                "rounded-full border px-3.5 py-1.5 text-xs font-medium transition-colors cursor-pointer",
                 filter === level
-                  ? "border-rule-strong bg-surface-inset text-foreground font-semibold"
+                  ? "border-rule-strong bg-brand-navy text-canvas font-semibold shadow-2xs"
                   : "border-rule bg-surface text-foreground-secondary hover:bg-surface-sunken hover:text-foreground",
               )}
             >
@@ -173,7 +174,7 @@ export default function ChallengesPage() {
           {visibleChallenges.map((challenge) => (
             <div
               key={challenge.id}
-              className="bg-surface-raised border-rule hover:border-rule-strong flex flex-col justify-between rounded-lg border p-6 shadow-xs transition-colors"
+              className="bg-surface border-rule hover:border-brand/60 flex flex-col justify-between rounded-2xl border p-6 shadow-xs transition-all hover:-translate-y-0.5 hover:shadow-md"
             >
               <div>
                 <div className="mb-3 flex items-start justify-between gap-2">
@@ -190,7 +191,7 @@ export default function ChallengesPage() {
                   {challenge.description}
                 </p>
 
-                <dl className="bg-surface-sunken border-rule mb-6 space-y-2 rounded-md border p-3.5 text-xs">
+                <dl className="bg-surface-sunken border-rule mb-6 space-y-2 rounded-xl border p-3.5 text-xs">
                   <div className="flex justify-between">
                     <dt className="label text-2xs text-foreground-muted">Volatility Overlay</dt>
                     <dd className="numeric font-semibold">{challenge.volatilityMultiplier}</dd>

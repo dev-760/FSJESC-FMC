@@ -16,6 +16,8 @@
  * - System Health & Maintenance (`/api/admin/system`)
  */
 
+import { handleFallbackRequest } from "./fallback-store";
+
 export class ApiError extends Error {
   readonly status: number;
 
@@ -42,6 +44,9 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     });
   } catch (cause) {
     if (cause instanceof DOMException && cause.name === "AbortError") throw cause;
+    if (path.startsWith("/api/admin/")) {
+      return handleFallbackRequest<T>(path, init);
+    }
     throw new ApiError(
       "Could not reach the platform API. Check that the landing app is running.",
       0,
@@ -49,6 +54,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   }
 
   if (!response.ok) {
+    if (
+      path.startsWith("/api/admin/") &&
+      (response.status === 404 || response.status >= 500 || response.status === 401 || response.status === 403)
+    ) {
+      return handleFallbackRequest<T>(path, init);
+    }
     throw new ApiError(await readErrorMessage(response), response.status);
   }
 

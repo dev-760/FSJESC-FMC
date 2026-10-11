@@ -5,6 +5,7 @@ from datetime import date
 from app.models.bonds import YieldCurve, FredSeriesMetadata, FredSeriesObservations
 from app.providers.router import ProviderName
 from app.services.bonds import BondsService
+from app.core.errors import MarketDataError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -27,7 +28,7 @@ async def get_yield_curve(
     """Get Treasury yield curve."""
     try:
         return await service.get_yield_curve(date_obj, provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting yield curve: {e}")

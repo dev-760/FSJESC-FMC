@@ -49,7 +49,7 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
     volatilityMultiplier: "2.5×",
     driftAdjustment: "+2.0% p.a.",
     concepts: [
-      "Input-cost vs pricing-power dynamics across Moroccan sectors",
+      "Input-cost vs pricing-power dynamics across Bourse de Casablanca sectors",
       "Real vs nominal portfolio return under inflation",
       "Position sizing when volatility doubles",
       "Using cash reserves to dampen portfolio drawdown",
@@ -59,9 +59,9 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
       maxDrawdownBps: -380n,
       volatilityBps: 640n,
       sectorWeightsPct: {
-        "Mining & Materials (PHM)": 35,
-        "Banking & Finance (ATB, FCB)": 25,
-        "Telecommunications (MTC)": 20,
+        "Mines & Materials (MNG, CMT)": 35,
+        "Banques (ATW, BCP)": 25,
+        "Télécommunications (IAM)": 20,
         "Liquid Cash Reserve (MAD)": 20,
       },
       tradeCount: 9,
@@ -73,7 +73,7 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
     summary:
       "Endure a sharp −15% annualised market correction with 3.0× volatility. Practice capital preservation and limit-order execution.",
     scenarioText:
-      "A broad risk-off shock triggers a −15% annualised downward drift and triples return volatility across all eight instruments.",
+      "A broad risk-off shock triggers a −15% annualised downward drift and triples return volatility across Moroccan and global equities.",
     goalText:
       "Limit portfolio drawdown using defensive rotation and cash buffers without panic-selling into wide spreads.",
     duration: "7 simulated trading days",
@@ -83,16 +83,16 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
       "Peak-to-trough maximum drawdown arithmetic",
       "Market order slippage vs limit order patience during sell-offs",
       "Correlation spikes during market corrections",
-      "Defensive rebalancing into lower-beta telecom and utility tickers",
+      "Defensive rebalancing into lower-beta telecom (IAM) and utility (TQM) equities",
     ],
     sampleResult: {
       finalReturnBps: -190n,
       maxDrawdownBps: -460n,
       volatilityBps: 890n,
       sectorWeightsPct: {
-        "Telecommunications (MTC)": 30,
-        "Energy & Utilities (TQA)": 25,
-        "Banking & Finance (ATB)": 15,
+        "Télécommunications (IAM)": 30,
+        "Énergie & Utilities (TQM)": 25,
+        "Banques (ATW)": 15,
         "Liquid Cash Reserve (MAD)": 30,
       },
       tradeCount: 11,
@@ -121,10 +121,10 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
       maxDrawdownBps: -195n,
       volatilityBps: 340n,
       sectorWeightsPct: {
-        "Banking & Finance (ATB, FCB)": 30,
-        "Construction & Cement (LHM, SGC)": 25,
-        "Mining & Materials (PHM)": 25,
-        "Consumer & Retail (MGB)": 20,
+        "Banques (ATW, BCP)": 30,
+        "Bâtiment & Matériaux (LHM, TGCC)": 25,
+        "Mines (MNG, SMI)": 25,
+        "Agroalimentaire & Retail (CSR, LBV)": 20,
       },
       tradeCount: 6,
     },
@@ -133,7 +133,7 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
     title: "Casablanca Sector Rotation",
     difficulty: "BEGINNER",
     summary:
-      "Rotate capital systematically across Moroccan sectors as relative performance shifts between cyclical and defensive industries.",
+      "Rotate capital systematically across Bourse de Casablanca sectors as relative performance shifts between cyclical and defensive industries.",
     scenarioText:
       "Moderate volatility (1.2×) and +3.0% drift reward portfolios that balance high-volatility cyclicals with steady dividend-style sectors.",
     goalText:
@@ -142,7 +142,7 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
     volatilityMultiplier: "1.2×",
     driftAdjustment: "+3.0% p.a.",
     concepts: [
-      "Comparing annualised volatility across sectors (12% telecom vs 28% construction)",
+      "Comparing annualised volatility across sectors (telecoms vs construction)",
       "Equal-weight vs volatility-weighted position sizing",
       "Evaluating turnover cost against expected drift",
     ],
@@ -151,10 +151,10 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
       maxDrawdownBps: -240n,
       volatilityBps: 410n,
       sectorWeightsPct: {
-        "Telecommunications (MTC)": 30,
-        "Banking & Finance (ATB, FCB)": 30,
-        "Energy & Utilities (TQA)": 25,
-        "Consumer & Retail (MGB)": 15,
+        "Télécommunications (IAM)": 30,
+        "Banques (ATW, BCP)": 30,
+        "Énergie & Utilities (TQM)": 25,
+        "Agroalimentaire (CSR, SBM)": 15,
       },
       tradeCount: 8,
     },
@@ -181,29 +181,29 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
       maxDrawdownBps: -520n,
       volatilityBps: 1120n,
       sectorWeightsPct: {
-        "Telecommunications (MTC)": 25,
-        "Energy & Utilities (TQA)": 25,
-        "Mining & Materials (PHM)": 15,
+        "Télécommunications (IAM)": 25,
+        "Énergie & Utilities (TQM)": 25,
+        "Mines (MNG)": 15,
         "Liquid Cash Reserve (MAD)": 35,
       },
       tradeCount: 14,
     },
   },
   "interest-rate-hike": {
-    title: "Central Bank Rate Tightening",
+    title: "Bank Al-Maghrib Rate Tightening",
     difficulty: "INTERMEDIATE",
     summary:
-      "Simulate the portfolio impact of a policy rate hike (−5% drift, 1.5× volatility) across rate-sensitive Moroccan equities.",
+      "Simulate the portfolio impact of a policy rate hike (−5% drift, 1.5× volatility) across rate-sensitive Moroccan equities and BDT bonds.",
     scenarioText:
       "Monetary tightening introduces a −5.0% annualised headwind and 1.5× volatility over a 30-day adjustment period.",
     goalText:
-      "Reduce duration and leverage exposure while keeping portfolio drawdown contained.",
+      "Reduce duration and rate-sensitive exposure while keeping portfolio drawdown contained.",
     duration: "30 simulated trading days",
     volatilityMultiplier: "1.5×",
     driftAdjustment: "−5.0% p.a.",
     concepts: [
-      "Discount rate sensitivity of equity valuations",
-      "Sector differentiation between banking margins and construction financing costs",
+      "Discount rate sensitivity of equity valuations and 10Y Bons du Trésor (BDT10Y)",
+      "Sector differentiation between banking margins (ATW, BCP) and construction financing costs (LHM, TGCC)",
       "Capital preservation when expected market drift is negative",
     ],
     sampleResult: {
@@ -211,9 +211,9 @@ const SCENARIO_CATALOG: Record<string, ScenarioMeta> = {
       maxDrawdownBps: -290n,
       volatilityBps: 480n,
       sectorWeightsPct: {
-        "Banking & Finance (ATB, FCB)": 35,
-        "Telecommunications (MTC)": 25,
-        "Consumer & Retail (MGB)": 15,
+        "Banques (ATW, BCP)": 35,
+        "Télécommunications (IAM)": 25,
+        "Agroalimentaire (CSR)": 15,
         "Liquid Cash Reserve (MAD)": 25,
       },
       tradeCount: 7,

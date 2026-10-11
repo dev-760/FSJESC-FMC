@@ -27,7 +27,7 @@ export const SETTLEMENT_DAYS = 2;
 export const UNSELLABLE = "Settlement pending — shares become sellable in two business days.";
 
 export type Side = "BUY" | "SELL";
-export type OrderType = "MARKET" | "LIMIT";
+export type OrderType = "MARKET" | "LIMIT" | "STOP";
 export type OrderStatus = "FILLED" | "PARTIAL" | "REJECTED" | "CANCELLED";
 
 export interface OrderRequest {
@@ -38,6 +38,8 @@ export interface OrderRequest {
   quantity: number;
   /** Limit price in centimes. Required for `LIMIT`, ignored for `MARKET`. */
   limitCents?: number;
+  /** Stop trigger price in centimes. Required for `STOP` (or falls back to `limitCents`). */
+  stopCents?: number;
 }
 
 export interface Order {
@@ -50,6 +52,7 @@ export interface Order {
   /** Shares actually executed. */
   filled: number;
   limitCents?: number;
+  stopCents?: number;
   /** Volume-weighted average execution price, in centimes. Excludes commission. */
   averageFillCents: number;
   status: OrderStatus;
@@ -215,6 +218,10 @@ export function executeOrder(
   if (request.type === "LIMIT" && (request.limitCents === undefined || request.limitCents <= 0)) {
     return reject("a limit order needs a positive limit price");
   }
+  const stopTrigger = request.stopCents ?? request.limitCents;
+  if (request.type === "STOP" && (stopTrigger === undefined || stopTrigger <= 0)) {
+    return reject("a stop order needs a positive stop trigger price");
+  }
 
   // An unfilled limit order would need a resting-order queue to be simulated
   // faithfully. Rather than fill one at a price the market has not reached, the
@@ -225,6 +232,14 @@ export function executeOrder(
     const marketable = request.side === "BUY" ? quote.askCents <= limit : quote.bidCents >= limit;
     if (!marketable) {
       return reject(`limit of ${(limit / 100).toFixed(2)} MAD is not currently marketable`);
+    }
+  }
+
+  if (request.type === "STOP") {
+    const stop = stopTrigger as number;
+    const triggered = request.side === "BUY" ? quote.askCents >= stop : quote.bidCents <= stop;
+    if (!triggered) {
+      return reject(`stop trigger of ${(stop / 100).toFixed(2)} MAD has not been reached`);
     }
   }
 
@@ -287,6 +302,7 @@ function fill(
     requested: request.quantity,
     filled: quantity,
     limitCents: request.limitCents,
+    stopCents: request.stopCents,
     averageFillCents: price,
     status: partial ? "PARTIAL" : "FILLED",
     reason: partial ? `filled ${quantity} of ${request.quantity} shares` : undefined,

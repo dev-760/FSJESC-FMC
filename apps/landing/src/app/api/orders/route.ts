@@ -17,43 +17,126 @@ import { transactionsRepository } from "@/infrastructure/database/repositories/t
 import { numericStringToCents, centsToNumericString } from "@/infrastructure/database/money";
 import { AppError } from "@fsjesc/config/errors";
 
+const guestPositionSchema = z.object({
+  symbol: z.string(),
+  quantity: z.number().int().nonnegative(),
+  averageCostCents: z.number().int().nonnegative(),
+  openedAt: z.number().int().nonnegative(),
+});
+
+const guestPortfolioSchema = z.object({
+  cashCents: z.union([z.string().regex(/^-?\d+$/), z.number().int().nonnegative()]),
+  reservedCents: z.union([z.string().regex(/^-?\d+$/), z.number().int().nonnegative()]).optional(),
+  realisedPnlCents: z.union([z.string().regex(/^-?\d+$/), z.number().int()]).optional(),
+  positions: z.record(z.string(), guestPositionSchema).optional(),
+});
+
 const orderSchema = z.object({
-  symbol: z.string().min(1).max(12),
+  symbol: z.string().min(1).max(20),
   side: z.enum(["BUY", "SELL"]),
-  type: z.enum(["MARKET", "LIMIT"]),
+  type: z.enum(["MARKET", "LIMIT", "STOP"]),
   quantity: z.number().int().positive(),
   limitCents: z.number().int().positive().optional(),
+  stopCents: z.number().int().positive().optional(),
   idempotencyKey: z.string().optional(),
+  guestPortfolio: guestPortfolioSchema.optional(),
 });
+
+export async function GET(request: NextRequest) {
+  try {
+    const session = await getCurrentSession();
+    if (!session?.user) {
+      return NextResponse.json({
+        isGuest: true,
+        orders: [],
+      });
+    }
+
+    const portfolioRecord = await portfoliosRepository.getUserPortfolio(session.user.id);
+    if (!portfolioRecord) {
+      return NextResponse.json({
+        isGuest: false,
+        orders: [],
+      });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const limitParam = Number(searchParams.get("limit") ?? "25");
+    const limit = Number.isFinite(limitParam) ? Math.min(Math.max(1, Math.trunc(limitParam)), 100) : 25;
+    const cursor = searchParams.get("cursor") ?? undefined;
+
+    const result = await ordersRepository.getOrders(portfolioRecord.id, limit, cursor);
+    return NextResponse.json({
+      isGuest: false,
+      orders: result.orders,
+      nextCursor: result.nextCursor,
+    });
+  } catch (error) {
+    if (error instanceof AppError) {
+      return NextResponse.json(
+        { error: error.message, code: error.code },
+        { status: error.status },
+      );
+    }
+    return NextResponse.json(
+      { error: "Internal server error", code: "INTERNAL_ERROR" },
+      { status: 500 },
+    );
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
     const json = (await request.json()) as unknown;
     const validated = orderSchema.parse(json);
+    const symbol = validated.symbol.trim().toUpperCase();
 
-    const now = new Date();
-    const quote = market.getQuote(validated.symbol.toUpperCase(), now);
+    const instrument = market.getInstrument(symbol);
+    if (!instrument) {
+      throw new AppError("NOT_FOUND", `Instrument ${symbol} not found on market`);
+    }
 
-    if (!quote) {
-      return NextResponse.json(
-        { error: `Instrument ${validated.symbol} not found on market` },
-        { status: 404 },
+    if (!market.isTradeable(symbol)) {
+      throw new AppError(
+        "VALIDATION_ERROR",
+        `Instrument ${symbol} is a reference benchmark and cannot be traded`,
       );
     }
+
+    const now = new Date();
+    const quote = market.getQuote(symbol, now);
+    const effectiveTriggerCents = validated.stopCents ?? validated.limitCents;
 
     const session = await getCurrentSession();
 
     if (!session?.user) {
-      // Guest demo mode: execute against standard starting capital
-      const demoPortfolio = createPortfolio(10_000_000n);
+      // Guest demo mode: execute against provided guest portfolio state or standard 100,000 MAD starting capital
+      const basePortfolio = createPortfolio(10_000_000n);
+      const demoPortfolio: Portfolio = validated.guestPortfolio
+        ? {
+            cashCents: BigInt(validated.guestPortfolio.cashCents),
+            reservedCents:
+              validated.guestPortfolio.reservedCents !== undefined
+                ? BigInt(validated.guestPortfolio.reservedCents)
+                : 0n,
+            realisedPnlCents:
+              validated.guestPortfolio.realisedPnlCents !== undefined
+                ? BigInt(validated.guestPortfolio.realisedPnlCents)
+                : 0n,
+            positions: validated.guestPortfolio.positions ?? {},
+            orders: [],
+          }
+        : basePortfolio;
+
       const executionResult = executeOrder(
         demoPortfolio,
         {
-          symbol: validated.symbol.toUpperCase(),
+          symbol,
           side: validated.side,
           type: validated.type,
           quantity: validated.quantity,
           limitCents: validated.limitCents,
+          stopCents: effectiveTriggerCents,
         },
         quote,
         now,
@@ -61,11 +144,15 @@ export async function POST(request: NextRequest) {
       );
 
       return NextResponse.json({
-        success: true,
+        success: executionResult.order.status !== "REJECTED",
         isGuest: true,
-        order: executionResult.order,
+        order: {
+          ...executionResult.order,
+          feeCents: executionResult.order.feeCents.toString(),
+        },
         portfolio: {
           cashCents: executionResult.portfolio.cashCents.toString(),
+          reservedCents: executionResult.portfolio.reservedCents.toString(),
           realisedPnlCents: executionResult.portfolio.realisedPnlCents.toString(),
           positions: executionResult.portfolio.positions,
         },
@@ -104,11 +191,13 @@ export async function POST(request: NextRequest) {
     // Place initial record in DB with idempotency
     const { order: dbOrder, isNew } = await ordersRepository.placeOrder({
       portfolioId: portfolioRecord.id,
-      symbol: validated.symbol.toUpperCase(),
+      symbol,
       side: validated.side,
       type: validated.type,
       requested: validated.quantity,
-      limitCents: validated.limitCents ? centsToNumericString(BigInt(validated.limitCents)) : undefined,
+      limitCents: effectiveTriggerCents
+        ? centsToNumericString(BigInt(effectiveTriggerCents))
+        : undefined,
       idempotencyKey: validated.idempotencyKey,
     });
 
@@ -124,11 +213,12 @@ export async function POST(request: NextRequest) {
     const executionResult = executeOrder(
       domainPortfolio,
       {
-        symbol: validated.symbol.toUpperCase(),
+        symbol,
         side: validated.side,
         type: validated.type,
         quantity: validated.quantity,
         limitCents: validated.limitCents,
+        stopCents: effectiveTriggerCents,
       },
       quote,
       now,
@@ -150,7 +240,7 @@ export async function POST(request: NextRequest) {
     if (executionResult.order.filled > 0) {
       await ordersRepository.createExecution({
         orderId: dbOrder.id,
-        symbol: validated.symbol.toUpperCase(),
+        symbol,
         quantity: executionResult.order.filled,
         priceCents: centsToNumericString(BigInt(executionResult.order.averageFillCents)),
         feeCents: centsToNumericString(executionResult.order.feeCents),
@@ -171,16 +261,16 @@ export async function POST(request: NextRequest) {
       }
 
       // Update positions
-      const newPos = executionResult.portfolio.positions[validated.symbol.toUpperCase()];
+      const newPos = executionResult.portfolio.positions[symbol];
       if (newPos && newPos.quantity > 0) {
         await portfoliosRepository.upsertPosition({
           portfolioId: portfolioRecord.id,
-          symbol: validated.symbol.toUpperCase(),
+          symbol,
           quantity: newPos.quantity,
           averageCostCents: centsToNumericString(BigInt(newPos.averageCostCents)),
         });
       } else {
-        await portfoliosRepository.deletePosition(portfolioRecord.id, validated.symbol.toUpperCase());
+        await portfoliosRepository.deletePosition(portfolioRecord.id, symbol);
       }
 
       // Record immutable transaction
@@ -188,14 +278,14 @@ export async function POST(request: NextRequest) {
         portfolioId: portfolioRecord.id,
         type: validated.side === "BUY" ? "BUY" : "SELL",
         amountCents: centsToNumericString(cashDiff < 0n ? -cashDiff : cashDiff),
-        symbol: validated.symbol.toUpperCase(),
+        symbol,
         referenceId: dbOrder.id,
-        description: executionResult.messages[0] ?? `${validated.side} ${validated.quantity} ${validated.symbol}`,
+        description: executionResult.messages[0] ?? `${validated.side} ${validated.quantity} ${symbol}`,
       });
     }
 
     return NextResponse.json({
-      success: true,
+      success: executionResult.order.status !== "REJECTED",
       order: updatedOrder,
       messages: executionResult.messages,
     });

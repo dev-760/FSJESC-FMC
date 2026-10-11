@@ -42,7 +42,7 @@ const FALLBACK_COMPETITIONS: Record<string, Competition> = {
     id: "comp-spring-2026",
     name: "FSJESC Casablanca Spring Championship",
     description:
-      "Multi-week portfolio optimization challenge across 8 Casablanca instruments. Scored on risk-adjusted return and maximum drawdown limit.",
+      "Multi-week portfolio optimization challenge across 38 Bourse de Casablanca equities and global instruments. Scored on risk-adjusted return and maximum drawdown limit.",
     startingCashCents: "10000000",
     status: "ACTIVE",
     startsAt: "2026-03-01T09:00:00.000Z",

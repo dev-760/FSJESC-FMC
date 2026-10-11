@@ -5,6 +5,8 @@ from datetime import date
 from app.models.options import OptionChain, OptionExpirations
 from app.providers.router import ProviderName
 from app.services.options import OptionsService
+from app.utils.symbols import SymbolNormalizer
+from app.core.errors import MarketDataError, InvalidParameterError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -26,8 +28,9 @@ async def get_option_expirations(
 ):
     """Get available option expiration dates."""
     try:
-        return await service.get_expirations(symbol, provider)
-    except HTTPException:
+        normalized_symbol = SymbolNormalizer.normalize(symbol, "options")
+        return await service.get_expirations(normalized_symbol, provider)
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting option expirations: {e}")
@@ -48,13 +51,13 @@ async def get_option_chain(
     """Get option chain for a symbol and expiration."""
     try:
         if option_type not in ["calls", "puts", "all"]:
-            raise HTTPException(
-                status_code=400,
-                detail="option_type must be 'calls', 'puts', or 'all'"
-            )
+            raise InvalidParameterError("option_type must be 'calls', 'puts', or 'all'")
+        if min_strike is not None and max_strike is not None and min_strike > max_strike:
+            raise InvalidParameterError("min_strike must be less than or equal to max_strike")
 
+        normalized_symbol = SymbolNormalizer.normalize(symbol, "options")
         return await service.get_chain(
-            symbol,
+            normalized_symbol,
             expiration,
             option_type,
             min_strike,
@@ -62,7 +65,7 @@ async def get_option_chain(
             in_the_money,
             provider
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting option chain: {e}")

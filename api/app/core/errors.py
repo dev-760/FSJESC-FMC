@@ -60,6 +60,9 @@ class SymbolNotFoundError(MarketDataError):
         )
 
 
+HTTP_422_STATUS = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", 422)
+
+
 class InvalidParameterError(MarketDataError):
     """Exception for invalid parameters."""
 
@@ -68,7 +71,7 @@ class InvalidParameterError(MarketDataError):
             message=message,
             code="INVALID_PARAMETER",
             details=details,
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY
+            status_code=HTTP_422_STATUS
         )
 
 
@@ -89,12 +92,12 @@ class RateLimitError(MarketDataError):
         )
 
 
-class ProviderNotConfiguredError(MarketDataError):
-    """Exception when a provider is not configured."""
+class ProviderNotConfiguredError(MarketDataError, ValueError):
+    """Exception when a provider is not configured or not available."""
 
-    def __init__(self, provider: str):
+    def __init__(self, provider: str, message: Optional[str] = None):
         super().__init__(
-            message=f"Provider not configured: {provider}",
+            message=message or f"Provider {provider} not available",
             code="PROVIDER_NOT_CONFIGURED",
             provider=provider,
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE
@@ -154,7 +157,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     )
 
     return JSONResponse(
-        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        status_code=HTTP_422_STATUS,
         content={
             "error": {
                 "code": "VALIDATION_ERROR",

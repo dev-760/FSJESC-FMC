@@ -22,7 +22,7 @@
         "name": "next"
       }
     ],
-"paths": {
+    "paths": {
       "@/*": [
         "./src/*"
       ],
@@ -31,6 +31,9 @@
       ],
       "@/lib/*": [
         "./lib/*"
+      ],
+      "@fsjesc/domain/*": [
+        "../../packages/domain/*"
       ]
     }
   },

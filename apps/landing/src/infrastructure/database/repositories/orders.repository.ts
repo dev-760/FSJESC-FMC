@@ -20,7 +20,7 @@ export class OrdersRepository {
     portfolioId: string;
     symbol: string;
     side: "BUY" | "SELL";
-    type: "MARKET" | "LIMIT";
+    type: "MARKET" | "LIMIT" | "STOP";
     requested: number;
     limitCents?: string;
     idempotencyKey?: string;

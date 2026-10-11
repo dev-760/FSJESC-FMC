@@ -126,10 +126,10 @@ export function getDb(): Database {
  * eagerly invoke `getConnection()` before runtime requests arrive.
  */
 export const db: Database = new Proxy({} as Database, {
-  get(_target, prop, receiver) {
+  get(_target, prop, receiver): unknown {
     const instance = getDb();
-    const value = Reflect.get(instance, prop, receiver);
-    return typeof value === "function" ? value.bind(instance) : value;
+    const value: unknown = Reflect.get(instance, prop, receiver);
+    return typeof value === "function" ? (value as (...args: unknown[]) => unknown).bind(instance) : value;
   },
 });
 

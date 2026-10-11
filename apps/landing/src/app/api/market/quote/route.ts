@@ -14,15 +14,33 @@ import { AppError } from "@fsjesc/config/errors";
 export function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const symbol = searchParams.get("symbol");
+    const symbolParam = searchParams.get("symbol");
 
-    if (!symbol) {
+    if (!symbolParam) {
       throw new AppError("VALIDATION_ERROR", "symbol parameter is required");
+    }
+
+    const symbol = symbolParam.trim().toUpperCase();
+    const instrument = market.getInstrument(symbol);
+    if (!instrument) {
+      throw new AppError("NOT_FOUND", `Unknown instrument: ${symbol}`);
     }
 
     const quote = market.getQuote(symbol, new Date());
 
-    return NextResponse.json(quote);
+    return NextResponse.json(
+      {
+        symbol: quote.symbol,
+        lastCents: quote.lastCents.toString(),
+        bidCents: quote.bidCents.toString(),
+        askCents: quote.askCents.toString(),
+        changeCents: quote.changeCents.toString(),
+        changeBps: Number(quote.changeBps),
+        volume: quote.volume,
+        asOf: quote.asOf,
+      },
+      { headers: { "Cache-Control": "no-store" } },
+    );
   } catch (error) {
     if (error instanceof AppError) {
       return NextResponse.json(

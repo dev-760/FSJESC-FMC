@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Paragraph, Text, XStack, YStack } from "tamagui";
+import { Text, XStack, YStack } from "tamagui";
 import { CheckCircle2, Save } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +13,12 @@ import { api, type PlatformSettings } from "@/lib/api";
 import { useResource } from "@/lib/use-resource";
 
 const INPUT_STYLE: React.CSSProperties = {
-  background: "#0f1520",
-  border: "1px solid #283449",
+  background: "var(--surface-raised)",
+  border: "1px solid var(--border)",
   borderRadius: 6,
-  color: "#eef2f6",
+  color: "var(--text)",
   fontSize: 13,
-  padding: "8px 12px",
+  padding: "7px 11px",
   width: "100%",
 };
 
@@ -34,32 +34,20 @@ function ToggleRow({
   onChange: (next: boolean) => void;
 }) {
   return (
-    <XStack
-      alignItems="center"
-      justifyContent="space-between"
-      gap="$4"
-      paddingVertical="$3"
-      borderBottomWidth={1}
-      borderColor="$ruleFaint"
-    >
-      <YStack flex={1} gap="$0.5">
-        <Text fontSize="$3" fontWeight="600" color="$foreground">
-          {label}
-        </Text>
-        <Paragraph fontSize="$2" color="$foregroundSecondary" lineHeight={18}>
-          {description}
-        </Paragraph>
-      </YStack>
-      <Button
-        size="sm"
-        variant={checked ? "primary" : "outline"}
-        onPress={() => onChange(!checked)}
-      >
-        <Text fontFamily="$mono" fontSize="$1" color={checked ? "$canvas" : "$foregroundSecondary"}>
-          {checked ? "ENABLED" : "DISABLED"}
-        </Text>
-      </Button>
-    </XStack>
+    <div className="settings-row">
+      <div className="settings-row__text">
+        <div className="settings-row__label">{label}</div>
+        <div className="settings-row__desc">{description}</div>
+      </div>
+      <label className="switch">
+        <input
+          type="checkbox"
+          checked={checked}
+          onChange={(e) => onChange(e.target.checked)}
+        />
+        <span className="switch__track" />
+      </label>
+    </div>
   );
 }
 

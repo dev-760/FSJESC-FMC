@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Fraunces, Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { loadEnvConfig } from "@next/env";
 import { SkipLink } from "@fsjesc/ui/layout/skip-link";
+import { SimulatorShell } from "@fsjesc/ui/simulator/simulator-shell";
 import "./globals.css";
 
 /**
@@ -43,11 +45,11 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Simulator",
-    template: "%s | Simulator",
+    default: "FSJESC · Simulateur de Marché",
+    template: "%s | FSJESC · Simulateur",
   },
   description:
-    "Paper-trading terminal operating a deterministic simulated Moroccan market in MAD. No real money is involved.",
+    "Paper-trading terminal operating a deterministic simulated Moroccan and multi-asset market in MAD. No real money is involved.",
   robots: { index: false, follow: false },
 };
 
@@ -63,7 +65,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
-      lang="en"
+      lang="fr"
       dir="ltr"
       className={`${inter.variable} ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
       suppressHydrationWarning
@@ -77,7 +79,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="bg-canvas text-foreground flex min-h-full flex-col">
         <SkipLink targetId="main-content" />
-        {children}
+        <Suspense fallback={<div className="min-h-screen bg-[#f3f5f8]" />}>{/* Shell wraps all routes */}
+          <SimulatorShell>{children}</SimulatorShell>
+        </Suspense>
       </body>
     </html>
   );

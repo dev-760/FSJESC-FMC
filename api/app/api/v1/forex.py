@@ -5,6 +5,7 @@ from datetime import date
 from app.models.forex import ForexRate, ForexTimeSeries, ConversionResult, CurrencyInfo
 from app.providers.router import ProviderName
 from app.services.forex import ForexService
+from app.core.errors import MarketDataError, InvalidParameterError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -28,10 +29,11 @@ async def get_forex_rates(
 ):
     """Get forex exchange rate for a currency pair."""
     try:
-        # For now, return first quote as single rate
-        quote_currencies = [s.strip().upper() for s in symbols.split(",")]
-        return await service.get_forex_rate(base.upper(), quote_currencies[0], date_obj, provider)
-    except HTTPException:
+        quote_currencies = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not quote_currencies:
+            raise InvalidParameterError("At least one quote currency is required")
+        return await service.get_forex_rate(base.strip().upper(), quote_currencies[0], date_obj, provider)
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting forex rate: {e}")
@@ -49,9 +51,11 @@ async def get_forex_history(
 ):
     """Get forex time series data."""
     try:
-        quote_currencies = [s.strip().upper() for s in symbols.split(",")]
-        return await service.get_forex_history(base.upper(), quote_currencies, start, end, provider)
-    except HTTPException:
+        quote_currencies = [s.strip().upper() for s in symbols.split(",") if s.strip()]
+        if not quote_currencies:
+            raise InvalidParameterError("At least one quote currency is required")
+        return await service.get_forex_history(base.strip().upper(), quote_currencies, start, end, provider)
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting forex history: {e}")
@@ -70,13 +74,13 @@ async def convert_currency(
     """Convert currency amount."""
     try:
         return await service.convert_currency(
-            from_currency.upper(),
-            to_currency.upper(),
+            from_currency.strip().upper(),
+            to_currency.strip().upper(),
             amount,
             date_obj,
             provider
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error converting currency: {e}")
@@ -91,7 +95,7 @@ async def get_currencies(
     """Get available currencies."""
     try:
         return await service.get_currencies(provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting currencies: {e}")

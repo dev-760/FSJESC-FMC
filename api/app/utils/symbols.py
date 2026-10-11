@@ -20,10 +20,16 @@ class SymbolNormalizer:
         "RTY": "RTY=F",  # Russell 2000 E-mini
         "GC": "GC=F",  # Gold
         "SI": "SI=F",  # Silver
+        "HG": "HG=F",  # Copper
         "CL": "CL=F",  # Crude Oil
         "NG": "NG=F",  # Natural Gas
+        "RB": "RB=F",  # RBOB Gasoline
         "ZN": "ZN=F",  # 10-Year T-Note
         "ZB": "ZB=F",  # 30-Year T-Bond
+        "ZC": "ZC=F",  # Corn
+        "ZW": "ZW=F",  # Wheat
+        "6E": "6E=F",  # Euro FX
+        "DX": "DX-Y.NYB",  # US Dollar Index
     }
 
     # Crypto symbol mapping (short -> yfinance format)
@@ -37,11 +43,22 @@ class SymbolNormalizer:
         "SOL": "SOL-USD",
         "DOT": "DOT-USD",
         "MATIC": "MATIC-USD",
+        "POL": "POL-USD",
         "AVAX": "AVAX-USD",
+        "LINK": "LINK-USD",
+        "UNI": "UNI-USD",
+        "LTC": "LTC-USD",
+        "BCH": "BCH-USD",
+        "NEAR": "NEAR-USD",
+        "ATOM": "ATOM-USD",
+        "ARB": "ARB-USD",
+        "OP": "OP-USD",
+        "SUI": "SUI-USD",
+        "APT": "APT-USD",
     }
 
     @staticmethod
-    def normalize(symbol: str, asset_class: AssetClass) -> str:
+    def normalize(symbol: str, asset_class: AssetClass | str) -> str:
         """
         Normalize a symbol for the given asset class.
 
@@ -55,24 +72,26 @@ class SymbolNormalizer:
         Raises:
             InvalidParameterError: If symbol is invalid
         """
-        if not symbol:
+        if not symbol or not symbol.strip():
             raise InvalidParameterError("Symbol cannot be empty")
 
         symbol = symbol.strip().upper()
 
-        # Validate basic format
-        if not re.match(r'^[A-Z0-9/=-]+$', symbol):
+        # Validate basic format (allow letters, digits, slash, dot, caret, equals, hyphen)
+        if not re.match(r'^[A-Z0-9/.=^-]+$', symbol):
             raise InvalidParameterError(f"Invalid symbol format: {symbol}")
 
         # Normalize based on asset class
-        if asset_class == AssetClass.FOREX:
+        if asset_class in (AssetClass.FOREX, "forex"):
             return SymbolNormalizer._normalize_forex(symbol)
-        elif asset_class == AssetClass.CRYPTO:
+        elif asset_class in (AssetClass.CRYPTO, "crypto"):
             return SymbolNormalizer._normalize_crypto(symbol)
-        elif asset_class == AssetClass.FUTURES:
+        elif asset_class in (AssetClass.FUTURES, "futures"):
             return SymbolNormalizer._normalize_futures(symbol)
+        elif asset_class in (AssetClass.CSE, "cse"):
+            return symbol.removesuffix(".CS")
         else:
-            # For stocks, ETFs, bonds, options - just uppercase and return
+            # For stocks, ETFs, bonds, options - uppercase and return
             return symbol
 
     @staticmethod
@@ -82,11 +101,11 @@ class SymbolNormalizer:
         symbol = symbol.replace("/", "").replace(" ", "")
 
         # Validate forex pair format (6 characters: 3 for base, 3 for quote)
-        if len(symbol) == 6:
+        if len(symbol) == 6 and symbol.isalpha():
             return f"{symbol}=X"
 
         # If already in yfinance format, return as-is
-        if symbol.endswith("=X"):
+        if symbol.endswith("=X") and len(symbol) == 8:
             return symbol
 
         raise InvalidParameterError(f"Invalid forex symbol format: {symbol}. Expected format: EURUSD or EUR/USD")
@@ -94,6 +113,9 @@ class SymbolNormalizer:
     @staticmethod
     def _normalize_crypto(symbol: str) -> str:
         """Normalize crypto symbol to yfinance format (e.g., BTC -> BTC-USD)."""
+        # Replace slash with hyphen if passed as BTC/USD
+        symbol = symbol.replace("/", "-")
+
         # Check mapping
         if symbol in SymbolNormalizer.CRYPTO_MAPPING:
             return SymbolNormalizer.CRYPTO_MAPPING[symbol]
@@ -103,7 +125,7 @@ class SymbolNormalizer:
             return symbol
 
         # Try to infer format (add -USD)
-        if len(symbol) >= 2 and len(symbol) <= 5:
+        if 2 <= len(symbol) <= 6 and symbol.isalnum():
             return f"{symbol}-USD"
 
         raise InvalidParameterError(f"Invalid crypto symbol format: {symbol}")
@@ -116,10 +138,12 @@ class SymbolNormalizer:
             return SymbolNormalizer.FUTURES_MAPPING[symbol]
 
         # If already in yfinance format, return as-is
-        if symbol.endswith("=F"):
+        if symbol.endswith("=F") or symbol == "DX-Y.NYB":
             return symbol
 
-        raise InvalidParameterError(f"Invalid futures symbol: {symbol}. Known symbols: {', '.join(SymbolNormalizer.FUTURES_MAPPING.keys())}")
+        raise InvalidParameterError(
+            f"Invalid futures symbol: {symbol}. Known symbols: {', '.join(SymbolNormalizer.FUTURES_MAPPING.keys())}"
+        )
 
     @staticmethod
     def validate_interval(interval: str) -> str:

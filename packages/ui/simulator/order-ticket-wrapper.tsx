@@ -1,170 +1,168 @@
-/**
- * Order ticket wrapper component.
- *
- * Client component wrapper for OrderTicket that executes orders via /api/orders
- * and surfaces real-time execution feedback. Available cash is loaded from the
- * portfolio endpoint so the ticket reflects the member's actual balance.
- */
-
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { market } from "@fsjesc/domain/market/engine";
 import { OrderTicket } from "./order-ticket";
 import { Alert } from "../alert";
+import {
+  submitSimulatorOrder,
+  useSimulatorPortfolio,
+  type SimOrderType,
+} from "./simulator-store";
 
 interface OrderTicketWrapperProps {
   symbol: string;
   currentPriceCents: number;
-  /** Fallback used while the portfolio request is in flight, or for guests. */
   availableCashCents?: bigint;
-}
-
-interface PortfolioDto {
-  cashCents?: string;
-  positions?: Array<{
-    symbol: string;
-    quantity: number;
-  }>;
 }
 
 export function OrderTicketWrapper({
   symbol,
   currentPriceCents,
-  availableCashCents = 10_000_000n,
 }: OrderTicketWrapperProps) {
-  const [cashCents, setCashCents] = useState(availableCashCents);
-  const [positionQuantity, setPositionQuantity] = useState(0);
-  const [livePriceCents, setLivePriceCents] = useState(currentPriceCents);
+  const { telemetry, closePosition, cancelOrder } = useSimulatorPortfolio(3000);
+  const [quoteState, setQuoteState] = useState<{
+    lastCents: number;
+    bidCents: number;
+    askCents: number;
+  }>({
+    lastCents: currentPriceCents,
+    bidCents: Math.max(1, currentPriceCents - 5),
+    askCents: currentPriceCents + 5,
+  });
+
   const [feedback, setFeedback] = useState<{
     tone: "positive" | "negative" | "warning";
     message: string;
   } | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Keep ticket price synced with the deterministic market engine
   useEffect(() => {
     const updateQuote = () => {
       try {
-        const quote = market.getQuote(symbol, new Date());
-        setLivePriceCents(Number(quote.lastCents));
+        const q = market.getQuote(symbol, telemetry.effectiveDate);
+        setQuoteState({
+          lastCents: q.lastCents,
+          bidCents: q.bidCents,
+          askCents: q.askCents,
+        });
       } catch {
-        // Keep fallback price if symbol lookup fails
+        // Keep fallback
       }
     };
     updateQuote();
     const timer = setInterval(updateQuote, 3000);
     return () => clearInterval(timer);
-  }, [symbol]);
+  }, [symbol, telemetry.effectiveDate]);
 
-  const loadPortfolio = useCallback(async () => {
-    try {
-      const response = await fetch("/api/simulator/portfolio", { cache: "no-store" });
-      if (!response.ok) return;
-      const data = (await response.json()) as PortfolioDto;
-      if (typeof data.cashCents === "string") {
-        setCashCents(BigInt(data.cashCents));
-      }
-      if (Array.isArray(data.positions)) {
-        const match = data.positions.find(
-          (pos) => pos.symbol.toUpperCase() === symbol.toUpperCase(),
-        );
-        setPositionQuantity(match ? match.quantity : 0);
-      }
-    } catch {
-      // Keep fallback state; the ticket remains usable.
-    }
-  }, [symbol]);
-
+  // Clear feedback banner when switching instruments
   useEffect(() => {
-    void loadPortfolio();
-  }, [loadPortfolio]);
+    setFeedback(null);
+  }, [symbol]);
 
-  const handleSubmit = async (order: {
+  const currentPosition = telemetry.positions.find(
+    (p) => p.symbol.toUpperCase() === symbol.toUpperCase(),
+  );
+  const symbolPendingOrders = telemetry.pendingOrders.filter(
+    (o) => o.symbol.toUpperCase() === symbol.toUpperCase(),
+  );
+
+  const handleSubmit = (order: {
     side: "BUY" | "SELL";
-    type: "MARKET" | "LIMIT";
+    type: SimOrderType;
     quantity: number;
     limitCents?: number;
+    stopCents?: number;
   }) => {
-    setIsSubmitting(true);
-    setFeedback(null);
-    try {
-      const response = await fetch("/api/orders", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          symbol,
-          side: order.side,
-          type: order.type,
-          quantity: order.quantity,
-          limitCents: order.limitCents,
-          idempotencyKey: `ord-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
-        }),
-      });
+    const res = submitSimulatorOrder({
+      symbol,
+      side: order.side,
+      type: order.type,
+      quantity: order.quantity,
+      limitCents: order.limitCents,
+      stopCents: order.stopCents,
+    });
+    setFeedback({
+      tone: res.tone,
+      message: res.message,
+    });
+  };
 
-      const data = (await response.json()) as {
-        error?: string;
-        order?: { status?: string; reason?: string };
-        messages?: string[];
-        cashCents?: string;
-      };
-
-      if (!response.ok) {
-        setFeedback({
-          tone: "negative",
-          message: data.error ?? "Order placement failed.",
-        });
-        return;
-      }
-
-      if (typeof data.cashCents === "string") {
-        setCashCents(BigInt(data.cashCents));
-      }
-      await loadPortfolio();
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("fsjesc:portfolio-updated"));
-      }
-
-      const orderStatus = data.order?.status;
-      const firstMsg = data.messages?.[0] ?? `Order ${orderStatus ?? "processed"} successfully.`;
-
-      if (orderStatus === "FILLED") {
-        setFeedback({ tone: "positive", message: firstMsg });
-      } else if (orderStatus === "PARTIAL") {
-        setFeedback({ tone: "warning", message: firstMsg });
-      } else {
-        setFeedback({ tone: "negative", message: data.order?.reason ?? firstMsg });
-      }
-    } catch {
-      setFeedback({
-        tone: "negative",
-        message: "Network error occurred while submitting order.",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleClosePosition = () => {
+    const res = closePosition(symbol, 1);
+    setFeedback({
+      tone: res.ok ? "positive" : "negative",
+      message: res.message,
+    });
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {feedback && (
         <Alert tone={feedback.tone} assertive>
-          <p className="text-sm font-medium">{feedback.message}</p>
+          <p className="text-xs font-medium">{feedback.message}</p>
         </Alert>
       )}
+
       <OrderTicket
         symbol={symbol}
-        currentPriceCents={livePriceCents}
-        availableCashCents={cashCents}
-        positionQuantity={positionQuantity}
-        onSubmit={(order) => {
-          void handleSubmit(order);
-        }}
+        currentPriceCents={quoteState.lastCents}
+        bidCents={quoteState.bidCents}
+        askCents={quoteState.askCents}
+        availableCashCents={telemetry.availableCashCents}
+        positionQuantity={currentPosition?.quantity ?? 0}
+        positionAvgCostCents={currentPosition?.averageCostCents ?? 0}
+        onSubmit={handleSubmit}
+        onClosePosition={currentPosition ? handleClosePosition : undefined}
       />
-      {isSubmitting && (
-        <p className="text-foreground-muted animate-pulse text-center text-xs">
-          Submitting order to matching engine...
-        </p>
+
+      {/* Working Orders for this symbol */}
+      {symbolPendingOrders.length > 0 && (
+        <div className="sim-card p-3.5 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[var(--sim-amber)]">
+              Ordres en carnet ({symbolPendingOrders.length})
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {symbolPendingOrders.map((ord) => (
+              <div
+                key={ord.id}
+                className="flex items-center justify-between gap-2 rounded-lg border border-[var(--sim-border)] bg-[var(--sim-bg-subtle)] px-2.5 py-1.5 text-xs"
+              >
+                <div>
+                  <span
+                    className={
+                      ord.side === "BUY"
+                        ? "font-mono font-bold text-[var(--sim-emerald)]"
+                        : "font-mono font-bold text-[var(--sim-terracotta)]"
+                    }
+                  >
+                    {ord.side === "BUY" ? "ACHAT" : "VENTE"}
+                  </span>{" "}
+                  <span className="font-mono font-semibold text-[var(--sim-ink)]">
+                    {ord.requested} {ord.symbol}
+                  </span>
+                  <span className="block font-mono text-[10px] text-[var(--sim-ink-3)]">
+                    {ord.type} @ {(((ord.limitCents ?? ord.stopCents ?? 0)) / 100).toFixed(2)} MAD
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    cancelOrder(ord.id);
+                    setFeedback({
+                      tone: "warning",
+                      message: `Ordre ${ord.id} sur ${ord.symbol} annulé.`,
+                    });
+                  }}
+                  className="rounded border border-[var(--sim-border)] bg-[var(--sim-bg-card)] px-2 py-1 font-mono text-[10px] font-semibold text-[var(--sim-terracotta)] hover:bg-[var(--sim-terracotta-tint)] cursor-pointer"
+                >
+                  Annuler
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

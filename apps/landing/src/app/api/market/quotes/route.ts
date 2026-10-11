@@ -13,19 +13,55 @@
  * `bigint` on the receiving end.
  */
 
-import { NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 import { market } from "@fsjesc/domain/market/engine";
 import { AppError } from "@fsjesc/config/errors";
 
-export function GET() {
+export function GET(request?: NextRequest) {
   try {
-    const quotes = market.getQuotes(new Date());
+    const now = new Date();
+    let instruments = market.listInstruments();
 
-    const wire = quotes.map((quote) => ({
-      symbol: quote.symbol,
-      lastCents: quote.lastCents.toString(),
-      changeBps: Number(quote.changeBps),
-    }));
+    if (request) {
+      const { searchParams } = new URL(request.url);
+      const marketFilter = searchParams.get("market")?.trim().toUpperCase();
+      const sectorFilter = searchParams.get("sector")?.trim().toUpperCase();
+      const symbolsFilter = searchParams.get("symbols");
+
+      if (marketFilter) {
+        instruments = instruments.filter(
+          (inst) => inst.market?.toUpperCase() === marketFilter,
+        );
+      }
+      if (sectorFilter) {
+        instruments = instruments.filter(
+          (inst) => inst.sector.toUpperCase() === sectorFilter,
+        );
+      }
+      if (symbolsFilter) {
+        const requested = new Set(
+          symbolsFilter
+            .split(",")
+            .map((s) => s.trim().toUpperCase())
+            .filter(Boolean),
+        );
+        instruments = instruments.filter((inst) => requested.has(inst.symbol));
+      }
+    }
+
+    const wire = instruments.map((inst) => {
+      const quote = market.getQuote(inst.symbol, now);
+      return {
+        symbol: quote.symbol,
+        lastCents: quote.lastCents.toString(),
+        bidCents: quote.bidCents.toString(),
+        askCents: quote.askCents.toString(),
+        changeCents: quote.changeCents.toString(),
+        changeBps: Number(quote.changeBps),
+        volume: quote.volume,
+        asOf: quote.asOf,
+      };
+    });
 
     return NextResponse.json(wire, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {

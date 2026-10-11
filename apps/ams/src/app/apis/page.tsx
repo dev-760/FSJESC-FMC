@@ -81,12 +81,12 @@ const PRESET_PROBES = [
 ] as const;
 
 const INPUT_STYLE: React.CSSProperties = {
-  background: "#0f1520",
-  border: "1px solid #283449",
+  background: "var(--surface-raised)",
+  border: "1px solid var(--border)",
   borderRadius: 6,
-  color: "#eef2f6",
+  color: "var(--text)",
   fontSize: 13,
-  padding: "8px 12px",
+  padding: "7px 11px",
 };
 
 export default function ApisAndMarketsPage() {

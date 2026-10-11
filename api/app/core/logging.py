@@ -1,6 +1,9 @@
 import logging
 import sys
-from pythonjsonlogger import jsonlogger
+try:
+    from pythonjsonlogger.json import JsonFormatter
+except ImportError:
+    from pythonjsonlogger.jsonlogger import JsonFormatter  # type: ignore[no-redef]
 from contextvars import ContextVar
 from typing import Any
 from uuid import uuid4
@@ -28,7 +31,7 @@ def setup_logging() -> None:
     log_level = getattr(logging, settings.LOG_LEVEL.upper(), logging.INFO)
 
     # Create formatter
-    formatter = jsonlogger.JsonFormatter(
+    formatter = JsonFormatter(
         fmt="%(asctime)s %(name)s %(levelname)s %(message)s %(request_id)s",
         datefmt="%Y-%m-%d %H:%M:%S"
     )

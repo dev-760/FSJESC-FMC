@@ -6,6 +6,7 @@ from app.models.common import Quote, HistoryResponse, BatchQuotesResponse
 from app.providers.router import ProviderName
 from app.services.etfs import ETFsService
 from app.utils.symbols import SymbolNormalizer
+from app.core.errors import MarketDataError, InvalidParameterError
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
@@ -29,7 +30,7 @@ async def get_etf_quote(
     try:
         normalized_symbol = SymbolNormalizer.normalize(symbol, "etfs")
         return await service.get_quote(normalized_symbol, provider)
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting ETF quote: {e}")
@@ -55,12 +56,12 @@ async def get_etf_history(
 
         return await service.get_history(
             normalized_symbol,
-            validated_start,
-            validated_end,
+            date.fromisoformat(validated_start),
+            date.fromisoformat(validated_end),
             validated_interval,
             provider
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting ETF history: {e}")
@@ -75,9 +76,11 @@ async def get_etf_quotes(
 ):
     """Get quotes for multiple ETFs (max 50)."""
     try:
-        symbol_list = [s.strip() for s in symbols.split(",")]
+        symbol_list = [s.strip() for s in symbols.split(",") if s.strip()]
+        if not symbol_list:
+            raise InvalidParameterError("At least one symbol is required")
         if len(symbol_list) > 50:
-            raise HTTPException(status_code=400, detail="Maximum 50 symbols per request")
+            raise InvalidParameterError("Maximum 50 symbols per request")
 
         normalized_symbols = [
             SymbolNormalizer.normalize(s, "etfs") for s in symbol_list
@@ -89,7 +92,7 @@ async def get_etf_quotes(
             quotes=quotes,
             metadata=quotes[0].metadata if quotes else None
         )
-    except HTTPException:
+    except (HTTPException, MarketDataError):
         raise
     except Exception as e:
         logger.error(f"Error getting ETF quotes: {e}")

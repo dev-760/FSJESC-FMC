@@ -1,21 +1,14 @@
 "use client";
 
-import { Paragraph, Text, XStack, YStack } from "tamagui";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { EmptyState, Skeleton } from "@/components/ui/data-table";
 import type { Resource } from "@/lib/use-resource";
 
 /**
- * Page-level components.
- *
- * These were previously re-declared inside each of the eight pages, with a
- * `StatCard` on the dashboard and a differently-shaped `StyledBadge` on five
- * separate screens.
+ * Page-level components styled to match `mockups/AMS.html`.
  */
 
-/** Title and lead for a page. */
+/** Title and lead for a page (`.page-head`). */
 export function PageHeader({
   title,
   lead,
@@ -26,33 +19,18 @@ export function PageHeader({
   action?: React.ReactNode;
 }) {
   return (
-    <XStack
-      alignItems="flex-start"
-      justifyContent="space-between"
-      gap="$4"
-      marginBottom="$5"
-      flexWrap="wrap"
-    >
-      <YStack gap="$1" flex={1} minWidth={240}>
-        <Text fontSize="$8" fontWeight="700" letterSpacing={-0.6}>
-          {title}
-        </Text>
-        {lead ? (
-          <Paragraph fontSize="$3" color="$foregroundSecondary" lineHeight={20}>
-            {lead}
-          </Paragraph>
-        ) : null}
-      </YStack>
-      {action}
-    </XStack>
+    <div className="page-head">
+      <div>
+        <h1 className="page-head__title">{title}</h1>
+        {lead ? <p className="page-head__sub">{lead}</p> : null}
+      </div>
+      {action ? <div className="page-head__actions">{action}</div> : null}
+    </div>
   );
 }
 
 /**
- * A single headline figure.
- *
- * The value is monospaced and tabular so that a row of these aligns on the
- * decimal, which is the whole reason a financial summary is scannable.
+ * A single headline figure (`.stat` with top 3px gold bar `#d4a94f`).
  */
 export function StatCard({
   label,
@@ -64,87 +42,53 @@ export function StatCard({
   hint?: React.ReactNode;
 }) {
   return (
-    <Card flex={1} minWidth={180} padding="$4">
-      <Text
-        fontFamily="$mono"
-        fontSize="$0"
-        letterSpacing={1.2}
-        textTransform="uppercase"
-        color="$foregroundSecondary"
-      >
-        {label}
-      </Text>
-      <Text fontFamily="$mono" fontSize="$7" fontWeight="700" marginTop="$2" color="$foreground">
-        {value}
-      </Text>
-      {hint ? (
-        <Text fontSize="$1" color="$foregroundMuted" marginTop="$1">
-          {hint}
-        </Text>
-      ) : null}
-    </Card>
+    <div className="stat">
+      <div className="stat__label">{label}</div>
+      <div className="stat__value">{value}</div>
+      {hint ? <div className="stat__delta stat__delta--pos">{hint}</div> : null}
+    </div>
   );
 }
 
-/** A row of stat cards that wraps rather than overflowing. */
+/** A 4-column responsive row of stat cards (`.stats`). */
 export function StatGrid({ children }: { children: React.ReactNode }) {
-  return (
-    <XStack flexWrap="wrap" gap="$4" marginBottom="$6">
-      {children}
-    </XStack>
-  );
+  return <div className="stats">{children}</div>;
 }
 
-/**
- * Loading placeholder matching the shape of a stat row.
- *
- * Skeletons are sized like the content they stand in for so the layout does not
- * jump when the data lands. Not exported: `ResourceView` uses it as its default
- * loading state, and no screen renders one directly.
- */
 function StatSkeleton({ count = 4 }: { count?: number }) {
   return (
     <StatGrid>
       {Array.from({ length: count }, (_, index) => (
-        <StatCard key={index} label="Loading" value={<Skeleton width={72} height={28} />} />
+        <StatCard key={index} label="Chargement" value={<Skeleton width={72} height={28} />} />
       ))}
     </StatGrid>
   );
 }
 
-/**
- * Error state.
- *
- * Previously a failed request was indistinguishable from an empty one. This
- * states what failed and offers the one action that helps.
- */
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <Card padding="$5" marginBottom="$5">
-      <XStack alignItems="flex-start" gap="$3">
-        <AlertTriangle size={20} color="#e8745a" />
-        <YStack gap="$3" flex={1}>
-          <Text fontSize="$3" fontWeight="600" color="$foreground">
-            This data could not be loaded
-          </Text>
-          <Paragraph fontSize="$2" color="$foregroundSecondary" lineHeight={19}>
+    <div className="card" style={{ padding: 20, marginBottom: 20 }}>
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+        <AlertTriangle size={20} color="var(--neg)" />
+        <div style={{ display: "flex", flexDirection: "column", gap: 10, flex: 1 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: "var(--text)" }}>
+            Impossible de charger ces données
+          </div>
+          <p style={{ margin: 0, fontSize: 13, color: "var(--text-2)", lineHeight: 1.5 }}>
             {message}
-          </Paragraph>
-          <YStack alignItems="flex-start">
-            <Button variant="outline" size="sm" onPress={onRetry}>
-              <XStack alignItems="center" gap="$2">
-                <RefreshCw size={14} />
-                <Text>Try again</Text>
-              </XStack>
-            </Button>
-          </YStack>
-        </YStack>
-      </XStack>
-    </Card>
+          </p>
+          <div>
+            <button type="button" className="btn btn--secondary btn--sm" onClick={onRetry}>
+              <RefreshCw size={14} />
+              <span>Réessayer</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 
-/** Empty state for a list. */
 export function NoResults({
   title,
   description,
@@ -155,13 +99,6 @@ export function NoResults({
   return <EmptyState title={title} description={description} />;
 }
 
-/**
- * Render a resource, handling all three states.
- *
- * Typing the loader as a narrowing function means the `ready` branch is the
- * only place `data` is visible, so a page cannot accidentally read it while
- * still loading.
- */
 export function ResourceView<T>({
   resource,
   onRetry,
@@ -178,11 +115,20 @@ export function ResourceView<T>({
   return <>{children(resource.data)}</>;
 }
 
-/** Section heading inside a page body. */
 export function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <Text fontSize="$5" fontWeight="600" marginTop="$5" marginBottom="$3">
+    <h2
+      style={{
+        fontFamily: "var(--font-serif)",
+        fontSize: 18,
+        fontWeight: 600,
+        letterSpacing: "-0.01em",
+        color: "var(--text)",
+        marginTop: 22,
+        marginBottom: 12,
+      }}
+    >
       {children}
-    </Text>
+    </h2>
   );
 }

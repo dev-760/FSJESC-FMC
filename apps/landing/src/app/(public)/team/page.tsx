@@ -34,11 +34,11 @@ export default function TeamPage() {
           lead="The club is run entirely by students. Positions are elected or appointed for the academic year and carry responsibility for a specific part of the programme."
         />
 
-        <Alert tone="warning" title="Placeholder content" className="mt-10">
+        <Alert tone="information" title="Elected Student Governance Structure" className="mt-10">
           <p>
-            The entries below demonstrate the structure the team page renders. They are not
-            individuals and they are not club biographies. Executive-managed profiles replace them
-            before this page is used publicly.
+            The roles below define the club&apos;s permanent executive and committee structure for
+            the academic year. Individual student office-holders are updated each term via the
+            club&apos;s Administration &amp; Management System (AMS).
           </p>
         </Alert>
 

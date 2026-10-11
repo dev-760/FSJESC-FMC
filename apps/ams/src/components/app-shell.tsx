@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Paragraph, ScrollView, Text, XStack, YStack, styled } from "tamagui";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   Activity,
   BarChart3,
@@ -11,13 +10,12 @@ import {
   FileText,
   Globe,
   LayoutDashboard,
-  Menu,
   Sliders,
   ShoppingCart,
   Trophy,
   Users,
 } from "lucide-react";
-import { AuthGate } from "@/components/auth-gate";
+import { AuthGate, FmcLogoMark, useAmsSession } from "@/components/auth-gate";
 
 export interface AppNavItem {
   name: string;
@@ -38,108 +36,450 @@ export const APP_NAV: readonly AppNavItem[] = [
   { name: "System Health", href: "/system", icon: Activity },
 ];
 
-/** Active when the path matches exactly, or nests beneath the item. */
-function isActive(item: AppNavItem, pathname: string): boolean {
-  if (item.href === "/") return pathname === "/";
-  return pathname === item.href || pathname.startsWith(`${item.href}/`);
+const SHELL_COPY = {
+  fr: {
+    ams: "Admin Management System",
+    production: "Production",
+    superadmin: "● Super administrateur",
+    menuSettings: "Paramètres",
+    menuSite: "Site du club",
+    menuSignout: "Se déconnecter",
+    railOverview: "Vue d'ensemble",
+    railDashboard: "Tableau de bord",
+    railAnalytics: "Analytique",
+    railContent: "Contenu",
+    railArticles: "Articles",
+    railEvents: "Événements",
+    railCompetitions: "Compétitions",
+    railOperations: "Opérations",
+    railOrders: "Ordres",
+    railUsers: "Utilisateurs",
+    railApis: "APIs & Marchés",
+    railSystem: "Système",
+    railSystemHealth: "Moteur & santé",
+    railSettings: "Paramètres",
+    railBackToSite: "Retour au site",
+  },
+  en: {
+    ams: "Admin Management System",
+    production: "Production",
+    superadmin: "● Super admin",
+    menuSettings: "Settings",
+    menuSite: "Club site",
+    menuSignout: "Sign out",
+    railOverview: "Overview",
+    railDashboard: "Dashboard",
+    railAnalytics: "Analytics",
+    railContent: "Content",
+    railArticles: "Articles",
+    railEvents: "Events",
+    railCompetitions: "Competitions",
+    railOperations: "Operations",
+    railOrders: "Orders",
+    railUsers: "Users",
+    railApis: "APIs & Markets",
+    railSystem: "System",
+    railSystemHealth: "Engine & health",
+    railSettings: "Settings",
+    railBackToSite: "Back to site",
+  },
+} as const;
+
+function isActivePath(href: string, pathname: string): boolean {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function ShellInner({
+  action,
+  children,
+}: {
+  title: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
   const pathname = usePathname();
+  const { session, signOut, locale, setLocale, theme, toggleTheme, toasts } = useAmsSession();
+  const [railOpen, setRailOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  const [lastPath, setLastPath] = useState(pathname);
+  if (pathname !== lastPath) {
+    setLastPath(pathname);
+    if (railOpen) setRailOpen(false);
+    if (menuOpen) setMenuOpen(false);
+  }
+
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setRailOpen(false);
+        setMenuOpen(false);
+      }
+    };
+    const onClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    document.addEventListener("mousedown", onClickOutside);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      document.removeEventListener("mousedown", onClickOutside);
+    };
+  }, []);
+
+  const copy = SHELL_COPY[locale];
+  const landingUrl = process.env.NEXT_PUBLIC_APP_URL ?? "/";
 
   return (
-    <YStack flex={1} padding="$3" gap="$1">
-      {APP_NAV.map((item) => {
-        const active = isActive(item, pathname);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            onClick={onNavigate}
-            style={{ textDecoration: "none" }}
+    <div id="app" className="app">
+      <header className="app-header">
+        <button
+          type="button"
+          className="icon-btn"
+          id="rail-toggle"
+          aria-label="Ouvrir la navigation"
+          aria-expanded={railOpen}
+          onClick={() => setRailOpen((prev) => !prev)}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
           >
-            <XStack
-              alignItems="center"
-              gap="$3"
-              paddingVertical="$2"
-              paddingHorizontal="$3"
-              borderRadius="$2"
-              borderLeftWidth={2}
-              borderLeftColor={active ? "$bull" : "transparent"}
-              backgroundColor={active ? "$surfaceInset" : "transparent"}
-              hoverStyle={{ backgroundColor: "$surfaceInset" }}
+            <path d="M4 7h16M4 12h16M4 17h16" />
+          </svg>
+        </button>
+
+        <Link href="/" className="brand" aria-label="FSJESC FMC AMS">
+          <FmcLogoMark size="md" />
+          <span className="brand__text">
+            <span className="brand__name">FSJESC FMC</span>
+            <span className="brand__app">{copy.ams}</span>
+          </span>
+        </Link>
+
+        <span className="env-badge">{copy.production}</span>
+
+        <div className="header-spacer" />
+
+        {action ? <div style={{ display: "flex", alignItems: "center", gap: 8 }}>{action}</div> : null}
+
+        <div className="toggle-group" role="group" aria-label="Langue">
+          <button
+            type="button"
+            data-locale="fr"
+            aria-pressed={locale === "fr"}
+            onClick={() => setLocale("fr")}
+          >
+            FR
+          </button>
+          <button
+            type="button"
+            data-locale="en"
+            aria-pressed={locale === "en"}
+            onClick={() => setLocale("en")}
+          >
+            EN
+          </button>
+        </div>
+
+        <button
+          type="button"
+          className="icon-btn"
+          id="theme-toggle"
+          aria-label="Changer de thème"
+          onClick={toggleTheme}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.75"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path
+              id="theme-icon-path"
+              d={
+                theme === "dark"
+                  ? "M12 3v2M12 19v2M5 12H3M21 12h-2M6 6l-1.5-1.5M19.5 19.5L18 18M6 18l-1.5 1.5M19.5 4.5L18 6M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"
+                  : "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"
+              }
+            />
+          </svg>
+        </button>
+
+        <div className="avatar-menu" ref={menuRef}>
+          <button
+            type="button"
+            className="avatar"
+            id="avatar-btn"
+            aria-label="Menu du compte"
+            aria-expanded={menuOpen}
+            aria-haspopup="menu"
+            onClick={() => setMenuOpen((prev) => !prev)}
+          >
+            <span id="avatar-initials">{session?.initials ?? "AB"}</span>
+          </button>
+          <div className="menu" id="avatar-menu" data-open={menuOpen ? "true" : "false"} role="menu">
+            <div className="menu__header">
+              <div className="menu__name" id="account-name">
+                {session?.name ?? "Admin Bureau"}
+              </div>
+              <div className="menu__email" id="account-email">
+                {session?.email ?? "admin@fmc-fsjes.ma"}
+              </div>
+              <div className="menu__role">{copy.superadmin}</div>
+            </div>
+            <Link
+              className="menu__item"
+              href="/settings"
+              role="menuitem"
+              onClick={() => setMenuOpen(false)}
             >
-              <Icon size={18} color={active ? "#2dbf8e" : "#b3c0cb"} />
-              <Text fontSize="$3" color={active ? "$foreground" : "$foregroundSecondary"}>
-                {item.name}
-              </Text>
-            </XStack>
-          </Link>
-        );
-      })}
-    </YStack>
-  );
-}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+              </svg>
+              <span>{copy.menuSettings}</span>
+            </Link>
+            <a className="menu__item" href={landingUrl} role="menuitem">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span>{copy.menuSite}</span>
+            </a>
+            <div className="menu__sep" />
+            <button
+              type="button"
+              className="menu__item menu__item--danger"
+              role="menuitem"
+              onClick={() => {
+                setMenuOpen(false);
+                signOut();
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              >
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+              </svg>
+              <span>{copy.menuSignout}</span>
+            </button>
+          </div>
+        </div>
+      </header>
 
-function Brand() {
-  return (
-    <XStack
-      height={56}
-      alignItems="center"
-      gap="$2.5"
-      paddingHorizontal="$4"
-      borderBottomWidth={1}
-      borderColor="$rule"
-    >
-      <picture>
-        <source srcSet="/brand/mark-dark.png" media="(prefers-color-scheme: dark)" />
-        <img
-          src="/brand/mark-light.png"
-          alt="FSJESC FMC"
-          height={24}
-          style={{ height: 24, width: "auto", display: "block" }}
+      <div className="app-body">
+        <div
+          className="rail-overlay"
+          id="rail-overlay"
+          data-open={railOpen ? "true" : "false"}
+          onClick={() => setRailOpen(false)}
         />
-      </picture>
-      <YStack gap={0}>
-        <Text fontFamily="$mono" fontSize="$3" fontWeight="700" color="$foreground">
-          FSJESC FMC
-        </Text>
-        <Text fontSize="$1" color="$foregroundMuted">
-          AMS Control Center
-        </Text>
-      </YStack>
-    </XStack>
-  );
-}
 
-const Drawer = styled(YStack, {
-  width: 264,
-  backgroundColor: "$surfaceSunken",
-  borderRightWidth: 1,
-  borderColor: "$rule",
-  style: { position: "fixed", top: 0, bottom: 0, left: 0, zIndex: 50 },
-});
+        <nav
+          className="rail"
+          id="rail"
+          aria-label="Navigation AMS"
+          data-open={railOpen ? "true" : "false"}
+        >
+          <div className="rail__group">
+            <div className="rail__label">{copy.railOverview}</div>
+            <Link
+              className="rail__link"
+              href="/"
+              aria-current={isActivePath("/", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <rect x="3" y="3" width="7" height="9" rx="1.5" />
+                <rect x="14" y="3" width="7" height="5" rx="1.5" />
+                <rect x="14" y="12" width="7" height="9" rx="1.5" />
+                <rect x="3" y="16" width="7" height="5" rx="1.5" />
+              </svg>
+              <span>{copy.railDashboard}</span>
+            </Link>
+            <Link
+              className="rail__link"
+              href="/analytics"
+              aria-current={isActivePath("/analytics", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <path d="M18 20V10M12 20V4M6 20v-6" strokeLinecap="round" />
+              </svg>
+              <span>{copy.railAnalytics}</span>
+            </Link>
+          </div>
 
-function DrawerToggle({ onPress }: { onPress: () => void }) {
-  return (
-    <YStack
-      aria-label="Open navigation"
-      className="ams-drawer-toggle"
-      onPress={onPress}
-      alignItems="center"
-      justifyContent="center"
-      width={34}
-      height={34}
-      borderRadius="$2"
-      borderWidth={1}
-      borderColor="$rule"
-      hoverStyle={{ backgroundColor: "$surfaceInset" }}
-      pressStyle={{ backgroundColor: "$surfaceInset" }}
-    >
-      <Menu size={18} />
-    </YStack>
+          <div className="rail__group">
+            <div className="rail__label">{copy.railContent}</div>
+            <Link
+              className="rail__link"
+              href="/articles"
+              aria-current={isActivePath("/articles", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <path d="M4 5a2 2 0 0 1 2-2h12v18H6a2 2 0 0 1-2-2V5z" />
+                <path d="M8 7h6M8 11h6M8 15h4" />
+              </svg>
+              <span>{copy.railArticles}</span>
+              <span className="rail__badge">6</span>
+            </Link>
+            <Link
+              className="rail__link"
+              href="/events"
+              aria-current={isActivePath("/events", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <rect x="3" y="5" width="18" height="16" rx="2" />
+                <path d="M16 3v4M8 3v4M3 11h18" />
+              </svg>
+              <span>{copy.railEvents}</span>
+              <span className="rail__badge">4</span>
+            </Link>
+            <Link
+              className="rail__link"
+              href="/competitions"
+              aria-current={isActivePath("/competitions", pathname) ? "page" : undefined}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinejoin="round"
+              >
+                <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" />
+                <path d="M17 5h3v2a3 3 0 0 1-3 3M7 5H4v2a3 3 0 0 0 3 3" />
+              </svg>
+              <span>{copy.railCompetitions}</span>
+              <span className="rail__badge">3</span>
+            </Link>
+          </div>
+
+          <div className="rail__group">
+            <div className="rail__label">{copy.railOperations}</div>
+            <Link
+              className="rail__link"
+              href="/orders"
+              aria-current={isActivePath("/orders", pathname) ? "page" : undefined}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              >
+                <path d="M4 4h16v4H4zM4 12h16M4 20h10" />
+              </svg>
+              <span>{copy.railOrders}</span>
+            </Link>
+            <Link
+              className="rail__link"
+              href="/users"
+              aria-current={isActivePath("/users", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <circle cx="9" cy="8" r="3.5" />
+                <path d="M3 21c0-3.5 3-6 6-6s6 2.5 6 6M16 3.5A3.5 3.5 0 0 1 16 11M19 21c0-2-.5-4-2-5" />
+              </svg>
+              <span>{copy.railUsers}</span>
+              <span className="rail__badge">426</span>
+            </Link>
+            <Link
+              className="rail__link"
+              href="/apis"
+              aria-current={isActivePath("/apis", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M3.6 9h16.8M3.6 15h16.8M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" />
+              </svg>
+              <span>{copy.railApis}</span>
+              <span className="rail__badge">110</span>
+            </Link>
+          </div>
+
+          <div className="rail__group">
+            <div className="rail__label">{copy.railSystem}</div>
+            <Link
+              className="rail__link"
+              href="/system"
+              aria-current={isActivePath("/system", pathname) ? "page" : undefined}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" />
+                <circle cx="12" cy="12" r="4" />
+              </svg>
+              <span>{copy.railSystemHealth}</span>
+              <span className="rail__badge rail__badge--warn">●</span>
+            </Link>
+            <Link
+              className="rail__link"
+              href="/settings"
+              aria-current={isActivePath("/settings", pathname) ? "page" : undefined}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z" />
+              </svg>
+              <span>{copy.railSettings}</span>
+            </Link>
+          </div>
+
+          <div className="rail__footer">
+            <a className="rail__link" href={landingUrl}>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+              >
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+              <span>{copy.railBackToSite}</span>
+            </a>
+          </div>
+        </nav>
+
+        <main className="route-view" id="route-view">
+          <div className="page">{children}</div>
+        </main>
+      </div>
+
+      <div className="toasts" id="toasts" role="region" aria-live="polite" aria-label="Notifications">
+        {toasts.map((item) => (
+          <div key={item.id} className={`toast toast--${item.tone}`}>
+            {item.message}
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -149,87 +489,14 @@ export function AppShell({
   children,
 }: {
   title: string;
-  action?: React.ReactNode;
-  children: React.ReactNode;
+  action?: ReactNode;
+  children: ReactNode;
 }) {
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const pathname = usePathname();
-
-  const [lastPath, setLastPath] = useState(pathname);
-  if (pathname !== lastPath) {
-    setLastPath(pathname);
-    if (drawerOpen) setDrawerOpen(false);
-  }
-
-  useEffect(() => {
-    if (!drawerOpen) return;
-    const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setDrawerOpen(false);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [drawerOpen]);
-
   return (
     <AuthGate>
-      <YStack flex={1} minHeight="100vh" backgroundColor="$canvas" flexDirection="row">
-        <YStack
-          className="ams-sidebar"
-          width={256}
-          borderRightWidth={1}
-          borderColor="$rule"
-          backgroundColor="$surfaceSunken"
-        >
-          <Brand />
-          <NavList />
-          <YStack padding="$4" borderTopWidth={1} borderColor="$ruleFaint" gap="$1">
-            <Text fontFamily="$mono" fontSize="$0" color="$bull">
-              ● WASSLY API GATEWAY
-            </Text>
-            <Paragraph fontSize="$0" color="$foregroundMuted">
-              8 Markets · 110 Instruments Active
-            </Paragraph>
-          </YStack>
-        </YStack>
-
-        {drawerOpen ? (
-          <>
-            <YStack
-              style={{ position: "fixed", inset: 0, backgroundColor: "#07080bcc", zIndex: 40 }}
-              onPress={() => setDrawerOpen(false)}
-            />
-            <Drawer>
-              <Brand />
-              <NavList onNavigate={() => setDrawerOpen(false)} />
-            </Drawer>
-          </>
-        ) : null}
-
-        <YStack flex={1} minWidth={0}>
-          <XStack
-            height={56}
-            alignItems="center"
-            gap="$3"
-            paddingHorizontal="$4"
-            borderBottomWidth={1}
-            borderColor="$rule"
-            backgroundColor="$surface"
-            style={{ position: "sticky", top: 0, zIndex: 30 }}
-          >
-            <DrawerToggle onPress={() => setDrawerOpen((open) => !open)} />
-
-            <Text fontSize="$4" fontWeight="600" flex={1} numberOfLines={1}>
-              {title}
-            </Text>
-
-            {action}
-          </XStack>
-
-          <ScrollView flex={1} contentContainerStyle={{ padding: 24, paddingBottom: 64 }}>
-            {children}
-          </ScrollView>
-        </YStack>
-      </YStack>
+      <ShellInner title={title} action={action}>
+        {children}
+      </ShellInner>
     </AuthGate>
   );
 }

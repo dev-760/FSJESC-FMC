@@ -29,7 +29,8 @@ interface Competition {
 const FALLBACK_ACTIVE: Competition = {
   id: "comp-spring-2026",
   name: "FSJESC Casablanca Spring Championship",
-  description: "Multi-week portfolio optimization challenge across 8 Casablanca instruments. Scored on risk-adjusted Sharpe ratio and maximum drawdown limit.",
+  description:
+    "Multi-week portfolio optimization challenge across 38 Bourse de Casablanca equities and global instruments. Scored on risk-adjusted Sharpe ratio and maximum drawdown limit.",
   startingCashCents: "10000000",
   status: "ACTIVE",
   startsAt: new Date(Date.now() - 3 * 86400000).toISOString(),

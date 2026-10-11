@@ -34,11 +34,19 @@ export function GET(request: NextRequest) {
       );
     }
 
+    const normalizedSymbol = symbol.trim().toUpperCase();
+    if (!market.getInstrument(normalizedSymbol)) {
+      throw new AppError("NOT_FOUND", `Unknown instrument: ${normalizedSymbol}`);
+    }
+
     const until = untilParam ? new Date(untilParam) : new Date();
+    if (Number.isNaN(until.getTime())) {
+      throw new AppError("VALIDATION_ERROR", "until parameter must be a valid ISO-8601 date");
+    }
 
-    const series = market.getSeries(symbol, interval, until);
+    const series = market.getSeries(normalizedSymbol, interval, until);
 
-    return NextResponse.json(series);
+    return NextResponse.json(series, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof AppError) {
       return NextResponse.json(
