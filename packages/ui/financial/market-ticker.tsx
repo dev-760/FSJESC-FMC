@@ -32,6 +32,24 @@ import { simulatorUrl } from "@fsjesc/config/app-urls";
 
 const TICK_MS = 3_000;
 
+const TICKER_STRIP_SYMBOLS = [
+  "ATW",
+  "IAM",
+  "BCP",
+  "LHM",
+  "TQM",
+  "AAPL",
+  "NVDA",
+  "SPY",
+  "BTC",
+  "GC",
+  "USDMAD",
+] as const;
+
+function stripQuotes(at: Date): Quote[] {
+  return TICKER_STRIP_SYMBOLS.map((sym) => market.getQuote(sym, at));
+}
+
 interface TickerState {
   quotes: readonly Quote[];
   /** Changes every tick, so consumers can key an animation off it. */
@@ -42,14 +60,14 @@ const EMPTY: TickerState = { quotes: [], tick: 0 };
 
 let state: TickerState =
   typeof window !== "undefined"
-    ? { quotes: market.watchlistPreview(new Date()), tick: 0 }
+    ? { quotes: stripQuotes(new Date()), tick: 0 }
     : EMPTY;
 let timer: ReturnType<typeof setInterval> | undefined;
 
 function ensureStarted(): void {
   if (timer !== undefined) return;
   const update = (): void => {
-    state = { quotes: market.watchlistPreview(new Date()), tick: state.tick + 1 };
+    state = { quotes: stripQuotes(new Date()), tick: state.tick + 1 };
     for (const listener of listeners) listener();
   };
   // Prime once so the strip has content on first paint after hydration.
@@ -89,7 +107,7 @@ export function MarketTicker({ className }: { className?: string }) {
       )}
     >
       <div className="shrink-0">
-        <p className="label text-2xs text-warning px-4 sm:px-6 lg:px-8">Simulated data</p>
+        <p className="label text-2xs text-warning-text px-4 sm:px-6 lg:px-8">Simulated data</p>
       </div>
 
       {/*

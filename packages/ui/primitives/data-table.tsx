@@ -91,18 +91,25 @@ export function DataTable<T>({
         unreadable shrunken table (Part 9.4). Both renderings draw from the one
         `columns` definition, so they cannot drift.
       */}
-      <ul aria-hidden="true" className="divide-rule divide-y md:hidden">
-        {rows.map((row, rowIndex) => (
-          <li key={rowKey(row, rowIndex)} className="px-4 py-3">
-            <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5">
-              {columns
-                .filter((column) => !column.hideOnMobile)
-                .map((column) => (
-                  <MobileCell key={column.header} column={column} row={row} index={rowIndex} />
+      <ul className="divide-rule divide-y md:hidden" aria-label={caption}>
+        {rows.map((row, rowIndex) => {
+          const visibleCols = columns.filter((column) => !column.hideOnMobile);
+          return (
+            <li key={rowKey(row, rowIndex)} className="px-4 py-3">
+              <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-4 gap-y-1.5">
+                {visibleCols.map((column, colIdx) => (
+                  <MobileCell
+                    key={column.header}
+                    column={column}
+                    row={row}
+                    index={rowIndex}
+                    isLead={colIdx === 0 && !column.numeric}
+                  />
                 ))}
-            </dl>
-          </li>
-        ))}
+              </dl>
+            </li>
+          );
+        })}
       </ul>
 
       <div className="hidden overflow-x-auto md:block">
@@ -169,19 +176,34 @@ export function DataTable<T>({
  * The first non-numeric column becomes the card's heading, which keeps the symbol or
  * name at the top where the thumb lands.
  */
-function MobileCell<T>({ column, row, index }: { column: Column<T>; row: T; index: number }) {
-  if (!column.numeric) {
+function MobileCell<T>({
+  column,
+  row,
+  index,
+  isLead,
+}: {
+  column: Column<T>;
+  row: T;
+  index: number;
+  isLead: boolean;
+}) {
+  if (isLead) {
     return (
-      <dt className="text-foreground col-span-2 text-sm font-semibold">
-        {column.render(row, index)}
-      </dt>
+      <>
+        <dt className="sr-only">{column.header}</dt>
+        <dd className="text-foreground col-span-2 mb-1 text-sm font-semibold">
+          {column.render(row, index)}
+        </dd>
+      </>
     );
   }
 
   return (
     <>
       <dt className="text-foreground-secondary text-xs">{column.header}</dt>
-      <dd className="numeric col-span-2 text-right text-sm">{column.render(row, index)}</dd>
+      <dd className={cn("text-right text-sm", column.numeric && "numeric")}>
+        {column.render(row, index)}
+      </dd>
     </>
   );
 }

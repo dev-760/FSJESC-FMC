@@ -8,15 +8,32 @@
 
 export type Interval = "1m" | "5m" | "1h" | "1d";
 
-export type AssetClass = "EQUITY" | "INDEX" | "FX" | "COMMODITY" | "RATE";
+export type AssetClass =
+  | "EQUITY"
+  | "INDEX"
+  | "FX"
+  | "COMMODITY"
+  | "RATE"
+  | "ETF"
+  | "FUTURE"
+  | "CRYPTO"
+  | "OPTION";
 
 export interface Instrument {
-  /** Display symbol, e.g. `MARI`. */
+  /** Display symbol, e.g. `ATW`, `IAM`, `AAPL`, `BTC`. */
   symbol: string;
   name: string;
   sector: string;
   assetClass: AssetClass;
   currency: "MAD";
+  /** Market category (`CSE`, `STOCKS`, `ETFS`, `FUTURES`, `CRYPTO`, `FOREX`, `BONDS`, `OPTIONS`). */
+  market?: string;
+  /** Exchange label (`Bourse de Casablanca`, `NASDAQ`, `NYSE`, `CME`, `Crypto 24/7`, `FRED`, `CBOE`). */
+  exchange?: string;
+  /** Native upstream currency (`MAD`, `USD`, `EUR`, `JPY`, `CHF`, `CAD`). */
+  displayCurrency?: string;
+  /** Upstream REST endpoint on https://api.wassly.tech */
+  apiEndpoint?: string;
   /** Opening price in centimes. */
   startingPriceCents: number;
   /** Annualised drift, as a fraction. Model parameter, not an observation. */

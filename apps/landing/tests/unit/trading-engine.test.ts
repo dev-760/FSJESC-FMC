@@ -20,7 +20,7 @@ const AT = new Date("2026-03-16T14:30:00Z");
 
 function quote(lastCents: number, overrides: Partial<Quote> = {}): Quote {
   return {
-    symbol: "MARI",
+    symbol: "ATW",
     lastCents,
     bidCents: lastCents - 5,
     askCents: lastCents + 5,
@@ -38,8 +38,8 @@ const STARTING_CASH = 10_000_000n;
 /**
  * Asserted lookups, not indexed ones.
  *
- * `noUncheckedIndexedAccess` makes `positions.MARI` and `marks[0]` possibly
- * undefined. These helpers make the failure legible: "expected a MARI position" says
+ * `noUncheckedIndexedAccess` makes `positions.ATW` and `marks[0]` possibly
+ * undefined. These helpers make the failure legible: "expected a ATW position" says
  * which invariant broke, where `undefined.quantity` says nothing.
  */
 function positionOf(portfolio: Portfolio, symbol: string): Position {
@@ -120,14 +120,14 @@ describe("executionPrice", () => {
     const portfolio = createPortfolio(STARTING_CASH);
     const afterBuy = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 1 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 1 },
       book,
       AT,
       "o1",
     );
     const afterSell = executeOrder(
       afterBuy.portfolio,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 1 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 1 },
       book,
       AT,
       "o2",
@@ -155,7 +155,7 @@ describe("executeOrder — buying", () => {
     const book = quote(4_800);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 100 },
       book,
       AT,
       "o1",
@@ -171,12 +171,12 @@ describe("executeOrder — buying", () => {
     const portfolio = createPortfolio(STARTING_CASH);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 10 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 10 },
       quote(4_800),
       AT,
       "o1",
     );
-    const position = positionOf(result.portfolio, "MARI");
+    const position = positionOf(result.portfolio, "ATW");
     expect(position.quantity).toBe(10);
     // Paid 4,805 at the ask, plus 24 cents of commission over 10 shares = 4,807.
     expect(position.averageCostCents).toBe(4_807);
@@ -186,20 +186,20 @@ describe("executeOrder — buying", () => {
     let portfolio = createPortfolio(STARTING_CASH);
     portfolio = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 10 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 10 },
       quote(4_000),
       AT,
       "o1",
     ).portfolio;
     portfolio = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 30 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 30 },
       quote(4_400),
       AT,
       "o2",
     ).portfolio;
 
-    const position = positionOf(portfolio, "MARI");
+    const position = positionOf(portfolio, "ATW");
     expect(position.quantity).toBe(40);
     // (10 × 4,005 + 5 fee + 30 × 4,405 + 66 fee) / 40 = 4,306.775 → 4,307
     expect(position.averageCostCents).toBe(4_307);
@@ -208,7 +208,7 @@ describe("executeOrder — buying", () => {
   it("does not create realised P&L on a purchase", () => {
     const result = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 100 },
       quote(4_800),
       AT,
       "o1",
@@ -222,7 +222,7 @@ describe("executeOrder — selling", () => {
     const portfolio = createPortfolio(STARTING_CASH);
     const bought = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity },
       quote(priceCents),
       AT,
       "o1",
@@ -236,7 +236,7 @@ describe("executeOrder — selling", () => {
     const book = quote(5_000);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 20 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 20 },
       book,
       AT,
       "o2",
@@ -251,13 +251,13 @@ describe("executeOrder — selling", () => {
     const book = quote(5_000);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 20 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 20 },
       book,
       AT,
       "o2",
     );
 
-    const costBasis = BigInt(20 * positionOf(portfolio, "MARI").averageCostCents);
+    const costBasis = BigInt(20 * positionOf(portfolio, "ATW").averageCostCents);
     const proceeds = BigInt(20 * book.bidCents) - result.order.feeCents;
     expect(result.portfolio.realisedPnlCents).toBe(proceeds - costBasis);
   });
@@ -266,14 +266,14 @@ describe("executeOrder — selling", () => {
     const portfolio = holding(50, 4_800);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 20 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 20 },
       quote(5_000),
       AT,
       "o2",
     );
-    expect(positionOf(result.portfolio, "MARI").quantity).toBe(30);
-    expect(positionOf(result.portfolio, "MARI").averageCostCents).toBe(
-      positionOf(portfolio, "MARI").averageCostCents,
+    expect(positionOf(result.portfolio, "ATW").quantity).toBe(30);
+    expect(positionOf(result.portfolio, "ATW").averageCostCents).toBe(
+      positionOf(portfolio, "ATW").averageCostCents,
     );
   });
 
@@ -281,19 +281,19 @@ describe("executeOrder — selling", () => {
     const portfolio = holding(50, 4_800);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 50 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 50 },
       quote(5_000),
       AT,
       "o2",
     );
-    expect(result.portfolio.positions.MARI).toBeUndefined();
+    expect(result.portfolio.positions.ATW).toBeUndefined();
   });
 
   it("records a loss when the price fell", () => {
     const portfolio = holding(50, 5_000);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 50 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 50 },
       quote(4_000),
       AT,
       "o2",
@@ -321,7 +321,7 @@ describe("executeOrder — rejections", () => {
   it("rejects a zero quantity", () => {
     expectRejection(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 0 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 0 },
       /positive whole number/,
     );
   });
@@ -329,7 +329,7 @@ describe("executeOrder — rejections", () => {
   it("rejects a fractional quantity", () => {
     expectRejection(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 1.5 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 1.5 },
       /positive whole number/,
     );
   });
@@ -337,7 +337,7 @@ describe("executeOrder — rejections", () => {
   it("rejects a negative quantity", () => {
     expectRejection(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: -10 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: -10 },
       /positive whole number/,
     );
   });
@@ -345,7 +345,7 @@ describe("executeOrder — rejections", () => {
   it("rejects selling a position that does not exist", () => {
     expectRejection(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 1 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 1 },
       /short selling is not available/,
     );
   });
@@ -355,7 +355,7 @@ describe("executeOrder — rejections", () => {
     // 100,000 cents of cash against a 4,800-centime price: 20 shares.
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 10_000 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 10_000 },
       book,
       AT,
       "o1",
@@ -367,7 +367,7 @@ describe("executeOrder — rejections", () => {
     const portfolio = createPortfolio(200_000n);
     const result = executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 1_000 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 1_000 },
       book,
       AT,
       "o1",
@@ -381,27 +381,27 @@ describe("executeOrder — rejections", () => {
   it("rejects a sell larger than the position and fills what it holds", () => {
     const holding = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 30 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 30 },
       book,
       AT,
       "o1",
     ).portfolio;
     const result = executeOrder(
       holding,
-      { symbol: "MARI", side: "SELL", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "SELL", type: "MARKET", quantity: 100 },
       book,
       AT,
       "o2",
     );
     expect(result.order.status).toBe("PARTIAL");
     expect(result.order.filled).toBe(30);
-    expect(result.portfolio.positions.MARI).toBeUndefined();
+    expect(result.portfolio.positions.ATW).toBeUndefined();
   });
 
   it("rejects a limit order that the market has not reached", () => {
     expectRejection(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "LIMIT", quantity: 1, limitCents: 4_000 },
+      { symbol: "ATW", side: "BUY", type: "LIMIT", quantity: 1, limitCents: 4_000 },
       /not currently marketable/,
     );
   });
@@ -409,7 +409,7 @@ describe("executeOrder — rejections", () => {
   it("rejects a limit order with no price", () => {
     expectRejection(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "LIMIT", quantity: 1 },
+      { symbol: "ATW", side: "BUY", type: "LIMIT", quantity: 1 },
       /positive limit price/,
     );
   });
@@ -462,7 +462,7 @@ describe("markToMarket", () => {
   it("values a position at the last price", () => {
     const portfolio = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 100 },
       quote(4_800),
       AT,
       "o1",
@@ -475,7 +475,7 @@ describe("markToMarket", () => {
   it("reports unrealised P&L in cents and basis points", () => {
     const portfolio = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 100 },
       quote(4_800),
       AT,
       "o1",
@@ -489,13 +489,13 @@ describe("markToMarket", () => {
   it("flags a position still inside the settlement window as locked", () => {
     const portfolio = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 10 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 10 },
       quote(4_800),
       AT,
       "o1",
     ).portfolio;
     const ledger = [
-      { symbol: "MARI", quantity: 10, dueAt: Math.floor(AT.getTime() / 1000) + 3600 },
+      { symbol: "ATW", quantity: 10, dueAt: Math.floor(AT.getTime() / 1000) + 3600 },
     ];
     expect(firstOf(markToMarket(portfolio, [quote(4_800)], ledger, AT)).locked).toBe(true);
     expect(
@@ -507,7 +507,7 @@ describe("markToMarket", () => {
   it("falls back to cost when a position has no quote", () => {
     const portfolio = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 10 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 10 },
       quote(4_800),
       AT,
       "o1",
@@ -521,7 +521,7 @@ describe("totalEquityCents", () => {
   it("is cash plus the marked value of every position", () => {
     const portfolio = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 100 },
       quote(4_800),
       AT,
       "o1",
@@ -534,7 +534,7 @@ describe("totalEquityCents", () => {
   it("equals the starting cash when the mark equals the entry price", () => {
     const portfolio = executeOrder(
       createPortfolio(STARTING_CASH),
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 100 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 100 },
       quote(4_800),
       AT,
       "o1",
@@ -549,11 +549,11 @@ describe("pendingSettlements", () => {
   it("returns only entries due in the future", () => {
     const now = Math.floor(AT.getTime() / 1000);
     const ledger = [
-      { symbol: "MARI", quantity: 10, dueAt: now - 1 },
-      { symbol: "CASA", quantity: 5, dueAt: now + 1 },
+      { symbol: "ATW", quantity: 10, dueAt: now - 1 },
+      { symbol: "IAM", quantity: 5, dueAt: now + 1 },
     ];
     expect(pendingSettlements(ledger, AT)).toHaveLength(1);
-    expect(firstOf(pendingSettlements(ledger, AT)).symbol).toBe("CASA");
+    expect(firstOf(pendingSettlements(ledger, AT)).symbol).toBe("IAM");
   });
 });
 
@@ -572,7 +572,7 @@ describe("immutability", () => {
     const before = snapshot();
     executeOrder(
       portfolio,
-      { symbol: "MARI", side: "BUY", type: "MARKET", quantity: 10 },
+      { symbol: "ATW", side: "BUY", type: "MARKET", quantity: 10 },
       quote(4_800),
       AT,
       "o1",

@@ -1,7 +1,7 @@
 /**
  * Market series API (Part 7.2, D1).
  *
- * GET /api/market/series?symbol=MARI&interval=1d&until=2026-03-16T14:30:00Z
+ * GET /api/market/series?symbol=ATW&interval=1d&until=2026-03-16T14:30:00Z
  *
  * Returns candle series for an instrument. No-store cache for time-sensitive data.
  */

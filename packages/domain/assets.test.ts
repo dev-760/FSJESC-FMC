@@ -1,32 +1,39 @@
 import { describe, expect, it } from "vitest";
-import { ASSETS, SECTORS, TICKER_PATTERN, assetsBySector, findAsset } from "./assets";
+import {
+  ALL_MARKET_ASSETS,
+  ASSETS,
+  CSE_REAL_ASSETS,
+  SECTORS,
+  TICKER_PATTERN,
+  assetsBySector,
+  findAsset,
+} from "./assets";
 import { money } from "@fsjesc/config/money";
 
 /**
- * The simulated instrument set (Part 5.6).
- *
- * These assertions guard the honesty requirements as much as the data: exactly
- * eight instruments, all MAD, no real company named, prices spread across the
- * intended range (N8).
+ * The core Bourse de Casablanca instrument set (Part 5.6) & extended multi-market catalog.
  */
 
 describe("instrument set", () => {
-  it("contains exactly the eight specified tickers", () => {
+  it("contains exactly the eight core Bourse de Casablanca tickers", () => {
     expect(ASSETS.map((asset) => asset.ticker)).toEqual([
-      "MARI",
-      "CASA",
-      "ATLAS",
-      "MAGHREB",
-      "RIF",
-      "SOUK",
-      "OASIS",
-      "ZENITH",
+      "ATW",
+      "IAM",
+      "BCP",
+      "CSR",
+      "MSA",
+      "SNP",
+      "MUT",
+      "ADH",
     ]);
   });
 
-  it("has no duplicate tickers", () => {
+  it("has no duplicate tickers in ASSETS or ALL_MARKET_ASSETS", () => {
     const tickers = new Set(ASSETS.map((asset) => asset.ticker));
     expect(tickers.size).toBe(ASSETS.length);
+
+    const allTickers = new Set(ALL_MARKET_ASSETS.map((asset) => asset.ticker));
+    expect(allTickers.size).toBe(ALL_MARKET_ASSETS.length);
   });
 
   it("denominates every instrument in MAD", () => {
@@ -51,7 +58,7 @@ describe("instrument set", () => {
     expect(lowest).toBeGreaterThanOrEqual(20);
     expect(highest).toBeLessThanOrEqual(500);
     // A meaningful spread, so the number of shares a given budget buys genuinely
-    // differs between a 24 MAD and a 480 MAD instrument.
+    // differs between a ~29.50 MAD and a ~492 MAD instrument.
     expect(highest / lowest).toBeGreaterThan(15);
   });
 
@@ -64,10 +71,14 @@ describe("instrument set", () => {
     }
   });
 
-  it("gives every instrument a description that marks it as fictional", () => {
+  it("gives every core CSE instrument a real Moroccan ISIN and description", () => {
     for (const asset of ASSETS) {
       expect(asset.description.length).toBeGreaterThan(40);
-      expect(asset.description.toLowerCase()).toMatch(/fictional|model exercises/);
+      expect(asset.description).toMatch(/ISIN MA\d{10}/);
+    }
+    for (const cseAsset of CSE_REAL_ASSETS) {
+      expect(cseAsset.isin).toMatch(/^MA\d{10}$/);
+      expect(cseAsset.exchange).toBe("Bourse de Casablanca");
     }
   });
 
@@ -96,11 +107,11 @@ describe("ticker conventions", () => {
 
 describe("lookup", () => {
   it("finds an asset by exact ticker", () => {
-    expect(findAsset("MARI")?.name).toBe("Mariem Agri-Industry");
+    expect(findAsset("ATW")?.name).toBe("Attijariwafa Bank");
   });
 
   it("is case and whitespace insensitive", () => {
-    expect(findAsset("  mari ")?.ticker).toBe("MARI");
+    expect(findAsset("  atw ")?.ticker).toBe("ATW");
   });
 
   it("returns undefined for an unknown ticker", () => {

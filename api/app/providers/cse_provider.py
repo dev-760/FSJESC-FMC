@@ -6,12 +6,21 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 from app.providers.base import Provider, ProviderCapabilities
 from app.models.common import Quote, Candle, HistoryResponse, SearchResults, AssetClass, ProviderMetadata, MarketState
 from app.models.cse import (
+    CSESharePrice,
     CSESharePricesResponse,
     CSERealtimePrice,
     CSEOrderBook,
     CSEInstrumentDetail,
     CSEHistoricalPricesResponse,
+    CSESectorSummary,
     CSESectorSummaryResponse,
+    CSEPerformance,
+    CSEShareholder,
+    CSEManagement,
+    CSERatios,
+    CSEFinancials,
+    CSEDividend,
+    CSECapitalIncrease,
 )
 from app.core.config import settings
 from app.core.errors import ProviderError, SymbolNotFoundError, InvalidParameterError

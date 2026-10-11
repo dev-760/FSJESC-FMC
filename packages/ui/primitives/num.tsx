@@ -35,7 +35,7 @@ const TONE_CLASS: Record<SemanticTone, string> = {
   positive: "text-bull",
   negative: "text-bear",
   neutral: "text-foreground",
-  warning: "text-warning",
+  warning: "text-warning-text",
   information: "text-info",
 };
 
@@ -50,12 +50,20 @@ const SIZE_CLASS = {
 
 export type NumSize = keyof typeof SIZE_CLASS;
 
-const decimalFormatter = new Intl.NumberFormat("fr-MA", {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
+const formatters = new Map<number, Intl.NumberFormat>();
 
-const integerFormatter = new Intl.NumberFormat("fr-MA", { maximumFractionDigits: 0 });
+function getFormatter(decimals: number): Intl.NumberFormat {
+  const clamped = Math.max(0, Math.min(8, Math.trunc(decimals)));
+  let fmt = formatters.get(clamped);
+  if (!fmt) {
+    fmt = new Intl.NumberFormat("fr-MA", {
+      minimumFractionDigits: clamped,
+      maximumFractionDigits: clamped,
+    });
+    formatters.set(clamped, fmt);
+  }
+  return fmt;
+}
 
 export function Num({
   cents,
@@ -79,8 +87,7 @@ export function Num({
     );
   }
 
-  const magnitude = decimals === 0 ? integerFormatter : decimalFormatter;
-  const text = magnitude.format(Math.abs(numeric));
+  const text = getFormatter(decimals).format(Math.abs(numeric));
 
   const prefix = numeric < 0 ? "−" : signed && numeric > 0 ? "+" : "";
 
@@ -128,7 +135,7 @@ export function Delta({
         className,
       )}
     >
-      <Num value={Number(bps) / 100} decimals={2} signed tone={tone} size={size} />
+      <Num value={Number(bps) / 100} decimals={2} unit="%" signed tone={tone} size={size} />
       {showGlyph ? <span aria-hidden>{arrow}</span> : null}
     </span>
   );

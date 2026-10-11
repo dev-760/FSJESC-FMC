@@ -18,7 +18,7 @@ const badgeVariants = cva(
         accent: "border-accent/30 bg-accent-subtle text-accent-text",
         positive: "border-positive/35 bg-positive-subtle text-positive",
         negative: "border-negative/35 bg-negative-subtle text-negative",
-        warning: "border-warning/35 bg-warning-subtle text-warning",
+        warning: "border-warning/35 bg-warning-subtle text-warning-text",
         information: "border-information/30 bg-information-subtle text-information",
       },
       size: {

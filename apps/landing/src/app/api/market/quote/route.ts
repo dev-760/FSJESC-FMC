@@ -1,7 +1,7 @@
 /**
  * Market quote API (Part 7.2, D1).
  *
- * GET /api/market/quote?symbol=MARI
+ * GET /api/market/quote?symbol=ATW
  *
  * Returns a quote for a single instrument. No-store cache because quotes are
  * time-sensitive and change with the simulated market.

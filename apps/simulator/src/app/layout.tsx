@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, Inter_Tight, JetBrains_Mono } from "next/font/google";
 import { loadEnvConfig } from "@next/env";
+import { SkipLink } from "@fsjesc/ui/layout/skip-link";
 import "./globals.css";
 
 /**
@@ -53,10 +54,11 @@ export const metadata: Metadata = {
 /**
  * The simulator is a tool, not a page of the marketing site.
  *
- * It deliberately does not import the site's header, footer or skip link: those
+ * It deliberately does not import the site's header or footer: those
  * belong to the landing app, and a duplicated shell here would drift from it.
- * What it does share is the type scale and the colour tokens, so a chart in the
- * simulator looks like the same instrument panel as the one on the home page.
+ * What it does share is the type scale, theme persistence, skip link, and
+ * colour tokens, so a chart in the simulator looks like the same instrument
+ * panel as the one on the home page.
  */
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -64,8 +66,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       lang="en"
       dir="ltr"
       className={`${inter.variable} ${fraunces.variable} ${interTight.variable} ${jetbrainsMono.variable} h-full`}
+      suppressHydrationWarning
     >
-      <body className="bg-canvas text-foreground flex min-h-full flex-col">{children}</body>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("fsjesc-theme");if(t){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`,
+          }}
+        />
+      </head>
+      <body className="bg-canvas text-foreground flex min-h-full flex-col">
+        <SkipLink targetId="main-content" />
+        {children}
+      </body>
     </html>
   );
 }

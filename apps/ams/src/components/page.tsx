@@ -122,7 +122,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry: () 
   return (
     <Card padding="$5" marginBottom="$5">
       <XStack alignItems="flex-start" gap="$3">
-        <AlertTriangle size={20} color="#ef4444" />
+        <AlertTriangle size={20} color="#e8745a" />
         <YStack gap="$3" flex={1}>
           <Text fontSize="$3" fontWeight="600" color="$foreground">
             This data could not be loaded

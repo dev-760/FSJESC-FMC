@@ -25,7 +25,7 @@ const StyledButton = styled(TamaguiButton, {
         backgroundColor: "$bull",
         borderColor: "$bull",
         color: "$canvas",
-        hoverStyle: { backgroundColor: "#22f0aa", borderColor: "#22f0aa" },
+        hoverStyle: { backgroundColor: "$bullHover", borderColor: "$bullHover" },
         pressStyle: { backgroundColor: "$bull" },
       },
       /** The standard secondary action. */

@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import { simulatorUrl } from "@fsjesc/config/app-urls";
 import Link from "next/link";
+import {
+  ArrowRight,
+  Award,
+  BookOpen,
+  Calendar,
+  Layers,
+  LineChart,
+  ShieldCheck,
+  Target,
+  Trophy,
+} from "lucide-react";
 import { Button } from "@fsjesc/ui/button";
 import { Container, RuledList, Section, SectionHeading } from "@fsjesc/ui/layout/container";
 import { Alert } from "@fsjesc/ui/alert";
@@ -10,11 +21,14 @@ import { Num } from "@fsjesc/ui/primitives/num";
 import { formatMAD } from "@fsjesc/config/format";
 import { money } from "@fsjesc/config/money";
 import { DISC_3, DISC_4, SIMULATION, SITE } from "@fsjesc/config/site";
+import {
+  ALL_MARKET_ASSETS,
+  CSE_REAL_ASSETS,
+  CSE_SECTOR_SUMMARIES,
+} from "@fsjesc/domain/assets";
+import { DEMO_EVENTS } from "@fsjesc/domain/events";
 
 export const metadata: Metadata = {
-  // No `title` override: the root layout's default is `${SITE.name} — ${SITE.tagline}`,
-  // which is the right homepage title. A local `title` would replace it rather
-  // than pick up the template, because `/` is the root segment.
   description: SITE.description,
   alternates: { canonical: "/" },
 };
@@ -25,12 +39,6 @@ export const metadata: Metadata = {
  * Section order is mandated by the spec: Hero → Club introduction → What we do →
  * Financial education → Paper-trading simulator → Upcoming workshops → Current
  * challenge → Educational topics → Club statistics → Call to action.
- *
- * The first viewport leads with the quote board rather than a pitch. This is a
- * research platform, and the most persuasive thing it can show is the instrument
- * set itself — real tickers, real modelled parameters, prices a student can
- * interrogate. A visitor who leaves after one screen describes a market board,
- * not a marketing page.
  *
  * Fully static: no request data, no build-time counting, so it prerenders clean
  * under Cache Components (DECISIONS.md D1).
@@ -84,59 +92,163 @@ export default function HomePage() {
 
 /* ── 1. Hero ─────────────────────────────────────────────────────────────── */
 
+const HERO_MARKET_PILLS = [
+  { label: "CSE Casablanca", count: 38, sample: "ATW" },
+  { label: "Global Stocks", count: 16, sample: "AAPL" },
+  { label: "ETFs", count: 12, sample: "SPY" },
+  { label: "Futures", count: 12, sample: "ES" },
+  { label: "Crypto", count: 10, sample: "BTC" },
+  { label: "Forex", count: 8, sample: "USDMAD" },
+  { label: "Bonds & BDT", count: 6, sample: "BDT10Y" },
+  { label: "Options", count: 8, sample: "AAPL-CALL" },
+] as const;
+
 function Hero() {
   return (
     <section className="hero-mesh border-rule bg-canvas border-b">
-      <Container
-        size="wide"
-        className="grid gap-10 py-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)] lg:gap-12 lg:py-20"
-      >
-        <div className="flex flex-col justify-center">
-          {/*
-            One machine fact above the headline — the number of instruments, which is
-            what a reader is about to see in the terminal beside this text. An eyebrow
-            phrase like "The Club for Future" would be decoration; this is data.
-          */}
-          <p className="label text-warning">Simulated market · 8 instruments · MAD</p>
+      <Container size="wide" className="pt-10 pb-14 lg:pt-16 lg:pb-20">
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.22fr)] lg:gap-12 lg:items-start">
+          <div className="flex flex-col justify-center">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="border-rule bg-surface inline-flex items-center gap-2 rounded-xs border px-2.5 py-1">
+                <span className="bg-bull inline-block size-2 rounded-full" aria-hidden="true" />
+                <span className="label text-foreground font-semibold">
+                  {ALL_MARKET_ASSETS.length} Instruments · 8 Markets · MAD
+                </span>
+              </span>
+              <span className="label text-warning-text border-rule bg-surface-sunken rounded-xs border px-2.5 py-1">
+                {SITE.campusShort}
+              </span>
+            </div>
 
-          <h1 className="mt-4 text-4xl sm:text-5xl">
-            A student terminal for learning how markets actually work.
-          </h1>
-          <p className="measure text-foreground-secondary mt-6 text-lg leading-relaxed">
-            {SITE.shortName} runs a written education programme, a paper-trading simulator priced in
-            Moroccan dirhams, and scenario challenges scored on risk as well as return. Everything
-            here is deterministic, so a result can be explained rather than merely reported.
-          </p>
+            <h1 className="mt-5 text-4xl leading-[1.06] tracking-tight sm:text-5xl lg:text-[3.25rem]">
+              A student research terminal for learning how markets{" "}
+              <em className="text-accent-text font-serif italic">actually work</em>.
+            </h1>
 
-          <div className="mt-8 flex flex-wrap gap-2">
-            <Button asChild size="lg">
-              <Link href={simulatorUrl()}>Enter the simulator</Link>
-            </Button>
-            <Button asChild size="lg" variant="secondary">
-              <Link href="/education">Explore education</Link>
-            </Button>
-            <Button asChild size="lg" variant="ghost">
-              <Link href="/competitions">View challenges</Link>
-            </Button>
+            <p className="measure text-foreground-secondary mt-5 text-base leading-relaxed sm:text-lg">
+              {SITE.shortName} combines a 20-topic written curriculum, a multi-asset paper-trading
+              terminal covering {CSE_REAL_ASSETS.length} Bourse de Casablanca equities and 72 global
+              instruments settled in Moroccan dirhams, and macroeconomic scenario challenges scored
+              on risk as well as return.
+            </p>
+
+            <div className="mt-7 flex flex-wrap gap-2.5">
+              <Button asChild size="lg">
+                <Link href={simulatorUrl()}>
+                  <span>Enter the simulator</span>
+                  <ArrowRight aria-hidden className="ml-1.5 size-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="secondary">
+                <Link href="/education">Explore education</Link>
+              </Button>
+              <Button asChild size="lg" variant="ghost">
+                <Link href="/competitions">Scenario challenges</Link>
+              </Button>
+            </div>
+
+            {/* 8-Market Quick Access Pill Bar */}
+            <div className="mt-8">
+              <p className="label mb-2.5">Direct market coverage ({ALL_MARKET_ASSETS.length} tradeable assets)</p>
+              <div className="flex flex-wrap gap-1.5">
+                {HERO_MARKET_PILLS.map((m) => (
+                  <Link
+                    key={m.label}
+                    href={simulatorUrl(`market/${m.sample.toLowerCase()}`)}
+                    className="border-rule bg-surface hover:bg-surface-inset hover:border-rule-strong focus-visible:outline-ring inline-flex items-center gap-1.5 rounded-xs border px-2.5 py-1 text-xs transition-colors focus-visible:outline-2"
+                  >
+                    <span className="text-foreground font-medium">{m.label}</span>
+                    <span className="numeric text-2xs text-foreground-muted">{m.count}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            <p className="border-rule-strong measure text-foreground-secondary mt-7 border-l-2 pl-4 text-xs leading-relaxed">
+              {DISC_4}
+            </p>
           </div>
 
-          <p className="border-rule-strong measure text-foreground-secondary mt-8 border-l pl-4 text-sm leading-relaxed">
-            {DISC_4}
-          </p>
+          <TerminalPreview className="lg:pt-0" />
         </div>
 
-        {/*
-          The first viewport is the thesis, not a pitch. A terminal's opening screen is
-          a board, so the hero *is* the instrument set — the same engine the simulator
-          runs on, not an illustration of it.
-        */}
-        <TerminalPreview className="lg:pt-1" />
+        {/* Institutional Key Figures Bar */}
+        <div className="border-rule bg-surface mt-12 grid grid-cols-2 divide-y border sm:grid-cols-4 sm:divide-x sm:divide-y-0">
+          <div className="p-4 sm:px-5">
+            <p className="label">Bourse de Casablanca</p>
+            <p className="numeric text-foreground mt-1.5 text-2xl font-semibold">
+              {CSE_REAL_ASSETS.length}{" "}
+              <span className="text-foreground-secondary text-xs font-normal">Principal F Equities</span>
+            </p>
+            <p className="text-2xs text-foreground-muted mt-1">
+              ATW · IAM · BCP · LHM · TQM · MNG · CSR · MSA
+            </p>
+          </div>
+          <div className="p-4 sm:px-5">
+            <p className="label">Global &amp; Macro</p>
+            <p className="numeric text-foreground mt-1.5 text-2xl font-semibold">
+              8{" "}
+              <span className="text-foreground-secondary text-xs font-normal">Asset Classes</span>
+            </p>
+            <p className="text-2xs text-foreground-muted mt-1">
+              CSE · Stocks · ETFs · Futures · Crypto · FX · Bonds · Options
+            </p>
+          </div>
+          <div className="p-4 sm:px-5">
+            <p className="label">Starting Portfolio</p>
+            <p className="numeric text-foreground mt-1.5 text-2xl font-semibold">
+              100,000{" "}
+              <span className="text-foreground-secondary text-xs font-normal">MAD</span>
+            </p>
+            <p className="text-2xs text-foreground-muted mt-1">
+              Integer-centime accounting · T+2 settlement
+            </p>
+          </div>
+          <div className="p-4 sm:px-5">
+            <p className="label">Written Curriculum</p>
+            <p className="numeric text-foreground mt-1.5 text-2xl font-semibold">
+              20{" "}
+              <span className="text-foreground-secondary text-xs font-normal">Published Topics</span>
+            </p>
+            <p className="text-2xs text-foreground-muted mt-1">
+              Worked arithmetic, formulas &amp; comprehension checks
+            </p>
+          </div>
+        </div>
       </Container>
     </section>
   );
 }
 
 /* ── 2. Club introduction ────────────────────────────────────────────────── */
+
+const LEARNING_STEPS = [
+  {
+    num: "01",
+    title: "Read the mechanics first",
+    detail:
+      "Study order types, book depth, bid-ask spreads, bond duration, and Bank Al-Maghrib monetary transmission in concise 8-minute briefs with worked examples.",
+    href: "/education",
+    cta: "Read curriculum",
+  },
+  {
+    num: "02",
+    title: "Execute on a 110-asset book",
+    detail:
+      "Deploy 100,000 MAD across 38 Bourse de Casablanca equities and 72 global instruments. Every fill records spread cost, 5 bps commission, and T+2 settlement.",
+    href: simulatorUrl(),
+    cta: "Open terminal",
+  },
+  {
+    num: "03",
+    title: "Compete under macro stress",
+    detail:
+      "Enter time-boxed scenario challenges (BAM policy rate hikes, inflation shocks, sector rotations) ranked on total return with lower maximum drawdown breaking ties.",
+    href: "/competitions",
+    cta: "Join challenges",
+  },
+] as const;
 
 function ClubIntroduction() {
   return (
@@ -145,25 +257,52 @@ function ClubIntroduction() {
         <SectionHeading
           as="h2"
           title="Most students meet market risk only as a hypothetical."
-          lead={`${SITE.shortName} is a club at ${SITE.campus}. We close the gap between the textbook chapter and the actual consequence.`}
+          lead={`${SITE.shortName} is a student academic initiative at ${SITE.campus}. We close the gap between the textbook formula and the actual execution ledger.`}
         />
-        <div className="text-foreground-secondary space-y-5 text-base leading-relaxed">
+        <div className="text-foreground-secondary space-y-4 text-base leading-relaxed">
           <p>
-            A supply-and-demand curve, a volatility formula, and a sentence about risk aversion
-            often leave the underlying mechanics implicit. How an order becomes a fill, why a
-            quoted price differs from an achievable execution, and how a drawdown feels while it
-            is unfolding require direct experience.
+            A supply-and-demand curve, a volatility formula, and a paragraph about risk aversion
+            often leave the operational mechanics implicit. How a limit order rests in a book, why a
+            quoted mid-price differs from an achievable fill, and how a drawdown compounds while a
+            position is still inside its T+2 settlement window require direct observation.
           </p>
           <p>
-            The simulator makes those mechanics visible. You place real orders against a
-            deterministic price model, watch the consequences accumulate in an immutable ledger,
-            and observe your own drawdown measured rather than assumed.
-          </p>
-          <p>
-            Members build the programme too: curating topics, designing scenarios, computing and
-            presenting competition analytics, and running sessions. The standard is academic.
+            The terminal makes those mechanics explicit. You trade real Moroccan and international
+            tickers against a reproducible price engine, inspect fundamental ratios and yield
+            curves, and watch every decision accumulate in an append-only audit ledger.
           </p>
         </div>
+      </div>
+
+      {/* 3-Step Progression Strip */}
+      <div className="border-rule bg-surface mt-12 grid divide-y border md:grid-cols-3 md:divide-x md:divide-y-0">
+        {LEARNING_STEPS.map((step) => (
+          <div key={step.num} className="flex flex-col justify-between p-6">
+            <div>
+              <div className="flex items-center justify-between">
+                <span className="numeric text-accent-text text-xs font-bold tracking-wider">
+                  STEP {step.num}
+                </span>
+                <span className="border-rule bg-surface-sunken text-foreground-secondary rounded-xs border px-2 py-0.5 text-2xs font-medium">
+                  {step.num === "01" ? "Theory" : step.num === "02" ? "Practice" : "Evaluation"}
+                </span>
+              </div>
+              <h3 className="mt-3 text-lg font-semibold text-foreground">{step.title}</h3>
+              <p className="text-foreground-secondary mt-2 text-sm leading-relaxed">
+                {step.detail}
+              </p>
+            </div>
+            <div className="mt-5 pt-3 border-t border-rule">
+              <Link
+                href={step.href}
+                className="text-accent-text hover:text-accent-hover inline-flex items-center gap-1.5 text-xs font-semibold transition-colors"
+              >
+                <span>{step.cta}</span>
+                <ArrowRight aria-hidden className="size-3.5" />
+              </Link>
+            </div>
+          </div>
+        ))}
       </div>
     </Section>
   );
@@ -175,30 +314,71 @@ const ACTIVITIES = [
   {
     title: "Workshops and lectures",
     detail:
-      "Sessions on accounting, monetary policy, market microstructure and risk measurement. Open to every student of the faculty, capped only where lab space requires it.",
+      "Sessions on financial statement analysis, Bank Al-Maghrib monetary policy, market microstructure, and risk measurement. Open to every student of the faculty.",
     href: "/events",
-    linkLabel: "Session calendar",
   },
   {
     title: "Written education programme",
     detail:
-      "A topic library covering instruments, execution mechanics, risk measures and portfolio construction. Each topic defines its terms, shows the arithmetic, and states what a measure does not tell you.",
+      "A 20-topic library covering equities, sovereign bonds, order execution, and portfolio risk. Each topic defines its terms, shows the arithmetic, and states what a measure does not tell you.",
     href: "/education",
-    linkLabel: "Topic library",
   },
   {
-    title: "Paper-trading simulator",
+    title: "Multi-asset paper-trading simulator",
     detail:
-      "Market and limit orders against a simulated market in MAD. Positions, executions, and a permanent record of every cash movement, with volatility, drawdown and concentration computed from your own history.",
-    href: "/simulator",
-    linkLabel: "Open a portfolio",
+      "Market and limit orders across 38 Bourse de Casablanca equities, US stocks, ETFs, futures, crypto, forex, bonds, and options settled in MAD with full risk telemetry.",
+    href: simulatorUrl(),
   },
   {
-    title: "Scenario challenges",
+    title: "Scenario challenges & competitions",
     detail:
-      "Time-boxed exercises under defined macroeconomic assumptions. scored on total portfolio return, with the lower maximum drawdown winning a tie; never on absolute profit in dirhams.",
+      "Time-boxed exercises under defined macroeconomic assumptions, scored on total portfolio return with lower maximum drawdown winning any tie.",
     href: "/competitions",
-    linkLabel: "Current challenges",
+  },
+] as const;
+
+const PLATFORM_GATEWAYS = [
+  {
+    icon: BookOpen,
+    title: "Education Centre",
+    meta: "20 topics · 6 categories",
+    desc: "Structured readings from market foundations and order types to bond duration and behavioural finance.",
+    href: "/education",
+  },
+  {
+    icon: LineChart,
+    title: "Market Simulator",
+    meta: "110 assets · 8 markets",
+    desc: "Interactive trading terminal with CSE equities, global stocks, ETFs, futures, FX, yield curves, and options.",
+    href: simulatorUrl(),
+  },
+  {
+    icon: Trophy,
+    title: "Competitions",
+    meta: "Risk-adjusted rankings",
+    desc: "Cohort tournaments evaluated on return and maximum drawdown over fixed competition windows.",
+    href: "/competitions",
+  },
+  {
+    icon: Target,
+    title: "Scenario Challenges",
+    meta: "6 stress-test briefs",
+    desc: "Focused exercises testing execution discipline, slippage control, and macro rate sensitivity.",
+    href: "/challenges",
+  },
+  {
+    icon: Calendar,
+    title: "Events & Clinics",
+    meta: "Campus & online sessions",
+    desc: "Workshops, central bank policy lectures, and post-competition debriefs at FSJES Casablanca.",
+    href: "/events",
+  },
+  {
+    icon: Award,
+    title: "Club & Governance",
+    meta: "Team, mission & grants",
+    desc: "Meet the student executive board, review our academic charter, and inspect transparent club budget grants.",
+    href: "/about",
   },
 ] as const;
 
@@ -208,21 +388,52 @@ function WhatWeDo() {
       <SectionHeading
         as="h2"
         title="Four activities, one programme"
-        lead="Education supplies the concepts, the simulator supplies the practice, and challenges supply the pressure of a deadline."
+        lead="Education supplies the concepts, the simulator supplies the execution book, and scenario challenges supply the discipline of a deadline."
       />
       <div className="mt-10">
-        <RuledList items={ACTIVITIES.map((a) => ({ term: a.title, detail: a.detail }))} />
+        <RuledList
+          items={ACTIVITIES.map((a) => ({
+            term: a.title,
+            detail: a.detail,
+            href: a.href,
+          }))}
+        />
       </div>
-      <div className="mt-6 flex flex-wrap gap-x-8 gap-y-3">
-        {ACTIVITIES.map((activity) => (
-          <Link
-            key={activity.href}
-            href={activity.href}
-            className="text-accent-text hover:text-accent-hover focus-visible:outline-ring rounded text-sm underline underline-offset-4 transition-colors focus-visible:outline-2 focus-visible:outline-offset-4"
-          >
-            {activity.linkLabel}
-          </Link>
-        ))}
+
+      {/* 6-Gateway Platform Directory */}
+      <div className="mt-12">
+        <p className="label mb-3">Explore the platform</p>
+        <div className="border-rule bg-rule grid gap-px border sm:grid-cols-2 lg:grid-cols-3">
+          {PLATFORM_GATEWAYS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.title}
+                href={item.href}
+                className="bg-surface hover:bg-surface-inset focus-visible:outline-ring group flex flex-col justify-between p-5 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="border-rule bg-surface-sunken text-foreground inline-flex size-8 items-center justify-center rounded-xs border">
+                      <Icon aria-hidden className="size-4" />
+                    </span>
+                    <span className="numeric text-2xs text-foreground-muted">{item.meta}</span>
+                  </div>
+                  <h3 className="group-hover:text-accent-text mt-3.5 text-base font-semibold transition-colors">
+                    {item.title}
+                  </h3>
+                  <p className="text-foreground-secondary mt-1.5 text-xs leading-relaxed">
+                    {item.desc}
+                  </p>
+                </div>
+                <span className="text-accent-text mt-4 inline-flex items-center gap-1 text-xs font-medium">
+                  <span>Open {item.title.toLowerCase()}</span>
+                  <ArrowRight aria-hidden className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </Section>
   );
@@ -237,13 +448,43 @@ const WRITING_STANDARDS = [
   ],
   [
     "Show the arithmetic",
-    "Risk measures arrive with their mathematical formula and a worked numerical example alongside the term.",
+    "Risk measures arrive with their mathematical formula and a worked numerical example in MAD alongside the term.",
   ],
   [
     "State the limits",
-    "Where a measure is informative and where it misleads is part of the topic.",
+    "Where a measure is informative and where it misleads is an explicit section of every article.",
   ],
-  ["No recommendations", "Nothing on this platform says what any person should do with money."],
+  [
+    "No recommendations",
+    "Nothing on this platform tells any person what to buy, sell, or do with real money.",
+  ],
+] as const;
+
+const CURRICULUM_MODULES = [
+  {
+    code: "MOD-01",
+    title: "Market Foundations & Order Microstructure",
+    topics: "7 topics · Beginner",
+    summary:
+      "Price formation, bid-ask spreads, market vs. limit orders, order book depth, and execution slippage.",
+    sampleHref: "/education/topics/what-is-a-financial-market",
+  },
+  {
+    code: "MOD-02",
+    title: "Equities, Sovereign Bonds & Macro Transmission",
+    topics: "7 topics · Intermediate",
+    summary:
+      "Balance sheet valuation, Bons du Trésor yield curves, inflation, Bank Al-Maghrib policy rates, and economic cycles.",
+    sampleHref: "/education/topics/bonds-and-fixed-income",
+  },
+  {
+    code: "MOD-03",
+    title: "Portfolio Construction, Risk & Behavioural Biases",
+    topics: "6 topics · Advanced",
+    summary:
+      "Annualised volatility, maximum drawdown, correlation breakdown, position sizing, and cognitive biases in trading.",
+    sampleHref: "/education/topics/volatility",
+  },
 ] as const;
 
 function EducationSection() {
@@ -254,11 +495,43 @@ function EducationSection() {
         title="Concepts before instruments"
         lead="The education programme is written so a topic can be read with no prior market experience, and without being steered toward a conclusion about what to buy."
         actions={
-          <Button asChild>
-            <Link href="/education">Explore education</Link>
-          </Button>
+          <>
+            <Button asChild>
+              <Link href="/education">Explore education</Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link href="/education/topics">All 20 topics</Link>
+            </Button>
+          </>
         }
       />
+
+      {/* 3 Curriculum Modules */}
+      <div className="mt-10 grid gap-4 lg:grid-cols-3">
+        {CURRICULUM_MODULES.map((mod) => (
+          <Link
+            key={mod.code}
+            href={mod.sampleHref}
+            className="border-rule bg-surface hover:bg-surface-sunken focus-visible:outline-ring flex flex-col justify-between border p-5 transition-colors focus-visible:outline-2"
+          >
+            <div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="numeric text-2xs text-accent-text font-semibold">{mod.code}</span>
+                <span className="label text-2xs">{mod.topics}</span>
+              </div>
+              <h3 className="mt-2.5 text-base font-semibold text-foreground">{mod.title}</h3>
+              <p className="text-foreground-secondary mt-2 text-xs leading-relaxed">
+                {mod.summary}
+              </p>
+            </div>
+            <span className="text-accent-text mt-4 inline-flex items-center gap-1 text-xs font-medium">
+              <span>Start module</span>
+              <ArrowRight aria-hidden className="size-3.5" />
+            </span>
+          </Link>
+        ))}
+      </div>
+
       <div className="mt-10">
         <p className="label mb-3">How we write about markets</p>
         <RuledList
@@ -272,6 +545,73 @@ function EducationSection() {
 
 /* ── 5. Paper-trading simulator ──────────────────────────────────────────── */
 
+const MARKET_COVERAGE_ROWS = [
+  {
+    market: "CSE Casablanca",
+    endpoint: "/api/v1/cse",
+    count: 38,
+    currency: "MAD",
+    tickers: ["ATW", "IAM", "BCP", "LHM", "TQM", "MNG"],
+    desc: "38 real Bourse de Casablanca Principal F equities with ISINs, official French sectors, and PER/PBR/ROE ratios.",
+  },
+  {
+    market: "Global Equities",
+    endpoint: "/api/v1/stocks",
+    count: 16,
+    currency: "USD → MAD",
+    tickers: ["AAPL", "MSFT", "NVDA", "GOOGL", "AMZN", "JPM"],
+    desc: "Large-cap technology, financial, healthcare, and energy equities listed on NASDAQ and NYSE.",
+  },
+  {
+    market: "Exchange-Traded Funds",
+    endpoint: "/api/v1/etfs",
+    count: 12,
+    currency: "USD → MAD",
+    tickers: ["SPY", "QQQ", "IWM", "GLD", "TLT", "EEM"],
+    desc: "S&P 500, NASDAQ-100, Russell 2000, gold bullion, long-duration US Treasury, and emerging market ETFs.",
+  },
+  {
+    market: "Index & Commodity Futures",
+    endpoint: "/api/v1/futures",
+    count: 12,
+    currency: "USD → MAD",
+    tickers: ["ES", "NQ", "GC", "CL", "NG", "ZB"],
+    desc: "CME, COMEX, NYMEX, and CBOT benchmark futures across equity indices, crude oil, gold, and treasury bonds.",
+  },
+  {
+    market: "Cryptocurrencies",
+    endpoint: "/api/v1/crypto",
+    count: 10,
+    currency: "USD → MAD",
+    tickers: ["BTC", "ETH", "SOL", "BNB", "XRP", "AVAX"],
+    desc: "24/7 digital assets enabling round-the-clock volatility and high-beta risk management exercises.",
+  },
+  {
+    market: "Foreign Exchange (FX)",
+    endpoint: "/api/v1/forex",
+    count: 8,
+    currency: "MAD / G10",
+    tickers: ["USDMAD", "EURMAD", "EURUSD", "GBPUSD", "USDJPY"],
+    desc: "Moroccan Dirham crosses (USD/MAD, EUR/MAD) and major G10 pairs powered by ECB Frankfurter reference rates.",
+  },
+  {
+    market: "Bonds & Yield Curve",
+    endpoint: "/api/v1/bonds",
+    count: 6,
+    currency: "MAD / USD",
+    tickers: ["BDT10Y", "US2Y", "US10Y", "US30Y"],
+    desc: "Moroccan 10-Year Bons du Trésor (BKAM) and US Treasury constant-maturity rates (FRED 1M–30Y curve).",
+  },
+  {
+    market: "Listed Equity Options",
+    endpoint: "/api/v1/options",
+    count: 8,
+    currency: "USD → MAD",
+    tickers: ["AAPL-CALL", "AAPL-PUT", "SPY-CALL", "NVDA-CALL"],
+    desc: "Standardized 30-day ATM call and put contracts illustrating delta, gamma, implied volatility, and theta decay.",
+  },
+] as const;
+
 function SimulatorSection() {
   return (
     <Section className="border-rule bg-surface border-y">
@@ -279,86 +619,192 @@ function SimulatorSection() {
         <div>
           <SectionHeading
             as="h2"
-            title="A market that behaves the same way every time"
-            lead="Eight invented instruments across six sectors, priced in MAD by a hash-seeded deterministic model. The same input yields the same price on every machine, which makes classroom discussions reproducible."
+            title="110 real-world instruments across eight markets, settled in MAD"
+            lead="Trade 38 Bourse de Casablanca equities alongside global stocks, ETFs, futures, crypto, forex, sovereign bonds, and options. A deterministic price engine paired with live reference feeds ensures every classroom exercise is reproducible."
           />
           <div className="mt-10">
             <RuledList
               items={[
                 {
                   term: "Starting cash",
-                  detail: `Each new portfolio is funded with ${formatMAD(money(SIMULATION.defaultStartingCashCents))} of simulated capital.`,
+                  detail: `Each new portfolio is funded with ${formatMAD(money(SIMULATION.defaultStartingCashCents))} of simulated capital held in integer centimes.`,
                 },
                 {
-                  term: "Execution",
+                  term: "Order book & execution",
                   detail:
-                    "Market and limit orders, with a review step before anything executes. A buy fills at the ask and a sell at the bid, so the spread costs you exactly what it would in a real book.",
+                    "Market and limit orders with pre-trade impact review. A buy fills at the ask and a sell at the bid, so the spread costs you exactly what it would in a live order book.",
                 },
                 {
-                  term: "The fee is part of the cost basis",
+                  term: "Capitalised fee basis",
                   detail:
-                    "Commission is capitalised into a position's break-even price, so realised P&L reconciles exactly with the change in your cash.",
+                    "A 5 bps (0.05%) institutional commission is capitalised into a position's break-even cost basis, so realised P&L reconciles to the centime with cash changes.",
                 },
                 {
-                  term: "Permanent ledger",
+                  term: "Permanent T+2 ledger",
                   detail:
-                    "Every cash movement is recorded in an append-only ledger. Records are never edited or deleted.",
+                    "Positions settle T+2 business days and every cash movement is recorded in an append-only ledger that is never edited or deleted.",
                 },
                 {
-                  term: "Risk analytics",
+                  term: "Risk & sector analytics",
                   detail:
-                    "Annualised volatility, maximum drawdown and position concentration, computed from your own simulated history.",
+                    "Annualised volatility, maximum drawdown, Sharpe ratio, and multi-market exposure computed directly from your portfolio history.",
                 },
               ]}
             />
           </div>
-          <div className="mt-8 flex flex-wrap gap-2">
+          <div className="mt-8 flex flex-wrap gap-2.5">
             <Button asChild size="lg">
               <Link href={simulatorUrl()}>Enter the simulator</Link>
             </Button>
             <Button asChild size="lg" variant="secondary">
-              <Link href={simulatorUrl("market")}>Browse the market</Link>
+              <Link href={simulatorUrl("market")}>Browse all 110 instruments</Link>
             </Button>
           </div>
         </div>
 
-        {/*
-          The model described on the left, stated as arithmetic on the right. A reader
-          who wants to know whether the determinism claim is credible gets the formula
-          and two real prices, not a reassurance.
-        */}
-        <div className="lg:sticky lg:top-24">
+        {/* Sticky Price Model & CSE Sector Snapshot */}
+        <div className="space-y-5 lg:sticky lg:top-24">
           <div className="border-rule bg-surface-sunken border">
-            <p className="label border-rule border-b px-4 py-2.5">The price model</p>
+            <div className="border-rule flex items-center justify-between border-b px-4 py-2.5">
+              <p className="label">The price &amp; execution model</p>
+              <span className="numeric text-2xs text-foreground-muted">GBM + Reference API</span>
+            </div>
             <div className="space-y-4 p-4">
-              <pre className="numeric text-foreground-secondary text-xs leading-relaxed">
+              <pre className="numeric text-foreground-secondary bg-surface border-rule border p-3 text-xs leading-relaxed">
                 <code>{`S(t) = S(0) · exp(
   (μ − σ²/2)·t + σ·√t·Z(t)
 )`}</code>
               </pre>
               <RuledList
                 items={[
-                  { term: "S(0)", detail: "The instrument's starting price, in integer centimes." },
-                  { term: "μ, σ", detail: "Its modelled annual drift and volatility." },
+                  {
+                    term: "S(0)",
+                    detail: "Calibrated opening reference price in integer centimes.",
+                  },
+                  {
+                    term: "μ, σ",
+                    detail: "Sector-calibrated annual drift and volatility parameters.",
+                  },
                   {
                     term: "Z(t)",
                     detail:
-                      "A sum of one standard normal deviate per minute, each derived from (seed, symbol, minute).",
+                      "Deterministic standard normal path derived from (seed, symbol, minute).",
                   },
                 ]}
               />
               <p className="text-2xs text-muted-allowed leading-relaxed">
-                Recomputable by hand from the published parameters. Students can compare notes and verify every number directly.
+                Recomputable from published parameters so every student in a seminar room observes the exact same quote book at the same timestamp.
               </p>
             </div>
           </div>
 
-          <Alert tone="warning" className="mt-4">
+          <Alert tone="warning">
             <p>
-              These are not real securities. No company, index or exchange is represented, and
-              nothing corresponds to anything tradable.
+              <strong>Educational paper-trading environment:</strong> While tickers, ISINs, and
+              sector classifications reflect real Bourse de Casablanca and international
+              instruments, all orders, portfolios, and MAD balances are 100% simulated.
             </p>
           </Alert>
+        </div>
+      </div>
+
+      {/* 8-Market Coverage Matrix */}
+      <div className="mt-14">
+        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-4">
+          <p className="label">Multi-Asset Market Catalog (8 API Routers · 110 Instruments)</p>
+          <Link
+            href={simulatorUrl("market")}
+            className="text-accent-text hover:text-accent-hover text-xs font-medium inline-flex items-center gap-1"
+          >
+            <span>Open full market board in Simulator</span>
+            <ArrowRight aria-hidden className="size-3.5" />
+          </Link>
+        </div>
+        <div className="border-rule bg-rule grid gap-px border sm:grid-cols-2 lg:grid-cols-4">
+          {MARKET_COVERAGE_ROWS.map((row) => (
+            <div key={row.market} className="bg-canvas flex flex-col justify-between p-4">
+              <div>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-foreground text-sm font-semibold">{row.market}</span>
+                  <span className="numeric border-rule bg-surface rounded-xs border px-1.5 py-0.5 text-2xs font-medium">
+                    {row.count}
+                  </span>
+                </div>
+                <p className="numeric text-2xs text-foreground-muted mt-0.5">
+                  {row.endpoint} · {row.currency}
+                </p>
+                <p className="text-foreground-secondary mt-2.5 text-xs leading-relaxed">
+                  {row.desc}
+                </p>
+              </div>
+              <div className="mt-3.5 flex flex-wrap gap-1 pt-2.5 border-t border-rule">
+                {row.tickers.map((sym) => (
+                  <Link
+                    key={sym}
+                    href={simulatorUrl(`market/${sym.toLowerCase()}`)}
+                    className="numeric border-rule bg-surface hover:bg-surface-inset text-foreground-secondary hover:text-foreground rounded-xs border px-1.5 py-0.5 text-2xs font-medium transition-colors"
+                  >
+                    {sym}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bourse de Casablanca Official Sector Breakdown */}
+      <div className="mt-10">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div className="flex items-center gap-2">
+            <Layers aria-hidden className="text-foreground-secondary size-4" />
+            <p className="label">
+              Bourse de Casablanca — {CSE_SECTOR_SUMMARIES.length} Official Sectors ({CSE_REAL_ASSETS.length} Listed Equities)
+            </p>
+          </div>
+          <span className="numeric text-2xs text-foreground-muted">
+            /api/v1/cse/sector-summary · Principal F
+          </span>
+        </div>
+        <div className="border-rule bg-rule grid gap-px border sm:grid-cols-2 lg:grid-cols-3">
+          {CSE_SECTOR_SUMMARIES.map((sec) => {
+            const isPos = sec.averageChangePercent >= 0;
+            return (
+              <div key={sec.sector} className="bg-surface p-3.5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-semibold text-foreground">{sec.englishLabel}</p>
+                      <p className="text-2xs text-foreground-muted">{sec.sector}</p>
+                    </div>
+                    <span
+                      className={`numeric rounded-xs px-1.5 py-0.5 text-2xs font-semibold ${
+                        isPos ? "bg-bull-subtle text-bull" : "bg-bear-subtle text-bear"
+                      }`}
+                    >
+                      {isPos ? "+" : ""}
+                      {sec.averageChangePercent.toFixed(2)}%
+                    </span>
+                  </div>
+                  <p className="numeric text-2xs text-foreground-secondary mt-2">
+                    Cap: {(sec.totalMarketCapMad / 1e9).toFixed(1)}B MAD · {sec.companyCount}{" "}
+                    {sec.companyCount === 1 ? "company" : "companies"}
+                  </p>
+                </div>
+                <div className="mt-2.5 flex flex-wrap gap-1 pt-2 border-t border-rule">
+                  {sec.tickers.map((t) => (
+                    <Link
+                      key={t}
+                      href={simulatorUrl(`market/${t.toLowerCase()}`)}
+                      className="numeric text-2xs border-rule bg-surface-sunken hover:bg-surface-inset text-foreground rounded-xs border px-1.5 py-0.5 font-medium transition-colors"
+                    >
+                      {t}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </Section>
@@ -367,57 +813,85 @@ function SimulatorSection() {
 
 /* ── 6. Upcoming workshops ───────────────────────────────────────────────── */
 
-const WORKSHOPS = [
-  {
-    title: "Reading financial statements",
-    format: "Workshop",
-    detail:
-      "Balance sheet, income statement and cash flow, read line by line. No prior accounting assumed.",
-  },
-  {
-    title: "How central bank policy reaches prices",
-    format: "Lecture",
-    detail:
-      "Transmission from the policy rate to asset prices, with published Bank Al-Maghrib statements as case material.",
-  },
-  {
-    title: "Volatility and drawdown in practice",
-    format: "Workshop",
-    detail:
-      "Compute both measures for a sample series, then discuss what each one fails to tell you.",
-  },
+const MONTH_ABBR = [
+  "JAN",
+  "FEB",
+  "MAR",
+  "APR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AUG",
+  "SEP",
+  "OCT",
+  "NOV",
+  "DEC",
 ] as const;
 
 function WorkshopsSection() {
+  const upcomingEvents = DEMO_EVENTS.filter((e) => e.registrationOpen).slice(0, 4);
+
   return (
     <Section>
       <SectionHeading
         as="h2"
         title="Sessions you can attend"
-        lead="Open to every student of the faculty. Where a session needs lab space, registration is capped at capacity."
+        lead="Open to every student of the faculty. Where a session requires computer-room space, registration is capped at room capacity."
         actions={
           <Button asChild variant="secondary">
-            <Link href="/events">All events</Link>
+            <Link href="/events">All events ({DEMO_EVENTS.length})</Link>
           </Button>
         }
       />
-      <ul className="divide-rule border-rule mt-10 max-w-4xl divide-y border-y">
-        {WORKSHOPS.map((workshop) => (
-          <li key={workshop.title}>
-            <Link
-              href="/events"
-              className="hover:bg-surface-sunken focus-visible:outline-ring grid gap-2 py-5 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-8"
-            >
-              <span className="grid gap-1 sm:grid-cols-[minmax(0,16rem)_minmax(0,1fr)] sm:gap-8">
-                <span className="text-foreground text-base font-medium">{workshop.title}</span>
-                <span className="text-foreground-secondary text-sm leading-relaxed">
-                  {workshop.detail}
-                </span>
-              </span>
-              <span className="label whitespace-nowrap sm:pt-1">{workshop.format}</span>
-            </Link>
-          </li>
-        ))}
+      <ul className="divide-rule border-rule mt-10 divide-y border-y">
+        {upcomingEvents.map((event) => {
+          const day = String(event.startAt.getUTCDate()).padStart(2, "0");
+          const month = MONTH_ABBR[event.startAt.getUTCMonth()] ?? "OCT";
+          return (
+            <li key={event.slug}>
+              <Link
+                href={`/events/${event.slug}`}
+                className="hover:bg-surface-sunken focus-visible:outline-ring grid gap-4 py-5 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 sm:grid-cols-[4.5rem_minmax(0,1fr)_auto] sm:items-center sm:gap-6"
+              >
+                <div className="border-rule flex sm:flex-col items-baseline sm:items-center justify-start sm:justify-center gap-2 sm:gap-0 sm:border-r sm:pr-4">
+                  <span className="font-serif text-2xl font-semibold leading-none text-foreground">
+                    {day}
+                  </span>
+                  <span className="numeric text-2xs text-foreground-muted font-bold tracking-widest uppercase sm:mt-1">
+                    {month}
+                  </span>
+                </div>
+
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-foreground text-base font-semibold">{event.title}</span>
+                    <span className="border-rule bg-surface text-foreground-secondary rounded-xs border px-1.5 py-0.5 text-2xs font-medium uppercase">
+                      {event.format}
+                    </span>
+                  </div>
+                  <p className="text-foreground-secondary mt-1 line-clamp-2 text-sm leading-relaxed">
+                    {event.description}
+                  </p>
+                  <p className="numeric text-2xs text-foreground-muted mt-1.5">
+                    {event.location ?? SITE.campusShort}
+                    {event.room ? ` · ${event.room}` : ""}
+                    {event.capacity ? ` · Cap ${event.capacity} seats` : ""}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 sm:flex-col sm:items-end">
+                  <span className="bg-bull-subtle text-bull rounded-xs px-2 py-0.5 text-2xs font-semibold uppercase">
+                    Registration Open
+                  </span>
+                  <span className="text-accent-text inline-flex items-center gap-1 text-xs font-medium">
+                    <span>Details</span>
+                    <ArrowRight aria-hidden className="size-3.5" />
+                  </span>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
       </ul>
     </Section>
   );
@@ -426,37 +900,117 @@ function WorkshopsSection() {
 /* ── 7. Current challenge ────────────────────────────────────────────────── */
 
 const CHALLENGE_BRIEF = [
-  { term: "Starting capital", detail: formatMAD(money(10_000_000n)), numeric: true },
-  { term: "Duration", detail: "30 minutes" },
-  { term: "Objective", detail: "Build a portfolio while keeping drawdown under control" },
+  { term: "Starting capital", detail: formatMAD(money(10_000_000n)) },
+  { term: "Scenario shock", detail: "+25 bps Bank Al-Maghrib rate hike & unexpected CPI print" },
+  { term: "Universe", detail: "38 Bourse de Casablanca equities & Moroccan 10Y Bons du Trésor" },
+  { term: "Objective", detail: "Reposition sector exposure while keeping maximum drawdown controlled" },
   {
     term: "Scored on",
-    detail: "Total return, with the lower maximum drawdown as the tie-break",
+    detail: "Total portfolio return (%), with lower maximum drawdown breaking ties",
   },
+] as const;
+
+const SAMPLE_STANDINGS = [
+  { rank: 1, name: "Y. El Amrani", cohort: "M2 Finance", returnPct: "+8.42%", sharpe: "1.84", drawdown: "-1.18%" },
+  { rank: 2, name: "L. Benjelloun", cohort: "M1 Finance", returnPct: "+7.15%", sharpe: "1.62", drawdown: "-1.45%" },
+  { rank: 3, name: "K. Ouazzani", cohort: "L3 Économie", returnPct: "+6.80%", sharpe: "1.55", drawdown: "-1.92%" },
+  { rank: 4, name: "S. Tazi", cohort: "L3 Gestion", returnPct: "+5.94%", sharpe: "1.41", drawdown: "-1.60%" },
+  { rank: 5, name: "M. Idrissi", cohort: "M1 Finance", returnPct: "+5.20%", sharpe: "1.29", drawdown: "-2.10%" },
 ] as const;
 
 function ChallengeSection() {
   return (
     <Section className="border-rule bg-surface-sunken border-y">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:items-start">
-        <SectionHeading
-          as="h2"
-          title="Inflation shock"
-          lead="A thirty-minute scenario in which inflation rises unexpectedly. You start with 100,000 MAD, build a portfolio under the shock, and are measured on the risk you took as well as the return."
-          actions={
-            <Button asChild>
-              <Link href="/competitions">See the full brief</Link>
-            </Button>
-          }
-        />
+      <div className="grid gap-10 lg:grid-cols-[minmax(0,5.5fr)_minmax(0,6.5fr)] lg:items-start">
         <div>
-          <RuledList items={CHALLENGE_BRIEF.map(({ term, detail }) => ({ term, detail }))} />
-          <Alert tone="neutral" className="mt-6">
+          <SectionHeading
+            as="h2"
+            title="Scenario challenge: Inflation & policy rate shock"
+            lead="A macro stress-test in which inflation rises unexpectedly and Bank Al-Maghrib tightens liquidity. You start with 100,000 MAD, allocate across rate-sensitive and defensive CSE sectors, and are evaluated on risk as well as return."
+            actions={
+              <>
+                <Button asChild>
+                  <Link href="/competitions">Enter competitions</Link>
+                </Button>
+                <Button asChild variant="secondary">
+                  <Link href="/challenges">Practice challenges</Link>
+                </Button>
+              </>
+            }
+          />
+          <div className="mt-8">
+            <RuledList items={CHALLENGE_BRIEF.map(({ term, detail }) => ({ term, detail }))} />
+          </div>
+        </div>
+
+        {/* Cohort Leaderboard Standings Preview */}
+        <div className="space-y-4">
+          <div className="border-rule bg-surface border">
+            <div className="border-rule bg-surface-sunken flex flex-wrap items-center justify-between gap-2 border-b px-4 py-2.5">
+              <div className="flex items-center gap-2">
+                <Trophy aria-hidden className="text-accent-text size-4" />
+                <p className="label text-foreground font-semibold">
+                  Sample Competition Standings · Macro BAM Shock
+                </p>
+              </div>
+              <span className="numeric text-2xs text-foreground-muted">
+                Ranked by Return · Tie-break: Max DD
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-rule bg-surface-sunken border-b text-2xs text-foreground-secondary uppercase">
+                    <th className="py-2.5 pl-4 pr-2 font-semibold">#</th>
+                    <th className="px-3 py-2.5 font-semibold">Participant</th>
+                    <th className="px-3 py-2.5 font-semibold">Cohort</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Return</th>
+                    <th className="px-3 py-2.5 text-right font-semibold">Sharpe</th>
+                    <th className="py-2.5 pl-3 pr-4 text-right font-semibold">Max DD</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-rule divide-y">
+                  {SAMPLE_STANDINGS.map((row) => (
+                    <tr key={row.rank} className="hover:bg-surface-sunken transition-colors">
+                      <td className="numeric py-2.5 pl-4 pr-2 font-semibold text-foreground">
+                        {row.rank}
+                      </td>
+                      <td className="px-3 py-2.5 font-medium text-foreground">{row.name}</td>
+                      <td className="numeric text-2xs text-foreground-secondary px-3 py-2.5">
+                        {row.cohort}
+                      </td>
+                      <td className="numeric text-bull px-3 py-2.5 text-right font-semibold">
+                        {row.returnPct}
+                      </td>
+                      <td className="numeric px-3 py-2.5 text-right text-foreground">
+                        {row.sharpe}
+                      </td>
+                      <td className="numeric text-bear py-2.5 pl-3 pr-4 text-right">
+                        {row.drawdown}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="border-rule bg-surface-sunken flex flex-wrap items-center justify-between gap-2 border-t px-4 py-2 text-2xs text-foreground-secondary">
+              <span>100,000.00 MAD initial equity · Zero leverage</span>
+              <Link
+                href="/competitions"
+                className="text-accent-text hover:text-accent-hover font-semibold inline-flex items-center gap-1"
+              >
+                <span>View full leaderboard methodology</span>
+                <ArrowRight aria-hidden className="size-3" />
+              </Link>
+            </div>
+          </div>
+
+          <Alert tone="neutral">
             <p>
-              When the window closes you see your final return, maximum drawdown, annualised
-              volatility and sector exposure, with feedback on what your positioning did under the
-              scenario. The feedback describes your outcome; it does not declare a strategy
-              universally correct.
+              When a competition window closes, participants receive a full debrief: total return,
+              maximum drawdown, annualised volatility, and sector attribution under the scenario.
             </p>
           </Alert>
         </div>
@@ -468,13 +1022,76 @@ function ChallengeSection() {
 /* ── 8. Educational topics ───────────────────────────────────────────────── */
 
 const TOPIC_PREVIEWS = [
-  { title: "What a financial market actually is", category: "Foundations" },
-  { title: "Stocks, and what a share entitles you to", category: "Instruments" },
-  { title: "Market orders, limit orders, and what a fill means", category: "Execution" },
-  { title: "Slippage: why your price is not the quoted price", category: "Execution" },
-  { title: "Realized and unrealized profit and loss", category: "Accounting" },
-  { title: "Volatility and maximum drawdown", category: "Risk" },
-  { title: "Diversification, and what it does not protect you from", category: "Portfolio" },
+  {
+    num: "01",
+    slug: "what-is-a-financial-market",
+    title: "What a financial market actually is",
+    category: "Foundations",
+    readTime: "7 min",
+  },
+  {
+    num: "02",
+    slug: "stocks-and-equities",
+    title: "Stocks and equities: what a share entitles you to",
+    category: "Instruments",
+    readTime: "8 min",
+  },
+  {
+    num: "03",
+    slug: "bonds-and-fixed-income",
+    title: "Bonds, fixed income, and Moroccan Bons du Trésor",
+    category: "Instruments",
+    readTime: "10 min",
+  },
+  {
+    num: "04",
+    slug: "market-orders",
+    title: "Market orders: immediate execution and its price",
+    category: "Execution",
+    readTime: "7 min",
+  },
+  {
+    num: "05",
+    slug: "limit-orders",
+    title: "Limit orders: price protection and non-execution risk",
+    category: "Execution",
+    readTime: "8 min",
+  },
+  {
+    num: "06",
+    slug: "slippage",
+    title: "Slippage: why your fill price differs from the mid quote",
+    category: "Execution",
+    readTime: "8 min",
+  },
+  {
+    num: "07",
+    slug: "profit-and-loss",
+    title: "Realized and unrealized profit and loss (P&L)",
+    category: "Accounting",
+    readTime: "9 min",
+  },
+  {
+    num: "08",
+    slug: "volatility",
+    title: "Volatility: measuring dispersion without confusing it for risk",
+    category: "Risk",
+    readTime: "10 min",
+  },
+  {
+    num: "09",
+    slug: "diversification",
+    title: "Diversification, correlation, and what it cannot protect you from",
+    category: "Portfolio",
+    readTime: "9 min",
+  },
+  {
+    num: "10",
+    slug: "interest-rates",
+    title: "Interest rates and how policy decisions reach asset prices",
+    category: "Macro",
+    readTime: "11 min",
+  },
 ] as const;
 
 function TopicsSection() {
@@ -483,22 +1100,36 @@ function TopicsSection() {
       <SectionHeading
         as="h2"
         title="Start where you are"
-        lead="Topics are ordered so each builds on the previous one. Each takes about six to ten minutes to read."
+        lead="Topics are ordered so each builds on the previous one. Every article links directly to its full reading, mathematical definitions, and comprehension questions."
         actions={
           <Button asChild variant="secondary">
-            <Link href="/education/topics">All topics</Link>
+            <Link href="/education/topics">Browse all 20 topics</Link>
           </Button>
         }
       />
-      <ul className="divide-rule border-rule mt-10 max-w-4xl divide-y border-y">
+      <ul className="divide-rule border-rule mt-10 grid divide-y border-y lg:grid-cols-2 lg:divide-x">
         {TOPIC_PREVIEWS.map((topic) => (
-          <li key={topic.title}>
+          <li key={topic.slug} className="border-rule first:border-t-0">
             <Link
-              href="/education/topics"
-              className="hover:bg-surface-sunken focus-visible:outline-ring grid gap-1 py-4 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-8"
+              href={`/education/topics/${topic.slug}`}
+              className="hover:bg-surface-sunken focus-visible:outline-ring flex items-center justify-between gap-4 px-4 py-4 transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2"
             >
-              <span className="text-foreground text-base">{topic.title}</span>
-              <span className="label whitespace-nowrap">{topic.category}</span>
+              <div className="flex items-baseline gap-3 min-w-0">
+                <span className="numeric text-2xs text-foreground-muted font-semibold shrink-0">
+                  {topic.num}
+                </span>
+                <span className="text-foreground truncate text-sm font-medium sm:text-base">
+                  {topic.title}
+                </span>
+              </div>
+              <div className="flex shrink-0 items-center gap-2.5">
+                <span className="numeric text-2xs text-foreground-muted hidden sm:inline">
+                  {topic.readTime}
+                </span>
+                <span className="label border-rule bg-surface rounded-xs border px-2 py-0.5 text-2xs">
+                  {topic.category}
+                </span>
+              </div>
             </Link>
           </li>
         ))}
@@ -509,34 +1140,30 @@ function TopicsSection() {
 
 /* ── 9. Club statistics ──────────────────────────────────────────────────── */
 
-/**
- * Static counts: the homepage prerenders completely, so it must not count rows at
- * request time. Phase 5 replaces these with real figures behind `use cache`.
- */
 function StatisticsSection() {
   return (
     <Section className="border-rule bg-surface border-t">
       <SectionHeading
         as="h2"
         title="What the programme currently holds"
-        lead="Figures below describe the platform's own contents. They are not performance claims."
+        lead="Figures below describe the platform's own catalog and accounting rules. They are verifiable specifications, not performance claims."
       />
 
       <KpiStrip columns={4} className="mt-10">
         <KpiCard
+          label="Tradeable instruments"
+          value={<Num value={ALL_MARKET_ASSETS.length} decimals={0} size="xl" />}
+          hint="Across 8 Moroccan & global markets"
+        />
+        <KpiCard
+          label="CSE Casablanca equities"
+          value={<Num value={CSE_REAL_ASSETS.length} decimals={0} size="xl" />}
+          hint="Principal F · 9 official sectors"
+        />
+        <KpiCard
           label="Published topics"
           value={<Num value={20} decimals={0} size="xl" />}
-          hint="Across six categories"
-        />
-        <KpiCard
-          label="Instruments"
-          value={<Num value={8} decimals={0} size="xl" />}
-          hint="Fictional, six sectors"
-        />
-        <KpiCard
-          label="Scenarios"
-          value={<Num value={6} decimals={0} size="xl" />}
-          hint="Published assumptions"
+          hint="Across six curriculum categories"
         />
         <KpiCard
           label="Starting capital"
@@ -550,24 +1177,24 @@ function StatisticsSection() {
           columns={2}
           items={[
             {
-              term: "Currency",
+              term: "Currency & accounting",
               detail:
-                "Moroccan dirham (MAD) throughout, held in integer centimes so no balance is a float. Simulated.",
+                "Portfolios are denominated in Moroccan dirhams (MAD) and stored in integer centimes (BigInt) so floating-point rounding never corrupts a balance.",
             },
             {
               term: "Fee model",
               detail:
-                "Zero brokerage commission, so the focus stays on market mechanics and the spread.",
+                "5 basis points (0.05%) institutional commission with a 0.05 MAD minimum floor, capitalised directly into each position's break-even cost basis.",
             },
             {
-              term: "Settlement",
+              term: "T+2 settlement",
               detail:
-                "Positions settle T+2, skipping weekends. A share bought on Friday is sellable on Tuesday.",
+                "Equity purchases settle T+2 business days, skipping weekends. Unsettled shares are flagged in the portfolio ledger.",
             },
             {
-              term: "Short selling",
+              term: "No short selling or margin",
               detail:
-                "Not available. A sell larger than the position fills what is held and says so, rather than silently inventing a borrow.",
+                "Cash-only accounts. A sell order larger than the held position partially fills what is held and reports the exact adjustment.",
             },
           ]}
         />
@@ -581,27 +1208,72 @@ function StatisticsSection() {
 
 function CallToAction() {
   return (
-    <Section contained={false} spacing="loose" className="border-rule border-t">
-      <Container size="prose" className="text-center">
-        <h2 className="text-3xl font-semibold tracking-tight">Join the programme</h2>
-        <p className="text-foreground-secondary mt-4 text-base leading-relaxed">
-          An account provides a simulated portfolio, access to competitions, event registration,
-          and member resources. Registration is free; the platform contains no mechanism to move
-          real money.
-        </p>
-        <div className="mt-8 flex flex-wrap justify-center gap-2">
-          <Button asChild size="lg">
-            <Link href="/create-account">Create an account</Link>
-          </Button>
-          <Button asChild size="lg" variant="secondary">
-            <Link href="/contact">Ask a question</Link>
-          </Button>
+    <Section spacing="loose" className="border-rule bg-canvas border-t">
+      <div className="border-rule-strong bg-surface relative overflow-hidden border p-8 sm:p-12 lg:p-14">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] lg:items-center">
+          <div>
+            <div className="inline-flex items-center gap-2">
+              <ShieldCheck aria-hidden className="text-bull size-4" />
+              <span className="label text-foreground font-semibold">
+                {SITE.name} · {SITE.campusShort}
+              </span>
+            </div>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+              Open your simulated portfolio and join the next cohort challenge.
+            </h2>
+            <p className="text-foreground-secondary mt-4 max-w-2xl text-base leading-relaxed">
+              An account provides a 100,000.00 MAD multi-asset paper-trading portfolio, access to
+              cohort competitions, workshop registration, and the full 20-topic curriculum.
+              Registration is free for students and contains no mechanism to move real money.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <Button asChild size="lg">
+                <Link href="/create-account">
+                  <span>Create a student account</span>
+                  <ArrowRight aria-hidden className="ml-1.5 size-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="secondary">
+                <Link href={simulatorUrl()}>Launch simulator</Link>
+              </Button>
+              <Button asChild size="lg" variant="ghost">
+                <Link href="/contact">Contact the board</Link>
+              </Button>
+            </div>
+          </div>
+
+          <div className="border-rule bg-surface-sunken border p-5">
+            <p className="label border-rule border-b pb-2.5">What your student account includes</p>
+            <ul className="divide-rule mt-2 divide-y text-xs">
+              <li className="flex items-center justify-between py-2.5">
+                <span className="text-foreground-secondary">Initial paper-trading allocation</span>
+                <span className="numeric font-semibold text-foreground">100,000.00 MAD</span>
+              </li>
+              <li className="flex items-center justify-between py-2.5">
+                <span className="text-foreground-secondary">Bourse de Casablanca equities</span>
+                <span className="numeric font-semibold text-foreground">38 Listed Companies</span>
+              </li>
+              <li className="flex items-center justify-between py-2.5">
+                <span className="text-foreground-secondary">Global Stocks, ETFs, Futures, FX, Crypto</span>
+                <span className="numeric font-semibold text-foreground">72 Instruments</span>
+              </li>
+              <li className="flex items-center justify-between py-2.5">
+                <span className="text-foreground-secondary">Written curriculum &amp; quizzes</span>
+                <span className="numeric font-semibold text-foreground">20 Topics</span>
+              </li>
+              <li className="flex items-center justify-between pt-2.5">
+                <span className="text-foreground-secondary">Real money or brokerage fees</span>
+                <span className="numeric text-bull font-semibold">None (100% Educational)</span>
+              </li>
+            </ul>
+          </div>
         </div>
-        <p className="border-rule text-foreground-muted mt-10 border-t pt-6 text-xs leading-relaxed">
+
+        <p className="border-rule text-foreground-muted mt-8 border-t pt-5 text-xs leading-relaxed">
           {SITE.name} · {SITE.campus}. Educational project. Nothing on this platform is investment
           advice.
         </p>
-      </Container>
+      </div>
     </Section>
   );
 }

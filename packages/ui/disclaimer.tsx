@@ -87,7 +87,7 @@ export function SimulatedMarker({
     return (
       <span
         className={cn(
-          "border-warning/40 bg-warning-subtle text-2xs text-warning inline-flex items-center rounded border px-1.5 py-0.5 font-medium",
+          "border-warning/40 bg-warning-subtle text-2xs text-warning-text inline-flex items-center rounded border px-1.5 py-0.5 font-medium",
           className,
         )}
       >

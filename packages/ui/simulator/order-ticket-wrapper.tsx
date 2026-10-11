@@ -2,31 +2,83 @@
  * Order ticket wrapper component.
  *
  * Client component wrapper for OrderTicket that executes orders via /api/orders
- * and surfaces real-time execution feedback.
+ * and surfaces real-time execution feedback. Available cash is loaded from the
+ * portfolio endpoint so the ticket reflects the member's actual balance.
  */
 
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { market } from "@fsjesc/domain/market/engine";
 import { OrderTicket } from "./order-ticket";
 import { Alert } from "../alert";
 
 interface OrderTicketWrapperProps {
   symbol: string;
   currentPriceCents: number;
-  availableCashCents: bigint;
+  /** Fallback used while the portfolio request is in flight, or for guests. */
+  availableCashCents?: bigint;
+}
+
+interface PortfolioDto {
+  cashCents?: string;
+  positions?: Array<{
+    symbol: string;
+    quantity: number;
+  }>;
 }
 
 export function OrderTicketWrapper({
   symbol,
   currentPriceCents,
-  availableCashCents,
+  availableCashCents = 10_000_000n,
 }: OrderTicketWrapperProps) {
+  const [cashCents, setCashCents] = useState(availableCashCents);
+  const [positionQuantity, setPositionQuantity] = useState(0);
+  const [livePriceCents, setLivePriceCents] = useState(currentPriceCents);
   const [feedback, setFeedback] = useState<{
     tone: "positive" | "negative" | "warning";
     message: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Keep ticket price synced with the deterministic market engine
+  useEffect(() => {
+    const updateQuote = () => {
+      try {
+        const quote = market.getQuote(symbol, new Date());
+        setLivePriceCents(Number(quote.lastCents));
+      } catch {
+        // Keep fallback price if symbol lookup fails
+      }
+    };
+    updateQuote();
+    const timer = setInterval(updateQuote, 3000);
+    return () => clearInterval(timer);
+  }, [symbol]);
+
+  const loadPortfolio = useCallback(async () => {
+    try {
+      const response = await fetch("/api/simulator/portfolio", { cache: "no-store" });
+      if (!response.ok) return;
+      const data = (await response.json()) as PortfolioDto;
+      if (typeof data.cashCents === "string") {
+        setCashCents(BigInt(data.cashCents));
+      }
+      if (Array.isArray(data.positions)) {
+        const match = data.positions.find(
+          (pos) => pos.symbol.toUpperCase() === symbol.toUpperCase(),
+        );
+        setPositionQuantity(match ? match.quantity : 0);
+      }
+    } catch {
+      // Keep fallback state; the ticket remains usable.
+    }
+  }, [symbol]);
+
+  useEffect(() => {
+    void loadPortfolio();
+  }, [loadPortfolio]);
 
   const handleSubmit = async (order: {
     side: "BUY" | "SELL";
@@ -54,6 +106,7 @@ export function OrderTicketWrapper({
         error?: string;
         order?: { status?: string; reason?: string };
         messages?: string[];
+        cashCents?: string;
       };
 
       if (!response.ok) {
@@ -62,6 +115,14 @@ export function OrderTicketWrapper({
           message: data.error ?? "Order placement failed.",
         });
         return;
+      }
+
+      if (typeof data.cashCents === "string") {
+        setCashCents(BigInt(data.cashCents));
+      }
+      await loadPortfolio();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("fsjesc:portfolio-updated"));
       }
 
       const orderStatus = data.order?.status;
@@ -93,14 +154,15 @@ export function OrderTicketWrapper({
       )}
       <OrderTicket
         symbol={symbol}
-        currentPriceCents={currentPriceCents}
-        availableCashCents={availableCashCents}
+        currentPriceCents={livePriceCents}
+        availableCashCents={cashCents}
+        positionQuantity={positionQuantity}
         onSubmit={(order) => {
           void handleSubmit(order);
         }}
       />
       {isSubmitting && (
-        <p className="text-xs text-foreground-muted text-center animate-pulse">
+        <p className="text-foreground-muted animate-pulse text-center text-xs">
           Submitting order to matching engine...
         </p>
       )}

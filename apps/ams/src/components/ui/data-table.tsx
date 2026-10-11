@@ -81,7 +81,11 @@ export function DataTable<T>({
             gap="$3"
           >
             {columns.map((column) => (
-              <HeaderCell key={column.header} width={column.width}>
+              <HeaderCell
+                key={column.header}
+                width={column.width}
+                textAlign={column.numeric ? "right" : "left"}
+              >
                 {column.header}
               </HeaderCell>
             ))}
@@ -98,7 +102,11 @@ export function DataTable<T>({
               hoverStyle={{ backgroundColor: "$surfaceSunken" }}
             >
               {columns.map((column) => (
-                <YStack key={column.header} width={column.width}>
+                <YStack
+                  key={column.header}
+                  width={column.width}
+                  alignItems={column.numeric ? "flex-end" : "flex-start"}
+                >
                   {column.render(row)}
                 </YStack>
               ))}
@@ -133,7 +141,7 @@ export function EmptyState({
       paddingHorizontal="$4"
       gap="$2"
     >
-      <Inbox size={24} color="#6b7280" />
+      <Inbox size={24} color="#778592" />
       <Text fontSize="$3" fontWeight="600" color="$foreground" textAlign="center">
         {title}
       </Text>
@@ -170,6 +178,16 @@ export function Skeleton({ height = 16, width }: { height?: number; width?: numb
       borderRadius="$2"
       opacity={0.6}
     />
+  );
+}
+
+export function TableSkeleton({ rows = 4 }: { rows?: number }) {
+  return (
+    <YStack gap="$3" paddingVertical="$2">
+      {Array.from({ length: rows }, (_, idx) => (
+        <Skeleton key={idx} height={36} />
+      ))}
+    </YStack>
   );
 }
 

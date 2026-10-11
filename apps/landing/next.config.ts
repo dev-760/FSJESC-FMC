@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
    * Argon2 is a native module. Keeping it out of the server bundle lets Node load
    * the platform binary directly instead of bundling it.
    */
-  serverExternalPackages: ["@node-rs/argon2"],
+  serverExternalPackages: ["@node-rs/argon2", "nodemailer"],
 
   /**
    * Workspace packages ship raw TypeScript rather than a build artefact.

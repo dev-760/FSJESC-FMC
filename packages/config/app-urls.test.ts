@@ -1,15 +1,24 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { isSimulatorSameOrigin, landingUrl, simulatorUrl } from "@fsjesc/config/app-urls";
+import {
+  amsUrl,
+  isSimulatorSameOrigin,
+  landingUrl,
+  safeCallbackUrl,
+  simulatorUrl,
+} from "@fsjesc/config/app-urls";
 
 describe("app URLs", () => {
   const originalSimulator = process.env.NEXT_PUBLIC_SIMULATOR_URL;
   const originalApp = process.env.NEXT_PUBLIC_APP_URL;
+  const originalAms = process.env.NEXT_PUBLIC_AMS_URL;
 
   afterEach(() => {
     process.env.NEXT_PUBLIC_SIMULATOR_URL = originalSimulator;
     process.env.NEXT_PUBLIC_APP_URL = originalApp;
+    process.env.NEXT_PUBLIC_AMS_URL = originalAms;
     if (originalSimulator === undefined) delete process.env.NEXT_PUBLIC_SIMULATOR_URL;
     if (originalApp === undefined) delete process.env.NEXT_PUBLIC_APP_URL;
+    if (originalAms === undefined) delete process.env.NEXT_PUBLIC_AMS_URL;
   });
 
   describe("simulatorUrl", () => {
@@ -52,6 +61,29 @@ describe("app URLs", () => {
     it("honours a configured deployment origin", () => {
       process.env.NEXT_PUBLIC_APP_URL = "https://fsjesc-fmc.vercel.app/";
       expect(landingUrl("/team")).toBe("https://fsjesc-fmc.vercel.app/team");
+    });
+  });
+
+  describe("amsUrl", () => {
+    it("defaults to the local administration port", () => {
+      delete process.env.NEXT_PUBLIC_AMS_URL;
+      expect(amsUrl()).toBe("http://localhost:3001");
+      expect(amsUrl("/users")).toBe("http://localhost:3001/users");
+    });
+  });
+
+  describe("safeCallbackUrl", () => {
+    it("allows relative paths and known app origins", () => {
+      expect(safeCallbackUrl("/dashboard", "/")).toBe("/dashboard");
+      expect(safeCallbackUrl("http://localhost:3001", "/")).toBe("http://localhost:3001/");
+      expect(safeCallbackUrl("http://localhost:3002/market", "/")).toBe(
+        "http://localhost:3002/market",
+      );
+    });
+
+    it("rejects open redirects", () => {
+      expect(safeCallbackUrl("https://evil.example/phish", "/simulator")).toBe("/simulator");
+      expect(safeCallbackUrl("//evil.example", "/simulator")).toBe("/simulator");
     });
   });
 });

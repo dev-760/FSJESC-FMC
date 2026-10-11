@@ -19,8 +19,11 @@
  * regression, not a feature.
  */
 
+import { findMarketAsset } from "@fsjesc/domain/assets";
+
 /** Base URL of the Python service. Not `NEXT_PUBLIC_`: server-side only. */
-const BASE_URL = process.env.MARKET_API_URL ?? "http://localhost:8000";
+const BASE_URL = (process.env.MARKET_API_URL ?? "https://api.wassly.tech").replace(/\/+$/, "");
+const API_KEY = process.env.MARKET_API_KEY ?? "";
 
 const TIMEOUT_MS = 4_000;
 
@@ -31,39 +34,61 @@ export interface ReferenceQuote {
   changePercent: number | null;
 }
 
-export function isMarketApiConfigured(): boolean {
-  return Boolean(process.env.MARKET_API_URL);
+interface UpstreamQuotePayload {
+  symbol?: string;
+  price?: number;
+  rate?: number;
+  currency?: string;
+  change_percent?: number | null;
+  changePercent?: number | null;
 }
 
-/**
- * Fetch one real-market quote.
- *
- * Returns `null` on any failure — unreachable, timeout, non-2xx, malformed
- * payload. Callers treat the reference feed as decorative.
- */
-export async function fetchReferenceQuote(symbol: string): Promise<ReferenceQuote | null> {
+function buildHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (API_KEY) {
+    headers["X-API-Key"] = API_KEY;
+  }
+  return headers;
+}
+
+export function isMarketApiConfigured(): boolean {
+  return Boolean(BASE_URL);
+}
+
+async function fetchQuoteFromUrl(url: string, fallbackSymbol: string): Promise<ReferenceQuote | null> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const url = `${BASE_URL}/api/v1/stocks/quote?symbol=${encodeURIComponent(symbol)}`;
     const response = await fetch(url, {
       signal: controller.signal,
-      headers: { Accept: "application/json" },
+      headers: buildHeaders(),
       cache: "no-store",
     });
 
     if (!response.ok) return null;
 
-    const payload = (await response.json()) as Partial<ReferenceQuote>;
-    if (typeof payload.price !== "number") return null;
+    const payload = (await response.json()) as UpstreamQuotePayload;
+    const price =
+      typeof payload.price === "number"
+        ? payload.price
+        : typeof payload.rate === "number"
+          ? payload.rate
+          : null;
+    if (price === null) return null;
+
+    const rawChange =
+      typeof payload.change_percent === "number"
+        ? payload.change_percent
+        : typeof payload.changePercent === "number"
+          ? payload.changePercent
+          : null;
 
     return {
-      symbol: payload.symbol ?? symbol,
-      price: payload.price,
+      symbol: payload.symbol ?? fallbackSymbol,
+      price,
       currency: payload.currency ?? "MAD",
-      changePercent:
-        typeof payload.changePercent === "number" ? payload.changePercent : null,
+      changePercent: rawChange,
     };
   } catch {
     return null;
@@ -72,13 +97,35 @@ export async function fetchReferenceQuote(symbol: string): Promise<ReferenceQuot
   }
 }
 
-/** True when the service answers its health check. */
+/**
+ * Fetch one real-market quote across all 8 API asset classes (`cse`, `stocks`,
+ * `etfs`, `futures`, `crypto`, `forex`, `bonds`, `options`).
+ *
+ * Returns `null` on any failure — unreachable, timeout, non-2xx, malformed
+ * payload. Callers treat the reference feed as decorative.
+ */
+export async function fetchReferenceQuote(symbol: string): Promise<ReferenceQuote | null> {
+  const known = findMarketAsset(symbol);
+  if (known) {
+    const direct = await fetchQuoteFromUrl(`${BASE_URL}${known.apiEndpoint}`, known.ticker);
+    if (direct) return direct;
+  }
+
+  const encoded = encodeURIComponent(symbol.trim().toUpperCase());
+  const cseQuote = await fetchQuoteFromUrl(`${BASE_URL}/api/v1/cse/quote?ticker=${encoded}`, symbol);
+  if (cseQuote) return cseQuote;
+
+  return fetchQuoteFromUrl(`${BASE_URL}/api/v1/stocks/quote?symbol=${encoded}`, symbol);
+}
+
+/** True when the service answers its health check (`/api/v1/health/healthz`). */
 export async function isMarketApiHealthy(): Promise<boolean> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
   try {
-    const response = await fetch(`${BASE_URL}/api/v1/healthz`, {
+    const response = await fetch(`${BASE_URL}/api/v1/health/healthz`, {
       signal: controller.signal,
+      headers: buildHeaders(),
       cache: "no-store",
     });
     return response.ok;

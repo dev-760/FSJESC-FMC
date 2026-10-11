@@ -33,7 +33,7 @@
  * most one day of increments plus one array lookup. The result is identical to the
  * naive sum and O(1) amortised.
  */
-import { ASSETS, type Sector } from "../assets";
+import { ALL_MARKET_ASSETS, type MarketCategory, type Sector } from "../assets";
 import { normal, uniform } from "./random";
 import { easternLabel, nextTransition, sessionState, type SessionState } from "./clock";
 import type {
@@ -79,21 +79,31 @@ const SECTOR_TO_CLASS: Record<Sector, AssetClass> = {
   INDUSTRY: "EQUITY",
 };
 
+const MARKET_TO_CLASS: Record<MarketCategory, AssetClass> = {
+  CSE: "EQUITY",
+  STOCKS: "EQUITY",
+  ETFS: "ETF",
+  FUTURES: "FUTURE",
+  CRYPTO: "CRYPTO",
+  FOREX: "FX",
+  BONDS: "RATE",
+  OPTIONS: "OPTION",
+};
+
 /**
- * The eight tradeable instruments, lifted from the canonical asset list.
- *
- * `src/data/assets.ts` stays the single source of truth for the universe (N4); this
- * module only restates it in the shape the chart layer consumes.
- *
- * Volume is generated rather than derived from the price path, and it carries **no**
- * information about conviction. Teaching "volume confirms the move" on synthetic data
- * would teach a habit that does not survive contact with a real order book.
+ * All tradeable instruments across all 8 API markets (`CSE`, `STOCKS`, `ETFS`,
+ * `FUTURES`, `CRYPTO`, `FOREX`, `BONDS`, `OPTIONS`), lifted from the canonical
+ * asset catalog.
  */
-export const TRADEABLE: readonly Instrument[] = ASSETS.map((asset) => ({
+export const TRADEABLE: readonly Instrument[] = ALL_MARKET_ASSETS.map((asset) => ({
   symbol: asset.ticker,
   name: asset.name,
   sector: asset.sector,
-  assetClass: SECTOR_TO_CLASS[asset.sector],
+  assetClass: MARKET_TO_CLASS[asset.market] ?? SECTOR_TO_CLASS[asset.sector],
+  market: asset.market,
+  exchange: asset.exchange,
+  displayCurrency: asset.displayCurrency,
+  apiEndpoint: asset.apiEndpoint,
   currency: asset.currency,
   startingPriceCents: asset.startingPriceCents,
   annualDrift: asset.annualDrift,

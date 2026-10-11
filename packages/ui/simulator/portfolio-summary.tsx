@@ -25,7 +25,10 @@ export function PortfolioSummary({
   className,
 }: PortfolioSummaryProps) {
   const totalPnlCents = realisedPnlCents + unrealisedPnlCents;
-  const returnBps = totalEquityCents > 0n ? (totalPnlCents * 10_000n) / totalEquityCents : 0n;
+  const initialCapitalCents =
+    totalEquityCents > totalPnlCents ? totalEquityCents - totalPnlCents : 10_000_000n;
+  const returnBps =
+    initialCapitalCents > 0n ? (totalPnlCents * 10_000n) / initialCapitalCents : 0n;
   const isPositive = totalPnlCents >= 0n;
 
   const investedCents = totalEquityCents > cashCents ? totalEquityCents - cashCents : 0n;

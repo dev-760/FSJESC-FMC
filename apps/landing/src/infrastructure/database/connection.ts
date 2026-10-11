@@ -105,10 +105,33 @@ export function getConnection() {
   return pool;
 }
 
+type Database = ReturnType<typeof createDrizzle>;
+
+function createDrizzle() {
+  return drizzle(getConnection(), { schema });
+}
+
+let dbInstance: Database | null = null;
+
+export function getDb(): Database {
+  dbInstance ??= createDrizzle();
+  return dbInstance;
+}
+
 /**
  * Drizzle database instance.
+ *
+ * Lazily initialised on first property access so importing this module during
+ * Next.js build-time route config collection ("Collecting page data") does not
+ * eagerly invoke `getConnection()` before runtime requests arrive.
  */
-export const db = drizzle(getConnection(), { schema });
+export const db: Database = new Proxy({} as Database, {
+  get(_target, prop, receiver) {
+    const instance = getDb();
+    const value = Reflect.get(instance, prop, receiver);
+    return typeof value === "function" ? value.bind(instance) : value;
+  },
+});
 
 /**
  * Close the connection pool. Call this in tests or on shutdown.
@@ -117,6 +140,7 @@ export async function closeConnection() {
   if (pool) {
     await pool.end();
     pool = null;
+    dbInstance = null;
   }
 }
 

@@ -18,8 +18,12 @@ import * as schema from "../database/schema";
 import { usersRepository } from "../database/repositories/users.repository";
 import { portfoliosRepository } from "../database/repositories/portfolios.repository";
 import { bearerTokenFrom, verifySupabaseToken } from "./supabase-jwt";
+import { clearSessionCookie, setSessionCookie } from "./session-cookie";
+import { sendPasswordResetEmail } from "../mail/provider";
 import { AUTH_CONFIG } from "@fsjesc/config/site";
+import { landingUrl } from "@fsjesc/config/app-urls";
 import { AppError, ERROR_CODES, rateLimited } from "@fsjesc/config/errors";
+import { logError } from "@fsjesc/config/logger";
 import type { UserRole } from "./rbac";
 import {
   checkLoginRateLimit,
@@ -218,14 +222,7 @@ class AuthJsAuthProvider implements AuthProvider {
     });
 
     try {
-      const cookieStore = await cookies();
-      cookieStore.set("fsjesc-fmc.session", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        expires,
-      });
+      await setSessionCookie(token, expires);
     } catch {
       // Non-action context
     }
@@ -273,14 +270,7 @@ class AuthJsAuthProvider implements AuthProvider {
     });
 
     try {
-      const cookieStore = await cookies();
-      cookieStore.set("fsjesc-fmc.session", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        expires,
-      });
+      await setSessionCookie(token, expires);
     } catch {
       // Non-action context
     }
@@ -304,11 +294,11 @@ class AuthJsAuthProvider implements AuthProvider {
   async logOut(): Promise<void> {
     try {
       const cookieStore = await cookies();
-      const token = cookieStore.get("fsjesc-fmc.session")?.value;
+      const token = cookieStore.get(AUTH_CONFIG.cookieName)?.value;
       if (token) {
         await db.delete(schema.sessions).where(eq(schema.sessions.sessionToken, token));
-        cookieStore.delete("fsjesc-fmc.session");
       }
+      await clearSessionCookie();
     } catch {
       // Outside request context
     }
@@ -347,7 +337,7 @@ class AuthJsAuthProvider implements AuthProvider {
 
       // 2. Check Session Cookie
       const cookieStore = await cookies();
-      const sessionToken = cookieStore.get("fsjesc-fmc.session")?.value;
+      const sessionToken = cookieStore.get(AUTH_CONFIG.cookieName)?.value;
       if (!sessionToken) return null;
 
       const [sessionRow] = await db
@@ -412,9 +402,18 @@ class AuthJsAuthProvider implements AuthProvider {
       expiresAt,
     });
 
-    // TODO: Send password reset email
-    // For now, we'll log the token for development
-    console.error(`Password reset token for ${email}: ${token}`);
+    const resetUrl = landingUrl(`/reset-password?token=${encodeURIComponent(token)}`);
+    try {
+      await sendPasswordResetEmail(user.email, resetUrl);
+    } catch (error) {
+      logError("auth.password_reset.mail_failed", error);
+      // Surface a generic failure rather than leaving the user waiting on an
+      // email that will never arrive. The token remains valid if they retry.
+      throw new AppError(
+        ERROR_CODES.INTERNAL,
+        "Could not send the reset email. Please try again shortly.",
+      );
+    }
   }
 
   /**

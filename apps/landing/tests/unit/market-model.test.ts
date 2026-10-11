@@ -31,7 +31,7 @@ describe("hash32", () => {
   });
 
   it("returns an unsigned 32-bit integer", () => {
-    for (const input of ["", "MARI", DEFAULT_SEED, "0", "é"]) {
+    for (const input of ["", "ATW", DEFAULT_SEED, "0", "é"]) {
       const value = hash32(input);
       expect(Number.isInteger(value)).toBe(true);
       expect(value).toBeGreaterThanOrEqual(0);

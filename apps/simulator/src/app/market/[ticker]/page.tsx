@@ -9,29 +9,32 @@ import { QuoteBoard, referenceRows } from "@fsjesc/ui/financial/quote-board";
 import { OrderTicketWrapper } from "@fsjesc/ui/simulator/order-ticket-wrapper";
 import { InstrumentTerminal } from "@fsjesc/ui/simulator/instrument-terminal";
 import { SimulatorNav } from "@fsjesc/ui/simulator/simulator-nav";
-import { ASSETS, SECTOR_LABELS } from "@fsjesc/domain/assets";
+import {
+  ALL_MARKET_ASSETS,
+  MARKET_CATEGORY_LABELS,
+  SECTOR_LABELS,
+  findMarketAsset,
+} from "@fsjesc/domain/assets";
 
 export function generateStaticParams(): Array<{ ticker: string }> {
-  return ASSETS.map((asset) => ({ ticker: asset.ticker.toLowerCase() }));
+  return ALL_MARKET_ASSETS.map((asset) => ({ ticker: asset.ticker.toLowerCase() }));
 }
 
 /**
- * Instrument detail.
- *
- * Unknown tickers render the platform 404 page and declare `robots: noindex`. See
- * DECISIONS.md D15 for the HTTP-status caveat on unprerendered parameters.
+ * Instrument detail across all 8 API markets (`CSE`, `STOCKS`, `ETFS`, `FUTURES`,
+ * `CRYPTO`, `FOREX`, `BONDS`, `OPTIONS`).
  */
 export async function generateMetadata({
   params,
 }: PageProps<"/market/[ticker]">): Promise<Metadata> {
   const { ticker } = await params;
-  const asset = ASSETS.find((candidate) => candidate.ticker.toLowerCase() === ticker.toLowerCase());
+  const asset = findMarketAsset(ticker);
 
   if (!asset) {
     return { title: "Instrument not found", robots: { index: false, follow: false } };
   }
 
-  const description = `${asset.ticker} | ${asset.name}, a fictional instrument on the FSJESC Financial Markets Club simulated market. ${SECTOR_LABELS[asset.sector]} sector. Simulated price, no real security.`;
+  const description = `${asset.ticker} | ${asset.name} (${asset.exchange} · ${MARKET_CATEGORY_LABELS[asset.market]}). ${SECTOR_LABELS[asset.sector]} sector. Tradeable on the FSJESC Financial Markets Club simulator.`;
 
   return {
     title: `${asset.ticker} | ${asset.name}`,
@@ -42,17 +45,46 @@ export async function generateMetadata({
 
 export default async function InstrumentPage({ params }: PageProps<"/market/[ticker]">) {
   const { ticker } = await params;
-  const asset = ASSETS.find((candidate) => candidate.ticker.toLowerCase() === ticker.toLowerCase());
+  const asset = findMarketAsset(ticker);
 
   if (!asset) notFound();
 
-  // The other instruments in the same sector, so a reader comparing behaviour has
-  // the comparison to hand rather than having to go back to the board.
-  const peers = ASSETS.filter(
-    (peer) => peer.sector === asset.sector && peer.ticker !== asset.ticker,
+  // Peer instruments in the same market & sector (or same market if sector has few peers)
+  const sameMarketAndSector = ALL_MARKET_ASSETS.filter(
+    (peer) =>
+      peer.market === asset.market &&
+      peer.sector === asset.sector &&
+      peer.ticker !== asset.ticker,
   );
-  const allRows = referenceRows(ASSETS);
-  const peerRows = allRows.filter((row) => peers.some((peer) => peer.ticker === row.asset.ticker));
+  const peers =
+    sameMarketAndSector.length > 0
+      ? sameMarketAndSector.slice(0, 6)
+      : ALL_MARKET_ASSETS.filter(
+          (peer) => peer.market === asset.market && peer.ticker !== asset.ticker,
+        ).slice(0, 6);
+
+  const peerRows = referenceRows(peers);
+
+  const referenceItems = [
+    { term: "Ticker", detail: asset.ticker },
+    { term: "Market", detail: MARKET_CATEGORY_LABELS[asset.market] },
+    { term: "Exchange", detail: asset.exchange },
+    { term: "Sector", detail: asset.frenchSector ?? SECTOR_LABELS[asset.sector] },
+    ...(asset.isin ? [{ term: "ISIN", detail: asset.isin }] : []),
+    ...(asset.compartment ? [{ term: "Compartment", detail: asset.compartment }] : []),
+    { term: "Upstream Currency", detail: asset.displayCurrency },
+    { term: "Settlement Currency", detail: asset.currency },
+    { term: "API Route", detail: asset.apiEndpoint.split("?")[0] ?? asset.apiEndpoint },
+    {
+      term: "Modelled volatility",
+      detail: `${(asset.annualVolatility * 100).toFixed(0)}% annualised`,
+    },
+    {
+      term: "Modelled drift",
+      detail: `${(asset.annualDrift * 100).toFixed(1)}% annualised`,
+    },
+    { term: "Status", detail: "Tradable in the simulator" },
+  ];
 
   return (
     <main id="main-content" className="flex-1">
@@ -71,6 +103,12 @@ export default async function InstrumentPage({ params }: PageProps<"/market/[tic
             <li aria-hidden className="text-foreground-muted">
               /
             </li>
+            <li className="text-foreground-secondary">
+              {MARKET_CATEGORY_LABELS[asset.market]}
+            </li>
+            <li aria-hidden className="text-foreground-muted">
+              /
+            </li>
             <li aria-current="page" className="numeric text-foreground font-medium">
               {asset.ticker}
             </li>
@@ -80,9 +118,6 @@ export default async function InstrumentPage({ params }: PageProps<"/market/[tic
         <div className="grid gap-10 lg:grid-cols-[minmax(0,8fr)_minmax(0,4fr)] lg:gap-12">
           {/* ── Chart & Terminal region ─────────────────────────────── */}
           <div>
-            {/* The terminal reads the clock and quotes live, so it is a
-                dynamic hole: without a boundary, prerendering the page would
-                try to evaluate `new Date()` at build time and fail. */}
             <Suspense
               fallback={
                 <div className="border-rule bg-surface h-[32rem] animate-pulse rounded-lg border" />
@@ -96,6 +131,13 @@ export default async function InstrumentPage({ params }: PageProps<"/market/[tic
                 annualVolatility={asset.annualVolatility}
                 annualDrift={asset.annualDrift}
                 description={asset.description}
+                marketLabel={MARKET_CATEGORY_LABELS[asset.market]}
+                exchange={asset.exchange}
+                isin={asset.isin}
+                compartment={asset.compartment}
+                frenchSector={asset.frenchSector}
+                apiEndpoint={asset.apiEndpoint}
+                ratios={asset.ratios}
               />
             </Suspense>
 
@@ -104,16 +146,13 @@ export default async function InstrumentPage({ params }: PageProps<"/market/[tic
               <div className="text-foreground-secondary mt-4 space-y-4 text-base leading-relaxed">
                 <p>{asset.description}</p>
                 <p>
-                  Its modelled annual volatility is {(asset.annualVolatility * 100).toFixed(0)}%
-                  with a drift of {(asset.annualDrift * 100).toFixed(1)}%. Those two numbers explain
-                  most of what a reader will observe: volatility determines how far a price wanders
-                  from its trend, and drift determines which way it leans on average. Neither is
-                  estimated from a real company.
-                </p>
-                <p>
-                  Choosing a different sector is the point of having six. A portfolio concentrated
-                  in telecom behaves measurably differently from one concentrated in retail, and a
-                  challenge is only instructive if that difference is visible.
+                  Listed under the <strong>{MARKET_CATEGORY_LABELS[asset.market]}</strong> segment (
+                  {asset.exchange}
+                  {asset.isin ? `, ISIN ${asset.isin}` : ""}), its modelled annual volatility in the
+                  continuous execution engine is {(asset.annualVolatility * 100).toFixed(0)}% with a
+                  drift of {(asset.annualDrift * 100).toFixed(1)}%. Upstream reference data is mapped
+                  to <code className="font-mono text-xs text-foreground">{asset.apiEndpoint}</code> on{" "}
+                  <code className="font-mono text-xs text-foreground">api.wassly.tech</code>.
                 </p>
               </div>
             </section>
@@ -121,23 +160,23 @@ export default async function InstrumentPage({ params }: PageProps<"/market/[tic
             {peers.length > 0 ? (
               <section className="mt-12">
                 <h2 className="text-xl font-semibold tracking-tight">
-                  Other {SECTOR_LABELS[asset.sector].toLowerCase()} instruments
+                  Peer {MARKET_CATEGORY_LABELS[asset.market]} instruments
                 </h2>
                 <p className="text-foreground-secondary mt-2 max-w-prose text-sm leading-relaxed">
-                  Same modelled conditions, different sensitivity. Comparing them is how a
-                  sector&rsquo;s risk profile becomes concrete.
+                  Compare volatility, drift, and price dynamics across related instruments in the{" "}
+                  {MARKET_CATEGORY_LABELS[asset.market]} universe.
                 </p>
                 <div className="mt-5">
                   <Suspense
-              fallback={<div className="border-rule h-64 animate-pulse rounded-lg border" />}
-            >
-  <QuoteBoard
+                    fallback={<div className="border-rule h-64 animate-pulse rounded-lg border" />}
+                  >
+                    <QuoteBoard
                       rows={peerRows}
-                      caption={`${SECTOR_LABELS[asset.sector]} peers. The change column is a deterministic placeholder until the price model ships.`}
+                      caption={`${MARKET_CATEGORY_LABELS[asset.market]} peers.`}
                       showParameters={false}
                       animate={false}
                     />
-            </Suspense>
+                  </Suspense>
                 </div>
               </section>
             ) : null}
@@ -153,38 +192,23 @@ export default async function InstrumentPage({ params }: PageProps<"/market/[tic
 
             <div>
               <p className="label mb-3">Reference data</p>
-              <RuledList
-                items={[
-                  { term: "Ticker", detail: asset.ticker },
-                  { term: "Currency", detail: asset.currency },
-                  { term: "Sector", detail: SECTOR_LABELS[asset.sector] },
-                  {
-                    term: "Modelled volatility",
-                    detail: `${(asset.annualVolatility * 100).toFixed(0)}% annualised`,
-                  },
-                  {
-                    term: "Modelled drift",
-                    detail: `${(asset.annualDrift * 100).toFixed(1)}% annualised`,
-                  },
-                  { term: "Status", detail: "Tradable in the simulator" },
-                ]}
-              />
+              <RuledList items={referenceItems} />
             </div>
 
             <div>
               <Button asChild fullWidth>
-                <Link href="/">Open a portfolio</Link>
+                <Link href="/portfolio">View portfolio &amp; holdings</Link>
               </Button>
               <Button asChild fullWidth variant="secondary" className="mt-2">
                 <Link href="/market">Back to the market board</Link>
               </Button>
             </div>
 
-            <Alert tone="warning" title="Not a real security">
+            <Alert tone="warning" title="Educational Simulation">
               <p>
-                {asset.name} is fictional. It does not exist, is not listed anywhere, and cannot be
-                bought or sold outside this platform. Any performance attributed to it describes a
-                simulation and nothing else.
+                All orders placed on {asset.ticker} ({asset.name}) execute inside the FSJESC-FMC
+                educational matching engine using virtual capital in MAD. No real brokerage order is
+                routed to {asset.exchange}.
               </p>
             </Alert>
           </aside>

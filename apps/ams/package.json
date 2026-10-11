@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit --incremental false"
   },
   "dependencies": {
+    "@next/env": "^16.4.0",
     "@tamagui/config": "^1.125.3",
     "@tamagui/core": "^1.125.3",
     "lucide-react": "1.52.0",

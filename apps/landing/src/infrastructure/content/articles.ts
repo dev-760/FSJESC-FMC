@@ -110,24 +110,26 @@ export async function getArticle(slug: string): Promise<Article> {
 
       if (res.data && !res.error) {
         const row = res.data as unknown as SupabaseArticleRow;
-        const frontmatter: Frontmatter = {
-          title: row.title,
-          category: row.category as Frontmatter["category"],
-          date: new Date(row.published_at),
-          summary: row.summary,
-          readingTime: row.reading_time ?? undefined,
-          related: Array.isArray(row.related) ? row.related : [],
-          essential: Boolean(row.essential),
-        };
-        const { html, tableOfContents, wordCount } = renderMarkdown(row.content);
-        return {
-          slug: row.slug,
-          frontmatter,
-          html,
-          tableOfContents,
-          wordCount,
-          readingTimeMinutes: row.reading_time ?? readingTimeFor(wordCount),
-        };
+        if (typeof row.content === "string" && row.content.trim().length > 0) {
+          const frontmatter: Frontmatter = {
+            title: row.title,
+            category: row.category as Frontmatter["category"],
+            date: new Date(row.published_at),
+            summary: row.summary,
+            readingTime: row.reading_time ?? undefined,
+            related: Array.isArray(row.related) ? row.related : [],
+            essential: Boolean(row.essential),
+          };
+          const { html, tableOfContents, wordCount } = renderMarkdown(row.content);
+          return {
+            slug: row.slug,
+            frontmatter,
+            html,
+            tableOfContents,
+            wordCount,
+            readingTimeMinutes: row.reading_time ?? readingTimeFor(wordCount),
+          };
+        }
       }
     } catch {
       // Fall through to filesystem
@@ -156,40 +158,45 @@ export async function getAllArticles(): Promise<Article[]> {
     // Outside Next.js cacheComponents runtime (e.g. scripts/seed)
   }
 
-  // 1. Try Supabase batch fetch
+  // 1. Try Supabase batch fetch (only if rows carry inline markdown content)
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseServerClient();
       const res = await supabase.from("articles").select("*").order("published_at");
       if (res.data && !res.error && res.data.length > 0) {
         const rows = res.data as unknown as SupabaseArticleRow[];
-        return rows
-          .map((item) => {
-            try {
-              const frontmatter: Frontmatter = {
-                title: item.title,
-                category: item.category as Frontmatter["category"],
-                date: new Date(item.published_at),
-                summary: item.summary,
-                readingTime: item.reading_time ?? undefined,
-                related: Array.isArray(item.related) ? item.related : [],
-                essential: Boolean(item.essential),
-              };
-              const { html, tableOfContents, wordCount } = renderMarkdown(item.content);
-              return {
-                slug: item.slug,
-                frontmatter,
-                html,
-                tableOfContents,
-                wordCount,
-                readingTimeMinutes: item.reading_time ?? readingTimeFor(wordCount),
-              };
-            } catch (e) {
-              logServerError(`content/article:${item.slug}`, e);
-              return null;
-            }
-          })
-          .filter((a): a is Article => a !== null);
+        const hasInlineContent = rows.every(
+          (item) => typeof item.content === "string" && item.content.trim().length > 0,
+        );
+        if (hasInlineContent) {
+          return rows
+            .map((item) => {
+              try {
+                const frontmatter: Frontmatter = {
+                  title: item.title,
+                  category: item.category as Frontmatter["category"],
+                  date: new Date(item.published_at),
+                  summary: item.summary,
+                  readingTime: item.reading_time ?? undefined,
+                  related: Array.isArray(item.related) ? item.related : [],
+                  essential: Boolean(item.essential),
+                };
+                const { html, tableOfContents, wordCount } = renderMarkdown(item.content);
+                return {
+                  slug: item.slug,
+                  frontmatter,
+                  html,
+                  tableOfContents,
+                  wordCount,
+                  readingTimeMinutes: item.reading_time ?? readingTimeFor(wordCount),
+                };
+              } catch (e) {
+                logServerError(`content/article:${item.slug}`, e);
+                return null;
+              }
+            })
+            .filter((a): a is Article => a !== null);
+        }
       }
     } catch {
       // Fall through to slug mapping

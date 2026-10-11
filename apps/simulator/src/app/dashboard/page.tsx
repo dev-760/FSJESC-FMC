@@ -35,7 +35,7 @@ export default function DashboardPage() {
     positions: [],
     orders: [],
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -118,15 +118,22 @@ export default function DashboardPage() {
       if (mounted) void load(false);
     }, 4000);
 
+    const handlePortfolioUpdate = () => {
+      if (mounted) void load(false);
+    };
+    window.addEventListener("fsjesc:portfolio-updated", handlePortfolioUpdate);
+
     return () => {
       mounted = false;
       clearInterval(interval);
+      window.removeEventListener("fsjesc:portfolio-updated", handlePortfolioUpdate);
     };
   }, []);
 
   if (isLoading) {
     return (
-      <div className="flex-1">
+      <main id="main-content" className="flex-1">
+        <SimulatorNav />
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
           <div className="space-y-6 sm:space-y-8 animate-pulse">
             <div className="bg-surface-sunken h-8 w-1/3 rounded" />
@@ -134,20 +141,21 @@ export default function DashboardPage() {
             <div className="bg-surface-sunken h-48 sm:h-64 rounded" />
           </div>
         </div>
-      </div>
+      </main>
     );
   }
 
   if (error) {
     return (
-      <div className="flex-1">
+      <main id="main-content" className="flex-1">
+        <SimulatorNav />
         <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:py-12 sm:px-6 lg:px-8">
           <Alert tone="negative" assertive>
             <p className="font-medium">Failed to load portfolio data</p>
             <p className="mt-1">{error}</p>
           </Alert>
         </div>
-      </div>
+      </main>
     );
   }
 

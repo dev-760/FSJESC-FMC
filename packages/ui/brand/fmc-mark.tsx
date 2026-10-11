@@ -55,7 +55,7 @@ export function FmcLogo({
 
   return (
     <picture>
-      <source srcSet={dark} media="(prefers-color-scheme: dark)" />
+      <source data-fmc-dark-source="" srcSet={dark} media="(prefers-color-scheme: dark)" />
       {/* eslint-disable-next-line @next/next/no-img-element --
           Deliberately not next/image: this is a two-variant <picture> swap driven
           by prefers-color-scheme, and a 27 KB logo does not justify the

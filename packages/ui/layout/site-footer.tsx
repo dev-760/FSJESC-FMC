@@ -50,9 +50,9 @@ export function SiteFooter() {
               © {year} {SITE.name}. {SITE.campus}.
             </p>
             <p className="mt-2 max-w-3xl">
-              Educational project. The market, its instruments and its prices are simulated and
-              fictional. Nothing on this platform is investment advice, a recommendation, or a
-              description of real market activity.
+              Educational project. All portfolios, order executions and balances are simulated in
+              Moroccan dirhams (MAD) with no real money at risk. Nothing on this platform is
+              investment advice, a recommendation, or a solicitation to trade.
             </p>
           </div>
           <div className="shrink-0">

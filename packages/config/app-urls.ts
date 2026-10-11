@@ -15,6 +15,9 @@ const DEFAULT_LANDING_ORIGIN = "http://localhost:3000";
 /** The simulator, which never shares an origin with the landing app in dev. */
 const DEFAULT_SIMULATOR_ORIGIN = "http://localhost:3002";
 
+/** The administration console. */
+const DEFAULT_AMS_ORIGIN = "http://localhost:3001";
+
 /** An explicit absolute origin (scheme + host) means the app is cross-origin. */
 function isAbsolute(value: string): boolean {
   return /^https?:\/\//i.test(value);
@@ -24,6 +27,49 @@ function simulatorOrigin(): string | null {
   const configured = process.env.NEXT_PUBLIC_SIMULATOR_URL ?? process.env.SIMULATOR_URL;
   if (!configured) return null;
   return isAbsolute(configured) ? configured.replace(/\/$/, "") : null;
+}
+
+function amsOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_AMS_URL;
+  if (configured && isAbsolute(configured)) return configured.replace(/\/$/, "");
+  return DEFAULT_AMS_ORIGIN;
+}
+
+/**
+ * Origins that may appear in a post-auth redirect.
+ *
+ * Used to reject open redirects through `callbackUrl` on the sign-in form.
+ */
+export function allowedAppOrigins(): readonly string[] {
+  const landing = (process.env.NEXT_PUBLIC_APP_URL ?? DEFAULT_LANDING_ORIGIN).replace(/\/$/, "");
+  const simulator = simulatorOrigin() ?? DEFAULT_SIMULATOR_ORIGIN;
+  const ams = amsOrigin();
+  return [...new Set([landing, simulator, ams])];
+}
+
+/**
+ * Returns a safe post-auth path or absolute URL, or the fallback when the
+ * candidate would leave the platform.
+ */
+export function safeCallbackUrl(candidate: string | undefined, fallback = "/"): string {
+  if (!candidate) return fallback;
+
+  // Relative paths stay on the current origin.
+  if (candidate.startsWith("/") && !candidate.startsWith("//")) {
+    return candidate;
+  }
+
+  try {
+    const url = new URL(candidate);
+    const origin = url.origin;
+    if (allowedAppOrigins().some((allowed) => allowed === origin)) {
+      return url.toString();
+    }
+  } catch {
+    // Not a parseable URL.
+  }
+
+  return fallback;
 }
 
 /**
@@ -46,6 +92,11 @@ export function isSimulatorSameOrigin(): boolean {
 /** Absolute URL into the public site. */
 export function landingUrl(path = ""): string {
   return join(process.env.NEXT_PUBLIC_APP_URL ?? DEFAULT_LANDING_ORIGIN, path);
+}
+
+/** Absolute URL into the administration console. */
+export function amsUrl(path = ""): string {
+  return join(amsOrigin(), path);
 }
 
 /**

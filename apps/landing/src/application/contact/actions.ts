@@ -2,7 +2,9 @@
 
 import { redirect } from "next/navigation";
 import { contactSchema, type ContactInput } from "@fsjesc/domain/education/contact";
+import { getServerEnv } from "@fsjesc/config/env";
 import { logError, logInfo } from "@fsjesc/config/logger";
+import { sendContactEnquiryEmail } from "@/infrastructure/mail/provider";
 
 /**
  * Contact form action.
@@ -52,14 +54,7 @@ export async function submitContactMessage(formData: FormData): Promise<never> {
   }
 
   try {
-    // Phase 5 wires this to the mail provider and the audit log. Until then the
-    // message is validated and discarded, and the page says so honestly rather
-    // than reporting a delivery that did not happen.
-    await queueEnquiry({
-      topic: parsed.data.topic,
-      // An address is personal data: log the domain only, never the full address.
-      domain: emailDomain(parsed.data.email),
-    });
+    await deliverEnquiry(parsed.data);
   } catch (error) {
     logError("contact.enquiry.failed", error);
     redirect("/contact?status=failed#contact-form");
@@ -79,15 +74,28 @@ function emailDomain(address: string): string {
 }
 
 /**
- * Records that an enquiry passed validation.
+ * Delivers a validated enquiry to the club inbox via the mail provider.
  *
- * Phase 5 replaces this body with a durable write (an `enquiries` row plus an
- * `audit_log` entry) and hands the message to the `MailProvider`. It is already
- * asynchronous, so the action's contract does not change when that happens.
+ * Only the email domain is written to the operational log — never the full
+ * address. Durable storage in `audit_log` / an enquiries table remains a
+ * follow-up; delivery itself is no longer a no-op.
  */
-async function queueEnquiry(metadata: { topic: string; domain: string }): Promise<void> {
-  logInfo("contact.enquiry.validated", metadata);
-  // Resolve on the microtask queue so the caller observes a real asynchronous
-  // boundary. Phase 5 replaces this with a database insert and a mail send.
-  await Promise.resolve();
+async function deliverEnquiry(input: ContactInput): Promise<void> {
+  const env = getServerEnv();
+  const notifyTo =
+    process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contact@fsjesc-fmc.local";
+
+  logInfo("contact.enquiry.validated", {
+    topic: input.topic,
+    domain: emailDomain(input.email),
+    mailProvider: env.MAIL_PROVIDER,
+  });
+
+  await sendContactEnquiryEmail({
+    name: input.name,
+    email: input.email,
+    topic: input.topic,
+    message: input.message,
+    notifyTo,
+  });
 }

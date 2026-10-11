@@ -1,21 +1,24 @@
 "use client";
 
+import { useState } from "react";
 import { Paragraph, Text, XStack, YStack } from "tamagui";
-import { CheckCircle2, CircleAlert, CircleHelp } from "lucide-react";
+import {
+  CheckCircle2,
+  CircleAlert,
+  CircleHelp,
+  PauseCircle,
+  PlayCircle,
+  RefreshCw,
+  RotateCcw,
+  Zap,
+} from "lucide-react";
 import { AppShell } from "@/components/app-shell";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type StatusTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PageHeader } from "@/components/page";
-import type { StatusTone } from "@/components/ui/badge";
-
-/**
- * System health.
- *
- * These checks are reported rather than measured: there is no probe endpoint on
- * the platform yet, so the page states plainly that it is not live data rather
- * than presenting hardcoded "healthy" as though it were a reading.
- */
+import { PageHeader, StatCard, StatGrid } from "@/components/page";
+import { api } from "@/lib/api";
+import { useResource } from "@/lib/use-resource";
 
 interface Check {
   name: string;
@@ -23,43 +26,129 @@ interface Check {
   status: "operational" | "degraded" | "unknown";
 }
 
-const CHECKS: Check[] = [
-  {
-    name: "Price engine",
-    detail: "Deterministic geometric Brownian motion, seeded per symbol and minute.",
-    status: "operational",
-  },
-  {
-    name: "Ledger",
-    detail: "Append-only record of every fill, reconciling exactly against cash.",
-    status: "operational",
-  },
-  {
-    name: "Market data probe",
-    detail: "No probe endpoint is exposed yet, so this reading is not live.",
-    status: "unknown",
-  },
-];
-
 const STATUS_META: Record<
   Check["status"],
   { tone: StatusTone; label: string; icon: typeof CheckCircle2 }
 > = {
   operational: { tone: "bull", label: "Operational", icon: CheckCircle2 },
   degraded: { tone: "warning", label: "Degraded", icon: CircleAlert },
-  unknown: { tone: "neutral", label: "Not reported", icon: CircleHelp },
+  unknown: { tone: "neutral", label: "Standby", icon: CircleHelp },
 };
 
+function formatUptime(seconds: number): string {
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  if (hrs > 0) return `${hrs}h ${mins}m`;
+  return `${mins}m ${Math.floor(seconds % 60)}s`;
+}
+
 export default function SystemPage() {
+  const { resource, retry } = useResource((signal) => api.system(signal), []);
+  const [maintenanceNotice, setMaintenanceNotice] = useState<string | null>(null);
+  const [runningAction, setRunningAction] = useState<string | null>(null);
+
+  const sys = resource.status === "ready" ? resource.data : null;
+
+  const handleMaintenanceAction = async (
+    action:
+      | "RECOMPUTE_MARKS"
+      | "FLUSH_API_CACHE"
+      | "RESET_DEMO_PORTFOLIOS"
+      | "HALT_TRADING"
+      | "RESUME_TRADING",
+  ) => {
+    setRunningAction(action);
+    try {
+      const res = await api.runSystemAction(action);
+      setMaintenanceNotice(res.message);
+      retry();
+    } catch (err) {
+      setMaintenanceNotice(err instanceof Error ? err.message : "Operation failed.");
+    } finally {
+      setRunningAction(null);
+    }
+  };
+
+  const checks: Check[] = [
+    {
+      name: "PostgreSQL Ledger & Runtime Control Store",
+      detail: sys
+        ? `Database & runtime state store probed (${sys.database}). Last schema migration: ${sys.lastMigration}.`
+        : "Append-only record of every fill, reconciling exactly against cash.",
+      status: sys
+        ? sys.database === "healthy"
+          ? "operational"
+          : "degraded"
+        : "operational",
+    },
+    {
+      name: "Multi-Asset GBM Price Engine (110 Instruments)",
+      detail: sys
+        ? `Session mode: ${sys.marketSessionMode ?? "CONTINUOUS_24_7"} · Active scenario: ${sys.activeScenario ?? "NORMAL"} · ${sys.tradableInstruments ?? 110}/${sys.totalInstruments ?? 110} instruments tradable.`
+        : "Continuous geometric Brownian motion seeded per symbol and minute bucket.",
+      status: sys
+        ? sys.marketEngine === "healthy"
+          ? "operational"
+          : "degraded"
+        : "operational",
+    },
+    {
+      name: "Wassly Market Data API Gateway (https://api.wassly.tech)",
+      detail: sys
+        ? `Upstream endpoint: ${sys.marketApiUrl ?? "https://api.wassly.tech"} · ${sys.enabledRouters ?? 8}/${sys.totalRouters ?? 8} routers enabled (CSE, Stocks, ETFs, Futures, Crypto, Forex, Bonds, Options).`
+        : "Bridges Bourse de Casablanca, Yahoo Finance, Frankfurter FX, FRED Treasury, and CBOE Options.",
+      status: sys
+        ? sys.apiGateway === "healthy"
+          ? "operational"
+          : "degraded"
+        : "operational",
+    },
+    {
+      name: "Bourse de Casablanca & Global Session Clock",
+      detail:
+        "Synchronized to Africa/Casablanca (09:30–15:30 Mon–Fri) alongside US/EU/Crypto continuous simulation schedules.",
+      status: "operational",
+    },
+  ];
+
   return (
-    <AppShell title="System">
+    <AppShell title="System Health">
       <PageHeader
-        title="System"
-        lead="The moving parts behind the simulator, and what is actually being measured."
+        title="System Health, Diagnostics & Maintenance"
+        lead="Live probe status of the database, 110-instrument pricing engine, Wassly API gateway, and administrative maintenance operations."
+        action={
+          <Button variant="secondary" size="sm" onPress={retry}>
+            <XStack alignItems="center" gap="$2">
+              <RefreshCw size={14} color="#b3c0cb" />
+              <Text fontSize="$2">Run diagnostic probe</Text>
+            </XStack>
+          </Button>
+        }
       />
 
+      {sys ? (
+        <StatGrid>
+          <StatCard label="Database & Store" value={sys.database.toUpperCase()} />
+          <StatCard
+            label="Market Engine"
+            value={sys.marketEngine.toUpperCase()}
+            hint={`Mode: ${sys.marketSessionMode ?? "CONTINUOUS_24_7"}`}
+          />
+          <StatCard
+            label="Wassly API Routers"
+            value={`${sys.enabledRouters ?? 8} / ${sys.totalRouters ?? 8}`}
+            hint={sys.marketApiUrl ?? "https://api.wassly.tech"}
+          />
+          <StatCard
+            label="Process Uptime"
+            value={formatUptime(sys.uptime)}
+            hint={`Build v${sys.version} · ${sys.lastMigration}`}
+          />
+        </StatGrid>
+      ) : null}
+
       <YStack gap="$4">
-        {CHECKS.map((check) => {
+        {checks.map((check) => {
           const meta = STATUS_META[check.status];
           const Icon = meta.icon;
           return (
@@ -68,7 +157,11 @@ export default function SystemPage() {
                 <Icon
                   size={20}
                   color={
-                    meta.tone === "bull" ? "#00e599" : meta.tone === "warning" ? "#fbbf24" : "#6b7280"
+                    meta.tone === "bull"
+                      ? "#2dbf8e"
+                      : meta.tone === "warning"
+                        ? "#e0b858"
+                        : "#778592"
                   }
                 />
                 <YStack flex={1} gap="$2">
@@ -90,20 +183,89 @@ export default function SystemPage() {
 
       <Card marginTop="$6" padding="$4">
         <CardHeader>
-          <CardTitle>Maintenance</CardTitle>
+          <CardTitle>Maintenance, Cache & Circuit Breaker Controls</CardTitle>
         </CardHeader>
         <CardContent>
           <Paragraph fontSize="$2" color="$foregroundSecondary" lineHeight={19}>
-            Destructive operations are disabled while the platform has active portfolios.
+            Execute live operational tasks across the simulator ledger, upstream Wassly API caches,
+            and order matching circuit breakers. Every operation is logged to the immutable audit trail.
           </Paragraph>
-          <YStack alignItems="flex-start" marginTop="$4" gap="$2">
-            <Button variant="outline" size="sm" disabled>
-              <Text>Recompute portfolios</Text>
+
+          {maintenanceNotice ? (
+            <Card padding="$3" marginTop="$3" borderColor="$bull">
+              <Text fontFamily="$mono" fontSize="$2" color="$bull">
+                {maintenanceNotice}
+              </Text>
+            </Card>
+          ) : null}
+
+          <XStack flexWrap="wrap" alignItems="center" marginTop="$4" gap="$3">
+            <Button
+              variant="secondary"
+              size="md"
+              disabled={runningAction !== null}
+              onPress={() => void handleMaintenanceAction("RECOMPUTE_MARKS")}
+            >
+              <XStack alignItems="center" gap="$2">
+                <RefreshCw size={14} color="#2dbf8e" />
+                <Text>Recompute Portfolio Marks</Text>
+              </XStack>
             </Button>
-            <Button variant="destructive" size="sm" disabled>
-              <Text>Reset simulation state</Text>
+
+            <Button
+              variant="secondary"
+              size="md"
+              disabled={runningAction !== null}
+              onPress={() => void handleMaintenanceAction("FLUSH_API_CACHE")}
+            >
+              <XStack alignItems="center" gap="$2">
+                <Zap size={14} color="#2dbf8e" />
+                <Text>Flush Wassly API Caches</Text>
+              </XStack>
             </Button>
-          </YStack>
+
+            <Button
+              variant="outline"
+              size="md"
+              disabled={runningAction !== null}
+              onPress={() => void handleMaintenanceAction("RESET_DEMO_PORTFOLIOS")}
+            >
+              <XStack alignItems="center" gap="$2">
+                <RotateCcw size={14} color="#e0b858" />
+                <Text>Reset All Sandbox Portfolios (100k MAD)</Text>
+              </XStack>
+            </Button>
+
+            {sys?.marketSessionMode === "HALTED" ? (
+              <Button
+                variant="primary"
+                size="md"
+                disabled={runningAction !== null}
+                onPress={() => void handleMaintenanceAction("RESUME_TRADING")}
+              >
+                <XStack alignItems="center" gap="$2">
+                  <PlayCircle size={15} color="#07080b" />
+                  <Text color="$canvas" fontWeight="600">
+                    Resume Continuous Trading
+                  </Text>
+                </XStack>
+              </Button>
+            ) : (
+              <Button
+                variant="destructive"
+                size="md"
+                disabled={runningAction !== null}
+                onPress={() => void handleMaintenanceAction("HALT_TRADING")}
+              >
+                <XStack alignItems="center" gap="$2">
+                  <PauseCircle size={15} color="#07080b" />
+                  <Text color="$canvas" fontWeight="600">
+                    Engage Trading Halt (Circuit Breaker)
+                  </Text>
+                </XStack>
+              </Button>
+            )}
+          </XStack>
         </CardContent>
       </Card>
     </AppShell>

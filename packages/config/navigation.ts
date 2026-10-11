@@ -38,7 +38,7 @@ export const PRIMARY_NAV: readonly NavItem[] = [
     href: simulatorUrl(),
     labelKey: "nav.simulator",
     label: "Simulator",
-    description: "Paper-trading a fictional Moroccan market in MAD",
+    description: "Multi-asset paper-trading across Bourse de Casablanca & global markets in MAD",
   },
   {
     href: "/competitions",
@@ -100,6 +100,12 @@ export const FOOTER_NAV: readonly NavSection[] = [
         labelKey: "nav.competitions",
         label: "Competitions",
         description: "Scenario challenges",
+      },
+      {
+        href: "/challenges",
+        labelKey: "nav.challenges",
+        label: "Scenario challenges",
+        description: "Guided historical stress-test exercises",
       },
     ],
   },

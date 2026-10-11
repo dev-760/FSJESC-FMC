@@ -34,7 +34,11 @@ import { simulatorUrl } from "@fsjesc/config/app-urls";
  */
 
 export interface QuoteRow {
-  asset: AssetDefinition;
+  asset: AssetDefinition & {
+    market?: string;
+    exchange?: string;
+    displayCurrency?: string;
+  };
   /** Basis points of change against the reference period. */
   changeBps: bigint;
 }
@@ -59,9 +63,9 @@ export function QuoteBoard({
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
-            <Th className="w-20">Ticker</Th>
+            <Th className="w-24">Ticker</Th>
             <Th>Instrument</Th>
-            <Th className="w-36">Sector</Th>
+            <Th className="w-40">Market / Sector</Th>
             <Th numeric className="w-32">
               Price (MAD)
             </Th>
@@ -134,7 +138,7 @@ const QuoteRowComponent = memo(function QuoteRowComponent({
   animate,
   showParameters,
 }: {
-  asset: AssetDefinition;
+  asset: QuoteRow["asset"];
   changeBps: bigint;
   index: number;
   animate: boolean;
@@ -143,7 +147,7 @@ const QuoteRowComponent = memo(function QuoteRowComponent({
   return (
     <TableRow
       className={cn(animate && "board-row", "hover:bg-surface-inset/60 transition-colors")}
-      style={animate ? { animationDelay: `${index * 45}ms` } : undefined}
+      style={animate ? { animationDelay: `${Math.min(index, 12) * 35}ms` } : undefined}
     >
       <Td>
         <Link
@@ -153,8 +157,22 @@ const QuoteRowComponent = memo(function QuoteRowComponent({
           {asset.ticker}
         </Link>
       </Td>
-      <Td className="text-foreground-secondary">{asset.name}</Td>
-      <Td className="text-foreground-secondary">{SECTOR_LABELS[asset.sector]}</Td>
+      <Td className="text-foreground-secondary">
+        <span className="font-medium text-foreground">{asset.name}</span>
+        {asset.exchange ? (
+          <span className="ml-2 text-2xs text-foreground-muted">({asset.exchange})</span>
+        ) : null}
+      </Td>
+      <Td className="text-foreground-secondary">
+        <span className="inline-flex items-center gap-1.5">
+          {asset.market ? (
+            <span className="rounded bg-surface-inset px-1.5 py-0.5 font-mono text-2xs font-semibold text-foreground">
+              {asset.market}
+            </span>
+          ) : null}
+          <span>{SECTOR_LABELS[asset.sector]}</span>
+        </span>
+      </Td>
       <Td numeric className="font-medium">
         {formatMAD(money(asset.startingPriceCents))}
       </Td>

@@ -4,7 +4,7 @@ import { signUpAction } from "../actions";
 import { Button } from "@fsjesc/ui/button";
 import { Container } from "@fsjesc/ui/layout/container";
 import { FmcLogo } from "@fsjesc/ui/brand/fmc-mark";
-import { DISC_3 } from "@fsjesc/config/site";
+import { AUTH_CONFIG, DISC_3 } from "@fsjesc/config/site";
 
 export const metadata: Metadata = {
   title: "Create an account",
@@ -27,20 +27,19 @@ export default async function CreateAccountPage({ searchParams }: PageProps) {
       <Container size="prose">
         <div className="mx-auto max-w-md">
           {/* Header */}
-          <div className="text-center mb-8">
-            <Link href="/" className="inline-block mb-4 transition-transform hover:scale-105" aria-label="FSJESC FMC Home">
+          <div className="mb-8 text-center">
+            <Link href="/" className="mb-4 inline-block" aria-label="FSJESC FMC Home">
               <FmcLogo variant="mark" height={48} className="mx-auto" />
             </Link>
-            <h1 className="font-serif text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            <h1 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
               Create your account
             </h1>
-            <p className="mt-2 text-sm text-foreground-secondary leading-relaxed">
-              Start trading in the simulation engine with 100,000 MAD in virtual paper-trading capital.
+            <p className="text-foreground-secondary mt-2 text-sm leading-relaxed">
+              Open a simulated portfolio with 100,000 MAD in paper-trading capital. No real money.
             </p>
           </div>
 
-          {/* Card */}
-          <div className="border-rule bg-surface rounded-xl border p-6 shadow-sm sm:p-8">
+          <div className="border-rule bg-surface rounded-lg border p-6 sm:p-8">
             {hasError && errorMessage ? (
               <div
                 role="alert"
@@ -83,14 +82,15 @@ export default async function CreateAccountPage({ searchParams }: PageProps) {
 
               <div>
                 <label htmlFor="password" className="block text-xs font-semibold uppercase tracking-wider text-foreground-secondary mb-1.5">
-                  Password (min. 8 characters)
+                  Password (min. {AUTH_CONFIG.minPasswordLength} characters)
                 </label>
                 <input
                   id="password"
                   name="password"
                   type="password"
                   required
-                  minLength={8}
+                  minLength={AUTH_CONFIG.minPasswordLength}
+                  maxLength={AUTH_CONFIG.maxPasswordLength}
                   autoComplete="new-password"
                   placeholder="••••••••••••"
                   className="focus-visible:outline-ring border-rule bg-canvas text-foreground placeholder:text-foreground-muted w-full rounded-md border px-3.5 py-2.5 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2"
@@ -126,8 +126,8 @@ export default async function CreateAccountPage({ searchParams }: PageProps) {
               </div>
 
               <div className="pt-3">
-                <Button type="submit" variant="bull" fullWidth size="lg">
-                  Create Free Account
+                <Button type="submit" variant="primary" fullWidth size="lg">
+                  Create account
                 </Button>
               </div>
             </form>

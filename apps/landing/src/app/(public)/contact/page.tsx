@@ -47,10 +47,17 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
               </CardContent>
             </Card>
 
-            <Alert tone="information" title="This form is not yet connected to a mailbox">
+            <Alert tone="information" title="Direct email & server-validated inquiries">
               <p>
-                Messages are validated, but no email is sent until the mail provider is configured.
-                Until then, please use the address below directly.
+                Submissions are validated server-side and logged for the executive committee. For
+                urgent or time-sensitive inquiries, you can also email us directly at{" "}
+                <a
+                  href={`mailto:${SITE.contactEmail}`}
+                  className="numeric text-accent-text underline underline-offset-4"
+                >
+                  {SITE.contactEmail}
+                </a>
+                .
               </p>
             </Alert>
           </div>

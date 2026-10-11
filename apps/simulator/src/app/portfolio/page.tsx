@@ -6,12 +6,13 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
-import { Suspense } from "react";
+import { useEffect, useState, Suspense } from "react";
+import Link from "next/link";
 import { PortfolioSummary } from "@fsjesc/ui/simulator/portfolio-summary";
 import { PositionsTable } from "@fsjesc/ui/simulator/positions-table";
 import { SimulatorNav } from "@fsjesc/ui/simulator/simulator-nav";
 import { MarketStatus } from "@fsjesc/ui/simulator/market-status";
+import { Num } from "@fsjesc/ui/primitives/num";
 import type { MarkedPosition } from "@fsjesc/domain/trading/engine";
 
 interface PortfolioData {
@@ -30,7 +31,7 @@ export default function PortfolioPage() {
     unrealisedPnlCents: 0n,
     positions: [],
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
@@ -86,11 +87,22 @@ export default function PortfolioPage() {
       if (mounted) void load(false);
     }, 4000);
 
+    const handlePortfolioUpdate = () => {
+      if (mounted) void load(false);
+    };
+    window.addEventListener("fsjesc:portfolio-updated", handlePortfolioUpdate);
+
     return () => {
       mounted = false;
       clearInterval(interval);
+      window.removeEventListener("fsjesc:portfolio-updated", handlePortfolioUpdate);
     };
   }, []);
+
+  const totalEquityNum = Number(data.totalEquityCents) || 1;
+  const cashPct = Math.max(0, Math.min(100, (Number(data.cashCents) / totalEquityNum) * 100));
+  const investedCents = data.totalEquityCents - data.cashCents;
+  const investedPct = Math.max(0, Math.min(100, (Number(investedCents) / totalEquityNum) * 100));
 
   return (
     <main id="main-content" className="flex-1">
@@ -99,29 +111,30 @@ export default function PortfolioPage() {
         <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-rule pb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-foreground">
-              Portfolio Holdings
+              Portfolio Holdings & Allocation
             </h1>
             <p className="text-foreground-secondary text-sm mt-1">
-              Marked-to-market positions, cash reserves, and unrealized gain metrics
+              Marked-to-market positions, capital deployment weights, and unrealized gain metrics
             </p>
           </div>
           <Suspense
-              fallback={<div className="h-5 w-32 animate-pulse rounded bg-surface-inset" />}
-            >
-  <MarketStatus />
-            </Suspense>
+            fallback={<div className="h-5 w-32 animate-pulse rounded bg-surface-inset" />}
+          >
+            <MarketStatus />
+          </Suspense>
         </div>
 
         {isLoading ? (
-          <div className="animate-pulse">
-            <div className="bg-surface-sunken h-64 rounded" />
+          <div className="space-y-6 animate-pulse">
+            <div className="bg-surface-sunken h-48 rounded-lg" />
+            <div className="bg-surface-sunken h-64 rounded-lg" />
           </div>
         ) : (
           <div className="space-y-8">
             <Suspense
               fallback={<div className="border-rule h-64 animate-pulse rounded-lg border" />}
             >
-  <PortfolioSummary
+              <PortfolioSummary
                 totalEquityCents={data.totalEquityCents}
                 cashCents={data.cashCents}
                 realisedPnlCents={data.realisedPnlCents}
@@ -129,13 +142,77 @@ export default function PortfolioPage() {
               />
             </Suspense>
 
+            {/* Capital Allocation Breakdown */}
+            <div className="rounded-lg border border-rule bg-surface-raised p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+                <div>
+                  <h2 className="text-base font-semibold tracking-tight">Capital Allocation</h2>
+                  <p className="text-xs text-foreground-secondary">
+                    Equity exposure vs. uninvested MAD cash reserve
+                  </p>
+                </div>
+                <div className="numeric text-xs text-foreground-secondary flex items-center gap-4">
+                  <span>
+                    Invested: <strong className="text-foreground">{investedPct.toFixed(1)}%</strong> (<Num cents={investedCents} />)
+                  </span>
+                  <span>
+                    Cash: <strong className="text-foreground">{cashPct.toFixed(1)}%</strong> (<Num cents={data.cashCents} />)
+                  </span>
+                </div>
+              </div>
+
+              <div className="h-3 w-full rounded-full bg-surface-sunken overflow-hidden flex border border-rule">
+                <div
+                  className="bg-bull h-full transition-all duration-300"
+                  style={{ width: `${investedPct}%` }}
+                  title={`Invested Equity: ${investedPct.toFixed(1)}%`}
+                />
+                <div
+                  className="bg-surface-inset h-full transition-all duration-300"
+                  style={{ width: `${cashPct}%` }}
+                  title={`Cash Reserve: ${cashPct.toFixed(1)}%`}
+                />
+              </div>
+
+              {data.positions.length > 0 && (
+                <div className="mt-4 pt-4 border-t border-rule grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {data.positions.map((pos) => {
+                    const weightPct = (Number(pos.marketValueCents) / totalEquityNum) * 100;
+                    return (
+                      <Link
+                        key={pos.symbol}
+                        href={`/market/${pos.symbol}`}
+                        className="rounded border border-rule bg-surface p-3 hover:border-bull transition-colors"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="numeric font-semibold text-sm text-foreground">{pos.symbol}</span>
+                          <span className="numeric text-xs text-bull font-medium">{weightPct.toFixed(1)}%</span>
+                        </div>
+                        <p className="numeric text-xs text-foreground-secondary mt-1">
+                          <Num cents={pos.marketValueCents} />
+                        </p>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
             <div>
-              <h2 className="mb-4 text-lg font-semibold tracking-tight">Positions</h2>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold tracking-tight">Open Positions</h2>
+                <Link
+                  href="/market"
+                  className="text-xs font-medium text-bull hover:underline numeric"
+                >
+                  + Trade Instruments →
+                </Link>
+              </div>
               <Suspense
-              fallback={<div className="border-rule h-48 animate-pulse rounded-lg border" />}
-            >
-  <PositionsTable positions={data.positions} />
-            </Suspense>
+                fallback={<div className="border-rule h-48 animate-pulse rounded-lg border" />}
+              >
+                <PositionsTable positions={data.positions} />
+              </Suspense>
             </div>
           </div>
         )}

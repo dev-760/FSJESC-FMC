@@ -13,6 +13,33 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
+      "env": [
+        "DATABASE_URL",
+        "TEST_DATABASE_URL",
+        "DATABASE_POOL_MAX",
+        "DATABASE_PREPARE",
+        "DATABASE_SSL",
+        "AUTH_SECRET",
+        "AUTH_TRUST_HOST",
+        "AUTH_URL",
+        "AUTH_COOKIE_DOMAIN",
+        "BOOTSTRAP_ADMIN_EMAIL",
+        "BOOTSTRAP_ADMIN_PASSWORD",
+        "BOOTSTRAP_ADMIN_NAME",
+        "SEED_DEMO",
+        "MARKET_SEED",
+        "MAIL_PROVIDER",
+        "SMTP_URL",
+        "MAIL_FROM",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SECRET_KEY",
+        "SUPABASE_JWKS_URL",
+        "SIMULATOR_API_ORIGIN",
+        "AMS_API_ORIGIN",
+        "MARKET_API_URL",
+        "MARKET_API_KEY"
+      ],
       "inputs": [
         "$TURBO_DEFAULT$",
         ".env*",
@@ -34,6 +61,19 @@
     },
     "test": {
       "dependsOn": ["^build"],
+      "env": [
+        "DATABASE_URL",
+        "TEST_DATABASE_URL",
+        "AUTH_SECRET",
+        "AUTH_TRUST_HOST",
+        "AUTH_URL",
+        "MARKET_SEED",
+        "SUPABASE_URL",
+        "SUPABASE_PUBLISHABLE_KEY",
+        "SUPABASE_SECRET_KEY",
+        "SUPABASE_JWKS_URL",
+        "MARKET_API_URL"
+      ],
       "outputs": []
     },
     "clean": {

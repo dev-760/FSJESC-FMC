@@ -1,7 +1,7 @@
 /**
  * Real-market reference feed.
  *
- * GET /api/market/reference?symbols=MARI,CASA
+ * GET /api/market/reference?symbols=ATW,IAM
  *
  * Proxies the Python market-data service. Every entry resolves independently:
  * one symbol the upstream does not know does not fail the response, because the

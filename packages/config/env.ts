@@ -59,6 +59,13 @@ const serverEnvSchema = z.object({
   MAIL_PROVIDER: z.enum(["console", "smtp"]).default("console"),
   MAIL_FROM: z.string().min(1).default("FSJESC Financial Markets Club <no-reply@fsjesc-fmc.local>"),
   SMTP_URL: z.string().optional(),
+  /**
+   * Optional cookie Domain attribute for cross-subdomain sessions
+   * (e.g. `.fsjes.ma` so landing, simulator and AMS share one session).
+   * Leave unset for localhost development — browsers treat host-only cookies
+   * as port-agnostic on localhost.
+   */
+  AUTH_COOKIE_DOMAIN: z.string().min(1).optional(),
   /** New secret key format. The legacy service_role JWT is intentionally absent. */
   /**
    * Supabase keys, new format only.

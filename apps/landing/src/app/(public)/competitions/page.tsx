@@ -157,11 +157,14 @@ export default function CompetitionsPage() {
 
       <div className="flex gap-2 pt-2 border-t border-rule/60">
         <Button asChild variant="secondary" className="flex-1 text-xs">
-          <Link href={`/competitions/${competition.id}`}>Leaderboard & Rules</Link>
+          <Link href={`/competitions/${competition.id}`}>Leaderboard &amp; Rules</Link>
         </Button>
         {competition.status === "UPCOMING" || competition.status === "ACTIVE" ? (
           <Button asChild variant="bull" className="flex-1 text-xs font-semibold">
-            <Link href={`/competitions/${competition.id}/join`} className="flex items-center justify-center gap-1">
+            <Link
+              href={`/competitions/${competition.id}?join=1`}
+              className="flex items-center justify-center gap-1"
+            >
               <span>Join Challenge</span>
               <ArrowRight className="h-3 w-3" />
             </Link>
@@ -177,9 +180,6 @@ export default function CompetitionsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-rule pb-6">
           <div>
-            <div className="flex items-center gap-2 mb-1.5">
-              <span className="label text-2xs text-bull font-semibold uppercase">Academic Trading League</span>
-            </div>
             <h1 className="text-2xl sm:text-4xl font-bold tracking-tight text-foreground">
               Trading Competitions
             </h1>
@@ -189,8 +189,11 @@ export default function CompetitionsPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button asChild variant="secondary" size="sm">
+              <Link href="/challenges">Scenario Challenges</Link>
+            </Button>
+            <Button asChild size="sm">
               <Link href={simulatorUrl()}>Practice in Simulator</Link>
             </Button>
           </div>

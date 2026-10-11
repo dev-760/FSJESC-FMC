@@ -34,7 +34,7 @@ export interface TerminalViewState {
 }
 
 export const useTerminalView = create<TerminalViewState>()((set) => ({
-  symbol: "MARI",
+  symbol: "ATW",
   interval: "1d",
   showVolume: true,
   setSymbol: (symbol) => set({ symbol }),

@@ -111,10 +111,10 @@ describe("slugs are editorial, not derived", () => {
 });
 
 describe("instrument descriptions", () => {
-  it("describes all eight instruments without naming a real company", () => {
+  it("describes all eight core Bourse de Casablanca instruments with ISINs and sectors", () => {
     expect(ASSETS).toHaveLength(8);
     for (const asset of ASSETS) {
-      expect(asset.description).toMatch(/fictional/i);
+      expect(asset.description).toMatch(/ISIN MA\d{10}/);
       expect(SECTOR_LABELS[asset.sector]).toBeTruthy();
     }
   });
